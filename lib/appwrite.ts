@@ -1,5 +1,5 @@
 import { Client, Models } from 'appwrite';
-import { ID, Account } from 'appwrite';
+import { ID, Account, Databases } from 'appwrite';
 
 const client = new Client();
 
@@ -8,6 +8,8 @@ client
     .setProject('biso');
 
 const account = new Account(client);
+
+const databases = new Databases(client);
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email)
@@ -42,5 +44,15 @@ export async function updateUserName(name: string) {
 
 export async function updateUserPreferences(preferences: string[]) {
     const response = await account.updatePrefs(preferences);
+    return response;
+}
+
+export async function getNews() {
+    const response = await databases.listDocuments('app', 'news');
+    return response;
+}
+
+export async function getEvents() {
+    const response = await databases.listDocuments('app', 'events');
     return response;
 }
