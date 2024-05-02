@@ -29,7 +29,6 @@ export function Events() {
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
-            <H6>Events</H6>
             <Button>See all</Button>
             </XStack>
             <XStack space="$3">
