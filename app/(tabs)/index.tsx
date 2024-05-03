@@ -1,7 +1,5 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { MyStack } from '@/components/ui/MyStack';
 import { H3, Text, View, YStack, Input } from 'tamagui';
 import { Featured } from '@/components/home/featured';
 import { Discover } from '@/components/home/discover';
@@ -17,13 +15,27 @@ export default function HomeScreen() {
   return (
     <ScrollView>
     <YStack ai={"center"}>
-      <TouchableOpacity onPress={() => setSearchModalOpen(true)} style={{width: "90%"}}>
-      <Input disabled onFocus={() => setSearchModalOpen(true)} width={"90%"} placeholder="Find something new" mt="$4" borderColor="$accentColor"/>
-      </TouchableOpacity>
+    <Pressable onPress={() => setSearchModalOpen(true)} style={{width: "90%", marginTop: 10}}>
+          <View style={{
+            borderWidth: 1,
+            borderColor: "$accentColor",
+            paddingVertical: 10,
+            paddingHorizontal: 15,
+            borderRadius: 6,
+            backgroundColor: "$background",
+            flexDirection: "row",
+            alignItems: "center",
+          }}>
+            <SearchIcon />
+            <Text style={{ marginLeft: 10 }}> {/* Adjust marginLeft as needed */}
+              Find something new
+            </Text>
+          </View>
+        </Pressable>
       <H3>Discover the latest updates and events</H3>
       <Featured />
       <Discover />
-      <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} leftIcon={<SearchIcon />} />
+      <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
     </YStack>
     </ScrollView>
   );

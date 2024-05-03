@@ -27,8 +27,8 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
                             : "$background"
                     }
                     bordered
-                    width={90}
-                    height={90}
+                    width={80}
+                    height={80}
                     jc={"center"}
                     ai={"center"}
                     onPress={() => setSelectedCategory(category)}
