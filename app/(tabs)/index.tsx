@@ -1,7 +1,5 @@
-import { Pressable, StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { MyStack } from '@/components/ui/MyStack';
 import { H3, Text, View, YStack, Input } from 'tamagui';
 import { Featured } from '@/components/home/featured';
 import { Discover } from '@/components/home/discover';
