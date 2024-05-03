@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAccount, updateUserName, updateUserPreferences } from '@/lib/appwrite';
+import { getAccount, getUserProfile, updateUserName, updateUserPreferences } from '@/lib/appwrite';
 import { Models } from 'appwrite';
 
 export const useAppwriteAccount = () => {
@@ -25,9 +25,11 @@ export const useAppwriteAccount = () => {
                 setIsLoading(false);
             }
         };
+        
 
         fetchAccount();
     }, []);
+
 
     const updateName = async (name: string) => {
         try {
@@ -56,6 +58,7 @@ export const useAppwriteAccount = () => {
             }
         }
     };
+
 
     return { data, isLoading, error, updateName, updatePrefs };
 };

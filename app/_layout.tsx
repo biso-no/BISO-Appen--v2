@@ -6,8 +6,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { TamaguiProvider } from 'tamagui';
-import { tamaguiConfig } from '@/tamag.config';
+import { TamaguiProvider, Theme } from 'tamagui';
+import { config } from '../tamag.config';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,12 +50,14 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <TamaguiProvider config={tamaguiConfig}>
+    <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
+      </Theme>
     </ThemeProvider>
     </TamaguiProvider>
   );

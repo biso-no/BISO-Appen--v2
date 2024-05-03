@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router'
 export default function ProfileScreen() {
   const isMobile = useMedia().xs
 
-  const { data } = useAppwriteAccount()
+  const { data, profile } = useAppwriteAccount()
 
   const router = useRouter()
   
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
         </View>
         <Hide when="gtSm">
           <View mt="$4">
-            <H1 size="$6">John Doe</H1>
+            <H1 size="$6">{profile?.name}</H1>
             <Text color="$color7">
               Software Engineer
             </Text>
@@ -53,7 +53,7 @@ export default function ProfileScreen() {
           <Button onPress={() => router.push('/profile/onboarding/')}>
             Edit Profile
           </Button>
-          <Button>
+          <Button onPress={() => console.log(profile)}>
             Settings
           </Button>
           <Button>

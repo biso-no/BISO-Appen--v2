@@ -37,6 +37,11 @@ export async function getAccount() {
     return response;
 }
 
+export async function getUserProfile(userId: string) {
+    const response = await databases.getDocument('app', 'users', userId);
+    return response
+}
+
 export async function updateUserName(name: string) {
     const response = await account.updateName(name);
     return response;

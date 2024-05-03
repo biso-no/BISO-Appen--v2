@@ -27,10 +27,10 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
                             : "$background"
                     }
                     bordered
-                    width={90}
-                    height={90}
-                    jc={"center"}
-                    ai={"center"}
+                    width={80}
+                    height={80}
+                    justifyContent={"center"}
+                    alignItems={"center"}
                     onPress={() => setSelectedCategory(category)}
                 >
                     <Card.Header>

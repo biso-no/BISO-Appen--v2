@@ -1,23 +1,51 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { H5 } from 'tamagui';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import { H5, Avatar } from 'tamagui';
+import { useAppwriteAccount } from '@/components/context/auth-context';
+import { Home, UserRound, LogIn, Info, Settings} from '@tamagui/lucide-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+
+  const { data, profile, isLoading } = useAppwriteAccount();
+
+  const profileTitle = data?.$id ? `Profile` : 'Login';
+
+  const avatarId = profile?.avatar;
+
+  const avatarUrl = `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`
+
+  //Profile icon is either:
+  //- UserRound if logged in but no avatar_id is set
+  //- LogIn if not logged in
+  //- Avatar if logged in and avatar_id is set
+  const profileIcon = () => {
+    if (isLoading) {
+      // Optionally return a loading indicator or null while loading
+      return null; // or your preferred loading spinner
+    } else if (!data?.$id) {
+      // Not logged in
+      return <LogIn size={25} />;
+    } else if (!avatarId) {
+      // Logged in but no avatar set
+      return <UserRound size={25} />;
+    } else {
+      // Logged in and avatar set
+      const avatarUrl = `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
+      return (
+        <Avatar circular size={25}>
+          <Avatar.Image src={avatarUrl} />
+          <Avatar.Fallback backgroundColor="$blue10" />
+        </Avatar>
+      );
+    }
+  };
+
 
   return (
     <Tabs
@@ -34,13 +62,12 @@ export default function TabLayout() {
           headerTitle(props) {
             return <H5>Welcome to BISO</H5>;
           },
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          tabBarIcon: ({ color }) => <Home color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
+                  <Info
                     size={25}
                     color={Colors[colorScheme ?? 'light'].text}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -54,15 +81,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          tabBarIcon: ({ color }) => <Settings color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile/index"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          title: profileTitle,
+          tabBarIcon: ({ color }) => profileIcon(),
+          href: data?.$id ? undefined : '/auth/signIn',
         }}
       />
     </Tabs>

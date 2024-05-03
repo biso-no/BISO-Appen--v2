@@ -1,6 +1,7 @@
-import { Sheet, Input, YStack, Button, H5, XStack, SizableText } from "tamagui";
+import { Sheet, Input, YStack, Button, H5, XStack, SizableText, Theme } from "tamagui";
 import React, { useState } from "react";
 import { Tabs } from "tamagui";
+import { useTheme } from "tamagui";
 
 interface SearchProps {
     modalOpen: boolean;
@@ -8,6 +9,8 @@ interface SearchProps {
 }
 
 export function Search({ modalOpen, setModalOpen }: SearchProps) {
+
+    const theme = useTheme();
 
 
     return (
@@ -32,7 +35,7 @@ export function Search({ modalOpen, setModalOpen }: SearchProps) {
                     <Input
                         placeholder="Search"
                         borderColor="$accentColor"
-                        autoFocus
+
                     />
                 <Tabs defaultValue="latest" width={400} flexDirection="column">
                     <Tabs.List space="$4">
