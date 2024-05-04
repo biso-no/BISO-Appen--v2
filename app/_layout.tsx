@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { useColorScheme } from '@/components/useColorScheme';
 import { TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
+import { AuthProvider } from '@/components/context/auth-provider';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,6 +51,7 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
+    <AuthProvider>
     <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
@@ -60,5 +62,6 @@ function RootLayoutNav() {
       </Theme>
     </ThemeProvider>
     </TamaguiProvider>
+    </AuthProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
 
@@ -8,17 +8,26 @@ import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { H5, Avatar } from 'tamagui';
 import { useAppwriteAccount } from '@/components/context/auth-context';
 import { Home, UserRound, LogIn, Info, Settings} from '@tamagui/lucide-icons';
+import { setupPushNotifications } from '@/lib/notifications';
+import { useAuth } from '@/components/context/auth-provider';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
-  const { data, profile, isLoading } = useAppwriteAccount();
+  const { data, profile, isLoading } = useAuth();
+
 
   const profileTitle = data?.$id ? `Profile` : 'Login';
 
   const avatarId = profile?.avatar;
 
-  const avatarUrl = `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`
+
+  useEffect(() => {
+    console.log("User ID: ",data?.$id);
+    if (data?.$id && !isLoading) {
+      setupPushNotifications(data.$id);
+    }
+  }), [data?.$id];
 
   //Profile icon is either:
   //- UserRound if logged in but no avatar_id is set

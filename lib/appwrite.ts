@@ -1,4 +1,4 @@
-import { Client, Models } from 'appwrite';
+import { Client, Models, Query } from 'appwrite';
 import { ID, Account, Databases } from 'appwrite';
 
 const client = new Client();
@@ -10,6 +10,7 @@ client
 const account = new Account(client);
 
 const databases = new Databases(client);
+
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email)
@@ -32,15 +33,29 @@ export async function verifyOtp(userId: string, otp: string) {
     return response;
 }
 
-export async function getAccount() {
-    const response = await account.get();
-    return response;
+export async function getUser() {
+    try {
+        const user = await account.get();
+        console.log("User Object: ", user);
+
+        let profile;
+
+        if (user.$id) {
+            try {
+                profile = await databases.getDocument('app', 'users', user.$id);
+                console.log("Profile Object: ", profile);
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        }
+
+        return { user, profile };
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
 }
 
-export async function getUserProfile(userId: string) {
-    const response = await databases.getDocument('app', 'users', userId);
-    return response
-}
 
 export async function updateUserName(name: string) {
     const response = await account.updateName(name);
@@ -60,4 +75,27 @@ export async function getNews() {
 export async function getEvents() {
     const response = await databases.listDocuments('app', 'events');
     return response;
+}
+
+export async function registerDeviceToken(userId: string, token: string) {
+    // Search for an existing document with the same userId and token
+    const searchResponse = await databases.listDocuments('app', 'devices', [
+        Query.equal('user_id', userId),
+        Query.equal('token', token)
+    ]);
+
+    // Check if a document already exists
+    if (searchResponse.documents.length > 0) {
+        // Token already registered, return the existing document or perform an update if needed
+        return searchResponse.documents[0];
+    } else {
+        account.createPushTarget(ID.unique(), token);
+        // Token not registered, create a new document
+        const createResponse = await databases.createDocument('app', 'devices', ID.unique(), {
+            user_id: userId,
+            token: token
+        });
+
+        return createResponse;
+    }
 }

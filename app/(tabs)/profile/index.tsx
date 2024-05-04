@@ -1,15 +1,16 @@
 import { View, Text, Image, H1, H2, Button } from 'tamagui'
 import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
-import { useAppwriteAccount } from '@/components/context/auth-context'
+import { useAuth } from '@/components/context/auth-provider'
 import { useRouter } from 'expo-router'
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs
 
-  const { data, profile } = useAppwriteAccount()
+  const { data, profile, isLoading } = useAuth()
 
   const router = useRouter()
+  
   
 
   return (
@@ -33,7 +34,7 @@ export default function ProfileScreen() {
             borderRadius="$6"
           />
           <Hide when="xs">
-            <View mt="$4">
+            <View marginTop="$4">
               <H1 size="$6">John Doe</H1>
               <Text color="$color7">
                 Software Engineer
@@ -42,8 +43,8 @@ export default function ProfileScreen() {
           </Hide>
         </View>
         <Hide when="gtSm">
-          <View mt="$4">
-            <H1 size="$6">{profile?.name}</H1>
+          <View marginTop="$4">
+            <H1 size="$6">{!isLoading ? data?.name : 'John Doe'}</H1>
             <Text color="$color7">
               Software Engineer
             </Text>

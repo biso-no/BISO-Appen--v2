@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getAccount, getUserProfile, updateUserName, updateUserPreferences } from '@/lib/appwrite';
+import { getUser, updateUserName, updateUserPreferences } from '@/lib/appwrite';
 import { Models } from 'appwrite';
 
 export const useAppwriteAccount = () => {
     const [data, setData] = useState<Models.User<Models.Preferences> | null>(null);
+    const [profile, setProfile] = useState<Models.Document | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -11,8 +12,9 @@ export const useAppwriteAccount = () => {
         const fetchAccount = async () => {
             setIsLoading(true);
             try {
-                const response = await getAccount();
-                setData(response);
+                const response = await getUser();
+                setData(response.user);
+                setProfile(response.profile || null);
                 setError(null);
             } catch (err: unknown) {
                 if (err instanceof Error) {
@@ -60,5 +62,5 @@ export const useAppwriteAccount = () => {
     };
 
 
-    return { data, isLoading, error, updateName, updatePrefs };
+    return { data, isLoading, error, updateName, updatePrefs, profile };
 };
