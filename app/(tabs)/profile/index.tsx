@@ -3,6 +3,7 @@ import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
 import { useRouter } from 'expo-router'
+import { FileUpload } from '@/lib/file-upload'
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs
@@ -59,6 +60,10 @@ export default function ProfileScreen() {
           </Button>
           <Button>
             Log Out
+          </Button>
+          <FileUpload bucketId='test' />
+          <Button onPress={() => router.push('/expenses/')}>
+            Expenses
           </Button>
         </View>
       </View>

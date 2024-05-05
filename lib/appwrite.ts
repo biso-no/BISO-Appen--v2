@@ -1,15 +1,18 @@
-import { Client, Models, Query } from 'appwrite';
-import { ID, Account, Databases } from 'appwrite';
+import { Models, Query, Client } from 'react-native-appwrite/src';
+import { ID, Account, Databases, Storage } from 'react-native-appwrite/src';
 
 const client = new Client();
 
 client
     .setEndpoint('https://appwrite-a0w8s4o.biso.no/v1')
-    .setProject('biso');
+    .setProject('biso')
+
 
 const account = new Account(client);
 
 const databases = new Databases(client);
+
+const storage = new Storage(client);
 
 
 export async function signIn(email: string) {
@@ -99,3 +102,22 @@ export async function registerDeviceToken(userId: string, token: string) {
         return createResponse;
     }
 }
+
+interface File {
+    name: string;
+    type: string;
+    size: number;
+    uri: string;
+}
+
+export async function uploadFile(bucketId: string, file: File) {
+    console.log("Uploading file: ", file);
+    try {
+        const response = await storage.createFile(bucketId, ID.unique(), file);
+        console.log("Response: ", response);
+        return response;
+    } catch (error) {
+        console.error("Error uploading file:", error);
+    }
+}
+

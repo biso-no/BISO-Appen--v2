@@ -10,6 +10,7 @@ import { useAppwriteAccount } from '@/components/context/auth-context';
 import { Home, UserRound, LogIn, Info, Settings} from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
+import Constants from 'expo-constants';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -21,10 +22,12 @@ export default function TabLayout() {
 
   const avatarId = profile?.avatar;
 
+  const isExpoGo = Constants.appOwnership === 'expo';
+
 
   useEffect(() => {
     console.log("User ID: ",data?.$id);
-    if (data?.$id && !isLoading) {
+    if (!isExpoGo &&data?.$id && !isLoading) {
       setupPushNotifications(data.$id);
     }
   }), [data?.$id];
