@@ -80,6 +80,52 @@ export async function getEvents() {
     return response;
 }
 
+export async function getDocument(collectionId: string, documentId: string) {
+    try {
+        const response = await databases.getDocument('app', collectionId, documentId);
+        return response;
+    } catch (error) {
+        console.error("Error fetching document:", error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
+}
+
+
+export async function getDocuments(collectionId: string, filters?: Record<string, string>) {
+    let query = [];
+    
+    // Build the query based on filters
+    if (filters) {
+      for (const [filterType, value] of Object.entries(filters)) {
+        const trimmedValue = value.trim();
+        if (trimmedValue.toLowerCase() !== "all") {
+          query.push(Query.equal(filterType, trimmedValue));
+        }
+      }
+    }
+  
+    try {
+      const response = await databases.listDocuments('app', collectionId, query);
+      return response;
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
+  }
+
+export async function createDocument(collectionId: string, data: any, id?: string) {
+
+    const documentId = id ?? ID.unique();
+
+    const response = await databases.createDocument('app', collectionId, documentId, data);
+    return response;
+}
+
+export async function updateDocument(collectionId: string, documentId: string, data: any) {
+    const response = await databases.updateDocument('app', collectionId, documentId, data);
+    return response;
+}
+
 export async function registerDeviceToken(userId: string, token: string) {
     // Search for an existing document with the same userId and token
     const searchResponse = await databases.listDocuments('app', 'devices', [

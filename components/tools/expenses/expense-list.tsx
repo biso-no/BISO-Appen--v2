@@ -1,33 +1,12 @@
 import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack} from "tamagui";
-import { getFormattedDate } from "@/lib/format-time";
+import { getFormattedDateFromString } from "@/lib/format-time";
 import { ExpenseFilter } from "./filter";
 import { CustomSelect } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getDocuments } from "@/lib/appwrite";
+import { Models, Query } from "appwrite";
 
-interface ExpenseProps {
-    title: string;
-    amount: number;
-    date: Date;
-    status: string;
-    category: string;
-}
 
-const expenses = [
-    {
-        title: "Groceries",
-        amount: 100,
-        date: new Date("2022-01-01"),
-        status: "Pending",
-        category: "Food",
-    },
-    {
-        title: "Entertainment",
-        amount: 50,
-        date: new Date("2022-01-02"),
-        status: "Pending",
-        category: "Entertainment",
-    },
-]
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -44,7 +23,10 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-function ExpenseCard({ title, amount, date, status, category }: ExpenseProps) {
+function ExpenseCard({expense}: {expense: Models.Document}) {
+
+    const { description, total, created_at, status } = expense;
+    
     return (
         <Card 
             bordered
@@ -55,13 +37,13 @@ function ExpenseCard({ title, amount, date, status, category }: ExpenseProps) {
             <YStack space="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
                     <YStack>
-                        <Text fontSize={30} fontWeight={"bold"}>{title}</Text>
-                        <Text fontSize={20}>{amount} kr</Text>
+                        <Text fontSize={30} fontWeight={"bold"}>{description}</Text>
+                        <Text fontSize={20}>{total} kr</Text>
                     </YStack>
                 </Card.Header>
                 <Card.Footer>
                     <XStack marginBottom={20} marginLeft={30} justifyContent="space-between" alignItems="center" width="80%">
-                        <SizableText size={"$5"}>{getFormattedDate(date)}</SizableText>
+                        <SizableText size={"$5"}>{getFormattedDateFromString(created_at)}</SizableText>
                         <StatusBadge status={status} />
                     </XStack>
                 </Card.Footer>
@@ -80,6 +62,76 @@ export interface CustomSelectProps {
 export function ExpenseList() {
 
     const [sortingOption, setSortingOption] = useState("Date Descending");
+    const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();
+    const [selectedStatus, setSelectedStatus] = useState("All");
+    const [selectedDepartment, setSelectedDepartment] = useState("All");
+
+    const filters = {
+        department: selectedDepartment,
+        status: selectedStatus
+    };
+
+    const filterConfigs = [
+        {
+            filterType: 'status',
+            options: [
+              { name: "All", value: "all" },
+              { name: "Pending", value: "pending" },
+              { name: "Paid", value: "paid" },
+              // Add 'value' property to each option
+            ],
+            label: 'Status',
+            initialSelected: selectedStatus,
+          },
+          {
+            filterType: 'department',
+            options: [
+              { name: "All", value: "all" },
+              { name: "Marketing", value: "marketing" },
+              { name: "IT", value: "it" },
+              { name: "HR", value: "hr" },
+              { name: "Finance", value: "finance" },
+              // Add 'value' property to each option
+            ],
+            label: 'Department',
+            initialSelected: selectedDepartment,
+          },
+          // Update the options with the 'value' property
+        // ... additional filter configurations if needed
+      ];
+
+    useEffect(() => {
+        async function fetchExpenses() {
+            const fetchedExpenses = await getDocuments('expenses', filters);
+            setExpenses(fetchedExpenses);
+            console.log(fetchedExpenses);
+        }
+        fetchExpenses();
+    }, []);
+
+    useEffect(() => {
+        console.log();
+    }, []);
+
+    if (!expenses) {
+        return (
+            <Text>Loading...</Text>
+        )
+    }   
+    const handleFilterChange = async (filterType: string, value: string) => {
+        
+        if (filterType === 'status') {
+          setSelectedStatus(value);
+          getDocuments('expenses', {status: value});
+        } else if (filterType === 'department') {
+          setSelectedDepartment(value);
+          getDocuments('expenses', {department: value});
+        }
+        const newExpenses = await getDocuments('expenses', { [filterType]: value });
+        setExpenses(newExpenses);
+      };
+    
+
 
     
     return (
@@ -91,7 +143,7 @@ export function ExpenseList() {
                 </Paragraph>
                 </YStack>
                 <XGroup space="$4">
-                <ExpenseFilter />
+                <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
                 <CustomSelect
                         items={[
                         { name: "Date Ascending" },
@@ -104,14 +156,10 @@ export function ExpenseList() {
                         initialSelected={sortingOption}
                     />
                 </XGroup>
-                {expenses.map((expense) => (
+                {expenses?.documents.map((expense) => (
                     <ExpenseCard
                         key={expense.title}
-                        title={expense.title}
-                        amount={expense.amount}
-                        date={expense.date}
-                        status={expense.status}
-                        category={expense.category}
+                        expense={expense}
                     />
                 ))}
             </YStack>
