@@ -21,7 +21,7 @@ export function MultiStepForm() {
         attachments: [],
         description: ""
     });
-    const [completedSteps, setCompletedSteps] = useState(new Set());
+    const [completedSteps, setCompletedSteps] = useState(new Set<number>());
 
     const saveSteps = async (steps: Set<number>) => {
         try {

@@ -21,7 +21,7 @@ export default function HomeScreen() {
             borderColor: "$accentColor",
             paddingVertical: 10,
             paddingHorizontal: 15,
-            borderRadius: 6,
+            borderRadius: 10,
             backgroundColor: "$background",
             flexDirection: "row",
             alignItems: "center",
