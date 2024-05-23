@@ -18,11 +18,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.biso.no',
-    googleServicesFile: process.env.GOOGLE_SERVICES_IOS,
+    googleServicesFile: process.env.GOOGLE_SERVICES_IOS ?? './GoogleService-Info.plist',
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+          NSPrivacyAccessedAPITypeReasons: ["CA92.1"]
+        }
+      ]
+    }
   },
   android: {
     package: 'com.biso.no',
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#ffffff',
@@ -36,8 +44,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     '@react-native-firebase/app',
+    'expo-font',
     ['expo-notifications'],
-    ['expo-build-properties', { ios: { useFrameworks: 'static' } }],
+    [
+      'expo-build-properties',
+       { 
+        ios: { 
+          useFrameworks: 'static',
+          newArchEnabled: true,
+        },
+        android: {
+          newArchEnabled: true,
+        },
+      }],
     ['expo-document-picker', { iCloudContainerEnvironment: 'Production' }],
   ],
   extra: {

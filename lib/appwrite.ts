@@ -1,5 +1,5 @@
 import { Models, Query, Client } from 'react-native-appwrite/src';
-import { ID, Account, Databases, Storage } from 'react-native-appwrite/src';
+import { ID, Account, Databases, Storage, Avatars } from 'react-native-appwrite/src';
 
 const client = new Client();
 
@@ -13,6 +13,8 @@ const account = new Account(client);
 const databases = new Databases(client);
 
 const storage = new Storage(client);
+
+const avatars = new Avatars(client);
 
 
 export async function signIn(email: string) {
@@ -62,6 +64,11 @@ export async function getUser() {
 
 export async function updateUserName(name: string) {
     const response = await account.updateName(name);
+    return response;
+}
+
+export async function updatePhoneNumber(userId: string, phoneNumber: string) {
+    const response = await account.updatePhone(userId, phoneNumber);
     return response;
 }
 
@@ -121,7 +128,7 @@ export async function createDocument(collectionId: string, data: any, id?: strin
     return response;
 }
 
-export async function updateDocument(collectionId: string, documentId: string, data: any) {
+export async function updateDocument(collectionId: string, documentId: string, data: object) {
     const response = await databases.updateDocument('app', collectionId, documentId, data);
     return response;
 }
@@ -167,3 +174,13 @@ export async function uploadFile(bucketId: string, file: File) {
     }
 }
 
+export function getUserAvatar(fileId: string) {
+
+    const result = avatars.getImage(
+        'https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/' + fileId + '/view?project=biso',
+        100,
+        100
+    )
+
+    return result;
+}

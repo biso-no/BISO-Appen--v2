@@ -324,7 +324,7 @@ export const Input = withStaticProperties(InputContainerFrame, {
 
 export const InputNew = () => {
   return (
-    <Input w={400} size="$3">
+    <Input width={400} size="$3">
       <Input.Box>
         <Input.Section>
           <Input.Icon>

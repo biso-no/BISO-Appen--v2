@@ -51,7 +51,7 @@ export default function TabLayout() {
       const avatarUrl = `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
         <Avatar circular size={25}>
-          <Avatar.Image src={avatarUrl} />
+          <Avatar.Image src={!isLoading ? avatarUrl : ''} />
           <Avatar.Fallback backgroundColor="$blue10" />
         </Avatar>
       );
@@ -70,7 +70,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
+          title: '',
           headerTitle(props) {
             return <H5>Welcome to BISO</H5>;
           },
@@ -93,13 +93,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
+          title: '',
           tabBarIcon: ({ color }) => <Settings color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile/index"
         options={{
-          title: profileTitle,
+          title: '',
           tabBarIcon: ({ color }) => profileIcon(),
           href: data?.$id ? undefined : '/auth/signIn',
         }}

@@ -32,7 +32,6 @@ function ExpenseCard({expense}: {expense: Models.Document}) {
             bordered
             borderWidth={3}
             size="$6"
-            width={360}
         >
             <YStack space="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
@@ -113,11 +112,6 @@ export function ExpenseList() {
         console.log();
     }, []);
 
-    if (!expenses) {
-        return (
-            <Text>Loading...</Text>
-        )
-    }   
     const handleFilterChange = async (filterType: string, value: string) => {
         
         if (filterType === 'status') {
@@ -156,6 +150,7 @@ export function ExpenseList() {
                         initialSelected={sortingOption}
                     />
                 </XGroup>
+                {expenses?.documents?.length === 0 && <Text>No expenses found.</Text>}
                 {expenses?.documents.map((expense) => (
                     <ExpenseCard
                         key={expense.title}
