@@ -1,7 +1,8 @@
 import { Card, Image, H6, Paragraph, YStack, XStack, View, SizableText, Button } from "tamagui";
 import { getEvents } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
-import type { Models } from "appwrite";
+import type { Models } from "react-native-appwrite";
+import { getFormattedDateFromString } from "@/lib/format-time";
 
 export function Events() {
 
@@ -21,7 +22,7 @@ export function Events() {
       };
 
       const useEventImageUri = (imageId: string) => {
-        return `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/events/files/${imageId}/view?project=biso`
+        return `https://appwrite-rg044w0.biso.no/v1/storage/buckets/events/files/${imageId}/view?project=biso`
       }
 
       //Display in a grid of 2 columns. One card for each event
@@ -51,7 +52,7 @@ export function Events() {
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
                             <Paragraph>{capitalizeFirstLetter(event.campus)}</Paragraph>
-                            <Paragraph>{event.created_at}</Paragraph>
+                            <Paragraph>{getFormattedDateFromString(event.$createdAt)}</Paragraph>
                             </XStack>
                             <H6>{event.title}</H6>
                             {event.price > 0 &&<Paragraph>{event.price} kr</Paragraph>}

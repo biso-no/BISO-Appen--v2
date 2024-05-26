@@ -90,5 +90,4 @@ export const config = createTamagui({
   }),
 })
 
-// for the compiler to find it
-export default config
+export type AppConfig = typeof config

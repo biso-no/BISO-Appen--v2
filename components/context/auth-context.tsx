@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUser, updateUserName, updateUserPreferences } from '@/lib/appwrite';
-import { Models } from 'appwrite';
+import { Models } from 'react-native-appwrite';
 
 export const useAppwriteAccount = () => {
     const [data, setData] = useState<Models.User<Models.Preferences> | null>(null);

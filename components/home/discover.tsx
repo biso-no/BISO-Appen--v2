@@ -19,7 +19,7 @@ export interface CategoryProps {
 const categories: Category[] = [
     { title: "News", icon: Newspaper },
     { title: "Events", icon: Calendar },
-    { title: "Community", icon: Hash },
+    { title: "Feed", icon: Hash },
     { title: "Shop", icon: ShoppingBag },
 ]
 

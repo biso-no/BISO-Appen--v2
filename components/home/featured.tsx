@@ -1,5 +1,5 @@
 import { FeaturedCard } from "../ui/card";
-import { YStack, H5, Image } from "tamagui";
+import { YStack, H5, Image, H3 } from "tamagui";
 
 interface NewsProps {
     title: string
@@ -21,7 +21,8 @@ const news: NewsProps[] = [
 
 export function Featured() {
     return (
-        <YStack width="90%" justifyContent="center" alignItems="center" space="$4">
+        <YStack justifyContent="center" alignItems="center" space="$4">
+                  <H3>Discover the latest updates and events</H3>
             {news.map((news, index) => (
                 <FeaturedCard key={index} title={news.title} description={news.description} urlToImage={news.urlToImage} tags={news.tags} url={news.url} />
             ))}

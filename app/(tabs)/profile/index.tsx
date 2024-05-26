@@ -7,7 +7,7 @@ import { FileUpload } from '@/lib/file-upload'
 import { getUserAvatar, updateDocument, updatePhoneNumber } from '@/lib/appwrite'
 import { useEffect, useRef, useState } from 'react'
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
-import { Models } from 'react-native-appwrite/src';
+import { Models } from 'react-native-appwrite';
 
 
 export default function ProfileScreen() {
@@ -28,9 +28,7 @@ export default function ProfileScreen() {
     console.log("Avatar: ", avatar);
   }, [avatar])
 
-  if (isLoading ?? !data) {
-    return null
-  }
+
 
   return (
     <YStack flex={1} padding="$4">
@@ -40,7 +38,7 @@ export default function ProfileScreen() {
             <Avatar.Image src={avatar.toString()} />
             <Avatar.Fallback backgroundColor="$blue10" />
           </Avatar>
-          <H1 size="$8" marginTop="$2">{data.name}</H1>
+          <H1 size="$8" marginTop="$2">{data?.name}</H1>
           <Text color="$color7">{profile?.email}</Text>
         </YStack>
       </Card>

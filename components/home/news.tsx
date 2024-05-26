@@ -1,7 +1,8 @@
 import { Card, Image, H6, Paragraph, YStack, XStack } from "tamagui";
 import { getNews } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
-import type { Models } from "appwrite";
+import type { Models } from "react-native-appwrite";
+import { getFormattedDateFromString } from "@/lib/format-time";
 
 export function News() {
 
@@ -29,7 +30,7 @@ export function News() {
       };
 
       const useNewsImageUri = (imageId: string) => {
-        return `https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
+        return `https://appwrite-rg044w0.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
       }
 
 
@@ -55,7 +56,7 @@ export function News() {
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
                             <Paragraph>{capitalizeFirstLetter(news.campus)}</Paragraph>
-                            <Paragraph>{news.created_at}</Paragraph>
+                            <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>
                             </XStack>
                             <H6>{news.title}</H6>
                             <Paragraph>{truncateDescription(news.content, 100)}</Paragraph>

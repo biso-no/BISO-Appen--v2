@@ -1,10 +1,10 @@
-import { Models, Query, Client } from 'react-native-appwrite/src';
-import { ID, Account, Databases, Storage, Avatars } from 'react-native-appwrite/src';
+import { Models, Query, Client } from 'react-native-appwrite';
+import { ID, Account, Databases, Storage, Avatars } from 'react-native-appwrite';
 
 const client = new Client();
 
 client
-    .setEndpoint('https://appwrite-a0w8s4o.biso.no/v1')
+    .setEndpoint('https://appwrite-rg044w0.biso.no/v1')
     .setProject('biso')
 
 

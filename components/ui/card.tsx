@@ -22,7 +22,7 @@ export function FeaturedCard(props: NewsProps) {
             source={{ uri: props.urlToImage }}
             alt="image"
             height={200}
-            width="100%"
+            width={350}
             borderRadius="$10"
             />
         </DefaultCard.Header>

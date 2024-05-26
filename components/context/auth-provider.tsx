@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useAppwriteAccount } from './auth-context';
-import { Models } from 'appwrite';
+import { Models } from 'react-native-appwrite';
 
 // Define the shape of your context state and functions
 interface AuthContextType {

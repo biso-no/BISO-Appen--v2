@@ -1,12 +1,10 @@
-import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack} from "tamagui";
+import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { ExpenseFilter } from "./filter";
 import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { getDocuments } from "@/lib/appwrite";
-import { Models, Query } from "appwrite";
-
-
+import { Models, Query } from "react-native-appwrite";
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -23,14 +21,16 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-function ExpenseCard({expense}: {expense: Models.Document}) {
+function ExpenseCard({ expense }: { expense: Models.Document }) {
+    const { description, total, $createdAt: created_at, status } = expense;
 
-    const { description, total, created_at, status } = expense;
-    
+    const formattedDate = created_at ? getFormattedDateFromString(created_at) : 'Invalid date';
+
     return (
         <Card 
             bordered
             borderWidth={3}
+            width={"100%"}
             size="$6"
         >
             <YStack space="$5" alignItems="flex-start" justifyContent="center">
@@ -42,7 +42,7 @@ function ExpenseCard({expense}: {expense: Models.Document}) {
                 </Card.Header>
                 <Card.Footer>
                     <XStack marginBottom={20} marginLeft={30} justifyContent="space-between" alignItems="center" width="80%">
-                        <SizableText size={"$5"}>{getFormattedDateFromString(created_at)}</SizableText>
+                        <SizableText size={"$5"}>{formattedDate}</SizableText>
                         <StatusBadge status={status} />
                     </XStack>
                 </Card.Footer>
@@ -50,20 +50,12 @@ function ExpenseCard({expense}: {expense: Models.Document}) {
         </Card>
     );
 }
-export interface CustomSelectProps {
-    items: { name: string }[];
-    onValueChange: (value: string) => void;
-    label?: string;
-    initialSelected?: string;
-  }
-
 
 export function ExpenseList() {
-
-    const [sortingOption, setSortingOption] = useState("Date Descending");
+    const [sortingOption, setSortingOption] = useState("date descending");
     const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();
-    const [selectedStatus, setSelectedStatus] = useState("All");
-    const [selectedDepartment, setSelectedDepartment] = useState("All");
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [selectedDepartment, setSelectedDepartment] = useState("all");
 
     const filters = {
         department: selectedDepartment,
@@ -77,7 +69,6 @@ export function ExpenseList() {
               { name: "All", value: "all" },
               { name: "Pending", value: "pending" },
               { name: "Paid", value: "paid" },
-              // Add 'value' property to each option
             ],
             label: 'Status',
             initialSelected: selectedStatus,
@@ -90,13 +81,10 @@ export function ExpenseList() {
               { name: "IT", value: "it" },
               { name: "HR", value: "hr" },
               { name: "Finance", value: "finance" },
-              // Add 'value' property to each option
             ],
             label: 'Department',
             initialSelected: selectedDepartment,
           },
-          // Update the options with the 'value' property
-        // ... additional filter configurations if needed
       ];
 
     useEffect(() => {
@@ -106,28 +94,18 @@ export function ExpenseList() {
             console.log(fetchedExpenses);
         }
         fetchExpenses();
-    }, []);
-
-    useEffect(() => {
-        console.log();
-    }, []);
+    }, [selectedStatus, selectedDepartment]);
 
     const handleFilterChange = async (filterType: string, value: string) => {
-        
         if (filterType === 'status') {
           setSelectedStatus(value);
-          getDocuments('expenses', {status: value});
         } else if (filterType === 'department') {
           setSelectedDepartment(value);
-          getDocuments('expenses', {department: value});
         }
         const newExpenses = await getDocuments('expenses', { [filterType]: value });
         setExpenses(newExpenses);
       };
-    
 
-
-    
     return (
         <ScrollView>
             <YStack space="$5" alignItems="center" justifyContent="center">
@@ -151,9 +129,9 @@ export function ExpenseList() {
                     />
                 </XGroup>
                 {expenses?.documents?.length === 0 && <Text>No expenses found.</Text>}
-                {expenses?.documents.map((expense) => (
+                {expenses?.documents?.map((expense) => (
                     <ExpenseCard
-                        key={expense.title}
+                        key={expense.$id} // Use a unique identifier instead of title
                         expense={expense}
                     />
                 ))}

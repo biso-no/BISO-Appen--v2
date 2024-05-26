@@ -1,135 +1,76 @@
-import useOtpClipboard from '@/lib/hooks/otp-clipboard';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { NativeSyntheticEvent, TextInput, TextInputKeyPressEventData } from 'react-native';
-import { Input, XStack, styled } from 'tamagui';
-import { verifyOtp } from '@/lib/appwrite';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
+import { View, Input } from 'tamagui';
 
-interface IOtpInputProps {
-    length?: number;
-    userId: string;
+interface OTPInputProps {
+    numberOfDigits: number;
+    onChange: (otp: string) => void;
 }
 
-const OtpTextField = styled(Input, {
-    width: 50,
-    height: 50,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    fontSize: '$9',
+export function OTPInput({ numberOfDigits, onChange }: OTPInputProps) {
+    
+  const [otp, setOtp] = useState<string[]>(Array(numberOfDigits).fill(''));
+  const inputs = useRef<(Input | null)[]>([]);
 
-    variants: {
-        isFilled: {
-            true: {
-                bg: '$primary',
-                color: 'white',
-            },
-            false: {
-                borderColor: '$border',
-                placeholderTextColor: '$border',
-            },
-        },
-    },
-});
+  useEffect(() => {
+    onChange(otp.join(''));
+  }, [otp, onChange]);
 
-function OtpInput(props: IOtpInputProps) {
-    const [otp, setOtp] = useState<string[]>(new Array(props?.length ?? 4).fill(''));
-    const inputs = useRef<TextInput[]>([]);
-    const currentInputIndex = useRef<number>();
+  const handleChangeText = (text: string, index: number) => {
+    if (/^\d*$/.test(text)) {
+      const newOtp = [...otp];
+      newOtp[index] = text;
+      setOtp(newOtp);
 
-    useOtpClipboard({
-        pinCount: props?.length ?? 4,
-        updateOtpState: otpValue => setOtp(otpValue),
-    });
-
-    useEffect(() => {
-        if (otp[otp.length - 1] !== '') {
-            verifySuccesfull();
-        }
-    }, [otp]);
-
-    const verifySuccesfull = useCallback(() => {
-      const otpValue = otp.join('');
-      if (otpValue.length === props.length) {
-        verifyOtp(props.userId, otpValue);
-        console.log(otp.join(''));
+      // Move focus to the next input field
+      if (text && index < numberOfDigits - 1) {
+        inputs.current[index + 1]?.focus();
       }
-    }, []);
 
-    const handleOtpChange = (value: string, index: number) => {
-        const newOtp = [...otp];
-        newOtp[index] = value;
-        setOtp(newOtp);
+      // If text is empty and it's not the first input, move focus to the previous input
+      if (!text && index > 0) {
+        inputs.current[index - 1]?.focus();
+      }
+    }
+  };
 
-        // Move focus to the next box if the current one has a value
-        if (value && index < newOtp.length - 1) {
-            currentInputIndex.current = index + 1;
-            focusNextInput(index + 1);
-        }
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputs.current[index - 1]?.focus();
+    }
+  };
 
-        // Move focus to the previous box if the current one has no value
-        if (!value && index < newOtp.length + 1) {
-            currentInputIndex.current = index - 1;
-            focusPrevInput(index - 1);
-        }
-    };
+  return (
+    <View style={styles.container}>
+      {otp.map((digit, index) => (
+        <Input
+          key={index}
+          style={styles.input}
+          value={digit}
+          onChangeText={(text) => handleChangeText(text, index)}
+          keyboardType="numeric"
+          maxLength={1}
+          ref={(input) => (inputs.current[index] = input)}
+          onKeyPress={(e) => handleKeyPress(e, index)}
+        />
+      ))}
+    </View>
+  );
+};
 
-    const focusPrevInput = useCallback(
-        (index?: number) => {
-            const prevIndex = currentInputIndex.current! - 1;
-            const prevInput = inputs.current[index ?? prevIndex];
-
-            if (prevInput) {
-                currentInputIndex.current = prevIndex;
-            }
-
-            prevInput?.focus();
-        },
-        [currentInputIndex],
-    );
-
-    const focusNextInput = useCallback(
-        (index?: number) => {
-            const nextIndex = currentInputIndex.current! + 1;
-            const nextInput = inputs.current[index ?? nextIndex];
-            nextInput?.focus();
-        },
-        [currentInputIndex],
-    );
-
-    const onKeyPress = useCallback(
-        (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-            if (e.nativeEvent.key === 'Backspace') {
-                if (otp[currentInputIndex.current!] === '') {
-                    focusPrevInput();
-                }
-            }
-        },
-        [otp],
-    );
-
-    return (
-        <XStack space>
-            {otp.map((digit, index) => (
-                <OtpTextField
-                    key={index}
-                    maxLength={1}
-                    isFilled={otp[index] !== ''}
-                    keyboardType="numeric"
-                    onChangeText={value => handleOtpChange(value, index)}
-                    value={digit}
-                    autoComplete="sms-otp"
-                    textContentType="oneTimeCode"
-                    placeholder="0"
-                    onKeyPress={onKeyPress}
-                    caretHidden
-                    ref={input => {
-                        if (input) {
-                            inputs.current[index] = input;
-                        }
-                    }}
-                />
-            ))}
-        </XStack>
-    );
-}
-
-export default OtpInput;
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 20,
+  },
+  input: {
+    width: 40,
+    height: 40,
+    borderColor: '#000',
+    borderWidth: 1,
+    borderRadius: 5,
+    textAlign: 'center',
+    fontSize: 18,
+  },
+});

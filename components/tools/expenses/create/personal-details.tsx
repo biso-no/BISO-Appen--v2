@@ -2,7 +2,7 @@ import { Text, XGroup, YStack, Input, Label, Button, YGroup } from 'tamagui'
 import { useState, useEffect } from 'react'
 import { getDocument, createDocument, updateDocument } from '@/lib/appwrite'
 import { useAuth } from '@/components/context/auth-provider'
-import { Models } from 'appwrite'
+import { Models } from 'react-native-appwrite'
 
 export function PersonalDetails({ user }: { user: Models.User<Models.Preferences> }) {
     

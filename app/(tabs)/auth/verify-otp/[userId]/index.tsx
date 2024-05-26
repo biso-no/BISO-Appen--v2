@@ -11,7 +11,7 @@ import {
 } from 'tamagui';
 import { FormCard } from '@/components/auth/layout';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import OtpInput from '@/components/ui/otp-input';
+import { OTPInput } from '@/components/ui/otp-input';
 
 
 /** ------ EXAMPLE ------ */
@@ -68,7 +68,6 @@ export default function SignInScreen() {
         </H1>
         <View flexDirection="column" gap="$3">
           <View flexDirection="column" gap="$1">
-          <OtpInput userId={userId.toString()} length={6}/>
           </View>
         </View>
         {errorMessage && (

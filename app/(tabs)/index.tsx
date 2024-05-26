@@ -32,7 +32,6 @@ export default function HomeScreen() {
             </Text>
           </View>
         </Pressable>
-      <H3>Discover the latest updates and events</H3>
       <Featured />
       <Discover />
       <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
