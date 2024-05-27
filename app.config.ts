@@ -43,7 +43,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
-    '@react-native-firebase/app',
     'expo-font',
     ['expo-notifications'],
     [
@@ -64,7 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: process.env.EAS_PROJECTID,
+      projectId: "c457ab17-1389-42bc-affd-800f0dd0768e"
     },
   },
   experiments: {
