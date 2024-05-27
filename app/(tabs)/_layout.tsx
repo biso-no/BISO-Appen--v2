@@ -6,7 +6,7 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { H5, Avatar } from 'tamagui';
-import { Home, UserRound, LogIn, Info, Settings } from '@tamagui/lucide-icons';
+import { Home, UserRound, LogIn, Info, Settings, Bell } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 
@@ -17,7 +17,6 @@ export default function TabLayout() {
   const isExpoGo = Constants.appOwnership === 'expo';
 
   useEffect(() => {
-    console.log("User ID: ", data?.$id);
     if (!isExpoGo && data?.$id && !isLoading) {
       setupPushNotifications(data.$id);
     }
@@ -59,10 +58,10 @@ export default function TabLayout() {
           headerTitle: () => <H5>Welcome to BISO</H5>,
           tabBarIcon: ({ color }) => <Home color={color} />,
           headerRight: () => (
-            <Link href="/modal" asChild>
+            <Link href="/notifications" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <Info
+                  <Bell
                     size={25}
                     color={Colors[colorScheme ?? 'light'].text}
                     style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
@@ -85,7 +84,7 @@ export default function TabLayout() {
         options={{
           title: '',
           tabBarIcon: ({ color }) => profileIcon(),
-          href: data?.$id ? 'profile/index' : null,
+          href: data?.$id ? 'profile/' : null,
         }}
       />
       <Tabs.Screen

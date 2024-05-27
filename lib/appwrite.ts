@@ -5,7 +5,7 @@ const client = new Client();
 
 client
     .setEndpoint('https://appwrite-rg044w0.biso.no/v1')
-    .setProject('biso')
+    .setProject('665313680028cb624457')
 
 
 const account = new Account(client);
@@ -32,11 +32,28 @@ export async function verifyOtp(userId: string, otp: string) {
     }
 
     const response = await account.createSession(userId, otp)
+    let profileStatus;
 
-    if (!response.$id) return null;
+    if (!response.$id) {
+        try {
+            const profile = await databases.getDocument('app', 'users', userId);
+            if (profile) {
+                profileStatus = true;
+            } else {
+                profileStatus = false;
+            }
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            profileStatus = false;
+        }
+    }
 
-    return response;
+    return {
+        user: response,
+        hasProfile: profileStatus
+    }
 }
+
 
 export async function getUser() {
     try {
@@ -47,7 +64,7 @@ export async function getUser() {
 
         if (user.$id) {
             try {
-                profile = await databases.getDocument('app', 'users', user.$id);
+                profile = await databases.getDocument('app', 'user', user.$id);
                 console.log("Profile Object: ", profile);
             } catch (error) {
                 console.error("Error fetching profile:", error);
@@ -78,12 +95,12 @@ export async function updateUserPreferences(preferences: string[]) {
 }
 
 export async function getNews() {
-    const response = await databases.listDocuments('app', 'news');
+    const response = await databases.listDocuments('app', 'post');
     return response;
 }
 
 export async function getEvents() {
-    const response = await databases.listDocuments('app', 'events');
+    const response = await databases.listDocuments('app', 'event');
     return response;
 }
 
@@ -135,7 +152,7 @@ export async function updateDocument(collectionId: string, documentId: string, d
 
 export async function registerDeviceToken(userId: string, token: string) {
     // Search for an existing document with the same userId and token
-    const searchResponse = await databases.listDocuments('app', 'devices', [
+    const searchResponse = await databases.listDocuments('app', 'device', [
         Query.equal('user_id', userId),
         Query.equal('token', token)
     ]);
@@ -147,7 +164,7 @@ export async function registerDeviceToken(userId: string, token: string) {
     } else {
         account.createPushTarget(ID.unique(), token);
         // Token not registered, create a new document
-        const createResponse = await databases.createDocument('app', 'devices', ID.unique(), {
+        const createResponse = await databases.createDocument('app', 'device', ID.unique(), {
             user_id: userId,
             token: token
         });
@@ -173,6 +190,7 @@ export async function uploadFile(bucketId: string, file: File) {
         console.error("Error uploading file:", error);
     }
 }
+
 
 export function getUserAvatar(fileId: string) {
 

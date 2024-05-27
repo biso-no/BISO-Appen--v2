@@ -26,7 +26,11 @@ export default function LoginScreen() {
     // Handle OTP submission
     const response = await verifyOtp(userId, otp);
     if (response) {
-      push('/profile');
+      if (response.hasProfile) {
+        push('/profile');
+      } else {
+        push('/onboarding');
+      }
     }
   }
 

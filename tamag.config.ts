@@ -1,11 +1,10 @@
-import { createTamagui } from 'tamagui'
-import { createInterFont } from '@tamagui/font-inter'
-import { shorthands } from '@tamagui/shorthands'
-import { tokens } from '@tamagui/themes/v3'
-import { themes } from '@tamagui/themes/v3-themes'
-import { createMedia } from '@tamagui/react-native-media-driver'
-
-import { animations } from '@tamagui/config'
+import { createTamagui } from 'tamagui';
+import { createInterFont } from '@tamagui/font-inter';
+import { shorthands } from '@tamagui/shorthands';
+import { tokens } from '@tamagui/themes/v3';
+import { themes } from '@tamagui/themes/v3-themes';
+import { createMedia } from '@tamagui/react-native-media-driver';
+import { createAnimations } from '@tamagui/animations-moti';
 
 const headingFont = createInterFont({
   size: {
@@ -37,7 +36,7 @@ const headingFont = createInterFont({
   face: {
     700: { normal: 'InterBold' },
   },
-})
+});
 
 const bodyFont = createInterFont(
   {
@@ -49,20 +48,35 @@ const bodyFont = createInterFont(
     sizeSize: (size) => Math.round(size * 1.1),
     sizeLineHeight: (size) => Math.round(size * 1.1 + (size > 20 ? 10 : 10)),
   }
-)
+);
+
+const animations = createAnimations({
+  fast: {
+    type: 'spring',
+    damping: 20,
+    mass: 1.2,
+    stiffness: 250,
+  },
+  medium: {
+    type: 'spring',
+    damping: 10,
+    mass: 0.9,
+    stiffness: 100,
+  },
+  slow: {
+    type: 'spring',
+    damping: 20,
+    stiffness: 60,
+  },
+});
 
 export const config = createTamagui({
   defaultFont: 'body',
   animations,
   shouldAddPrefersColorThemes: true,
   themeClassNameOnRoot: true,
-  
-  // highly recommended to turn this on if you are using shorthands
-  // to avoid having multiple valid style keys that do the same thing
-  // we leave it off by default because it can be confusing as you onboard.
   onlyAllowShorthands: false,
   shorthands,
-
   fonts: {
     body: bodyFont,
     heading: headingFont,
@@ -88,6 +102,6 @@ export const config = createTamagui({
     hoverNone: { hover: 'none' },
     pointerCoarse: { pointer: 'coarse' },
   }),
-})
+});
 
-export type AppConfig = typeof config
+export type AppConfig = typeof config;

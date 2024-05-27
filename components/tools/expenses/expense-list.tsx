@@ -1,10 +1,11 @@
-import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack } from "tamagui";
+import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack, Image } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { ExpenseFilter } from "./filter";
 import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { getDocuments } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
+import { Wallet } from "@tamagui/lucide-icons";
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -51,6 +52,18 @@ function ExpenseCard({ expense }: { expense: Models.Document }) {
     );
 }
 
+function NoExpensesPlaceholder() {
+    return (
+        <YStack alignItems="center" justifyContent="center" marginTop={50} padding="$4">
+            <Wallet size={48} />
+            <Text fontSize={24} fontWeight="bold">No Expenses Found</Text>
+            <Paragraph fontSize={18} color="$color7" textAlign="center" marginTop="$2">
+                It looks like you haven't submitted any expenses yet. Start by adding your first expense.
+            </Paragraph>
+        </YStack>
+    );
+}
+
 export function ExpenseList() {
     const [sortingOption, setSortingOption] = useState("date descending");
     const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();
@@ -89,7 +102,7 @@ export function ExpenseList() {
 
     useEffect(() => {
         async function fetchExpenses() {
-            const fetchedExpenses = await getDocuments('expenses', filters);
+            const fetchedExpenses = await getDocuments('expense', filters);
             setExpenses(fetchedExpenses);
             console.log(fetchedExpenses);
         }
@@ -109,32 +122,32 @@ export function ExpenseList() {
     return (
         <ScrollView>
             <YStack space="$5" alignItems="center" justifyContent="center">
-                <YStack space="$4" alignItems="flex-start" justifyContent="flex-start" marginTop={20}>
-                <Paragraph fontSize={22}>
-                    View and manage your submitted expenses.
-                </Paragraph>
-                </YStack>
-                <XGroup space="$4">
-                <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
-                <CustomSelect
-                        items={[
-                        { name: "Date Ascending" },
-                        { name: "Date Descending" },
-                        { name: "Amount Ascending" },
-                        { name: "Amount Descending" },
-                        ]}
-                        onValueChange={(value) => setSortingOption(value)} // Convert value to SortingOptions
-                        label="Sort by"
-                        initialSelected={sortingOption}
-                    />
+                <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
+                    <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
+                    <View flex={1} maxWidth="300px">
+                        <CustomSelect
+                            items={[
+                                { name: "Date Ascending" },
+                                { name: "Date Descending" },
+                                { name: "Amount Ascending" },
+                                { name: "Amount Descending" },
+                            ]}
+                            onValueChange={(value) => setSortingOption(value)} // Convert value to SortingOptions
+                            label="Sort by"
+                            initialSelected={sortingOption}
+                        />
+                    </View>
                 </XGroup>
-                {expenses?.documents?.length === 0 && <Text>No expenses found.</Text>}
-                {expenses?.documents?.map((expense) => (
-                    <ExpenseCard
-                        key={expense.$id} // Use a unique identifier instead of title
-                        expense={expense}
-                    />
-                ))}
+                {expenses?.documents?.length === 0 ? (
+                    <NoExpensesPlaceholder />
+                ) : (
+                    expenses?.documents?.map((expense) => (
+                        <ExpenseCard
+                            key={expense.$id} // Use a unique identifier instead of title
+                            expense={expense}
+                        />
+                    ))
+                )}
             </YStack>
         </ScrollView>
     );

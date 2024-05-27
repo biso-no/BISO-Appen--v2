@@ -47,9 +47,12 @@ export const useAppwriteAccount = () => {
         }
     };
 
-    const updatePrefs = async (preferences: string[]) => {
+    const updatePrefs = async (preferences: Models.Preferences) => {
         try {
-            const response = await updateUserPreferences(preferences);
+            // Convert Models.Preferences to an array of strings
+            const preferencesArray: string[] = Object.values(preferences);
+    
+            const response = await updateUserPreferences(preferencesArray);
             setData(response); // Update the local state with the new data
             setError(null);
         } catch (err: unknown) {

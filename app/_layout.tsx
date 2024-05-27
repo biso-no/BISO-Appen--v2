@@ -9,6 +9,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
 import { AuthProvider } from '@/components/context/auth-provider';
+import * as Updates from 'expo-updates';
+import Constants from 'expo-constants';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -22,7 +24,7 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
+  const isExpoGo = Constants.appOwnership === 'expo';
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -51,6 +53,26 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const isExpoGo = Constants.appOwnership === 'expo';
+useEffect(() => {
+  if (!isExpoGo) {
+  async function onFetchUpdateAsync() {
+    try {
+      const update = await Updates.checkForUpdateAsync();
+
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+      }
+    } catch (error) {
+      // You can also add an alert() to see the error message in case of an error when fetching updates.
+      alert(`Error fetching latest Expo update: ${error}`);
+
+    }
+  }
+  onFetchUpdateAsync();
+  }
+}, []);
 
   return (
     <AuthProvider>
@@ -60,6 +82,7 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="onboarding/index" options={{ presentation: 'modal', headerTitle: 'Welcome to BISO' }} />
       </Stack>
       </Theme>
     </ThemeProvider>
