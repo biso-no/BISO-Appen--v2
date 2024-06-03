@@ -9,6 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/images/icon.png',
   scheme: 'nymheien',
   userInterfaceStyle: 'automatic',
+  backgroundColor: "#fff",
   splash: {
     image: './assets/images/splash.png',
     resizeMode: 'contain',
@@ -64,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: process.env.EAS_PROJECTID,
+      projectId: "c457ab17-1389-42bc-affd-800f0dd0768e"
     },
   },
   experiments: {

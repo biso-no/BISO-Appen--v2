@@ -5,7 +5,9 @@ import { Input } from '@/components/auth/input';
 import { useAppwriteAccount } from '@/components/context/auth-context';
 import { createDocument, updateDocument } from '@/lib/appwrite';
 import CampusSelector from '@/components/SelectCampus';
+import DepartmentSelector from '@/components/SelectDepartments';
 import { MotiView } from 'moti';
+import { useLocalSearchParams } from 'expo-router';
 
 enum Campus {
     Bergen = "bergen",
@@ -19,15 +21,20 @@ interface UserPreferences {
     features: string[];
     studentID: string;
     isVolunteer: boolean;
-    department: string;
+    departments: string[];
 }
 
+
+
 export default function Onboarding() {
+
+    const params = useLocalSearchParams<{ initialStep: string }>();
+    
     const [preferences, setPreferences] = useState<UserPreferences>({
         features: [],
         studentID: '',
         isVolunteer: false,
-        department: '',
+        departments: [],
     });
     const { data, profile, isLoading, error, updateName, updatePrefs } = useAppwriteAccount();
 
@@ -40,7 +47,7 @@ export default function Onboarding() {
 
     const [campus, setCampus] = useState<Campus | null>(null);
 
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(Number(params.initialStep) || 1);
     const [documentId, setDocumentId] = useState<string | null>(null);
 
     const handleNext = async () => {
@@ -87,17 +94,19 @@ export default function Onboarding() {
         setPreferences({ ...preferences, isVolunteer });
     };
 
-    const handleDepartmentChange = (department: string) => {
-        setPreferences({ ...preferences, department });
+    const handleDepartmentChange = (departments: string[]) => {
+        setPreferences({ ...preferences, departments });
     };
 
     const handleUpdate = async (field: string, value: any) => {
-        if (documentId) {
+        if (documentId && field !== 'campus') {
             try {
                 await updateDocument('user', documentId, { [field]: value });
             } catch (err) {
                 console.error(err);
             }
+        } else if (field === 'campus') {
+            updatePrefs({ [field]: value });
         }
     };
 
@@ -135,6 +144,17 @@ export default function Onboarding() {
                     >
                         <View>
                             <CampusSelector onSelect={handleCampusChange} />
+                        </View>
+                    </MotiView>
+
+                    <MotiView
+                        from={{ opacity: 0 }}
+                        animate={{ opacity: step === 3 ? 1 : 0 }}
+                        exit={{ opacity: 0 }}
+                        style={{ display: step === 3 ? 'flex' : 'none' }}
+                    >
+                        <View>
+                            {campus && <DepartmentSelector campus={campus} onSelect={handleDepartmentChange} />}
                         </View>
                     </MotiView>
 
@@ -227,7 +247,7 @@ export default function Onboarding() {
                             </Input>
                         </View>
                     </MotiView>
-
+{/*
                     <MotiView
                         from={{ opacity: 0 }}
                         animate={{ opacity: step === 5 ? 1 : 0 }}
@@ -249,7 +269,7 @@ export default function Onboarding() {
                                         <Input.Area
                                             id="department"
                                             placeholder="Enter your department"
-                                            value={preferences.department}
+                                            value={preferences.departments[0]}
                                             onChangeText={handleDepartmentChange}
                                         />
                                     </Input.Box>
@@ -257,6 +277,7 @@ export default function Onboarding() {
                             )}
                         </View>
                     </MotiView>
+*/}
                 </YStack>
             </FormCard>
             <XStack
@@ -287,7 +308,7 @@ export default function Onboarding() {
                             handleNext();
                         } else if (step === 5) {
                             handleUpdate('isVolunteer', preferences.isVolunteer);
-                            handleUpdate('department', preferences.department);
+                           // handleUpdate('department', preferences.department);
                             // Add final submit logic here
                         }
                     }}

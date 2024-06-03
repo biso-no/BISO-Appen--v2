@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   input: {
-    width: 40,
-    height: 40,
+    width: 50, // Increased width
+    height: 50, // Increased height
     borderColor: '#000',
     borderWidth: 1,
     borderRadius: 5,

@@ -9,12 +9,22 @@ import { H5, Avatar } from 'tamagui';
 import { Home, UserRound, LogIn, Info, Settings, Bell } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
+import { useTheme } from 'tamagui';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { data, profile, isLoading } = useAuth();
   const avatarId = profile?.avatar;
   const isExpoGo = Constants.appOwnership === 'expo';
+
+  const theme = useTheme();
+
+    if (!theme.background) return "#fff"
+
+  const backgroundColor = theme.background.val
+
+
+  
 
   useEffect(() => {
     if (!isExpoGo && data?.$id && !isLoading) {
@@ -49,6 +59,9 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: useClientOnlyValue(false, true),
+      }}
+      sceneContainerStyle={{
+        backgroundColor: backgroundColor
       }}
     >
       <Tabs.Screen

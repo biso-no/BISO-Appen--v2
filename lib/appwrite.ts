@@ -27,32 +27,40 @@ export async function signIn(email: string) {
 
 export async function verifyOtp(userId: string, otp: string) {
     
-    if (!userId && !otp) {
-        throw new Error("Missing User ID or OTP. Contact System Admin if the error persists.")
+    if (!userId || !otp) {
+        throw new Error("Missing User ID or OTP. Contact System Admin if the error persists.");
     }
 
-    const response = await account.createSession(userId, otp)
-    let profileStatus;
+    let response;
+    let profileStatus = false;
+
+    try {
+        response = await account.createSession(userId, otp);
+    } catch (error) {
+        console.error("Error creating session:", error);
+        return {
+            user: null,
+            hasProfile: false
+        };
+    }
 
     if (!response.$id) {
         try {
             const profile = await databases.getDocument('app', 'users', userId);
             if (profile) {
                 profileStatus = true;
-            } else {
-                profileStatus = false;
             }
         } catch (error) {
             console.error("Error fetching profile:", error);
-            profileStatus = false;
         }
     }
 
     return {
         user: response,
         hasProfile: profileStatus
-    }
+    };
 }
+
 
 
 export async function getUser() {

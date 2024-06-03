@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Calendar, Newspaper, Hash, ShoppingBag } from "@tamagui/lucide-icons";
 import { News } from "./news";
 import { Events } from "./events";
+import { MyStack } from "../ui/MyStack";
 
 interface Category {
     title: string;
@@ -29,7 +30,7 @@ export function Discover() {
 
     const [selectedCategory, setSelectedCategory] = useState<Category>(categories[0]);
     return (
-        <YStack width="90%" justifyContent="center" alignItems="center" space="$4">
+        <MyStack width="90%" justifyContent="center" alignItems="center" space="$4">
             <XStack space="$4">
             <Categories
                 categories={categories}
@@ -43,6 +44,6 @@ export function Discover() {
             {selectedCategory.title === "Community" && <Community />}
             {selectedCategory.title === "Shop" && <Shop />}
             */}
-        </YStack>
+        </MyStack>
     );
 }

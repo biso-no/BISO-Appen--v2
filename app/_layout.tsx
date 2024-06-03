@@ -11,6 +11,7 @@ import { config } from '../tamag.config';
 import { AuthProvider } from '@/components/context/auth-provider';
 import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
+import 'react-native-gesture-handler';
 
 export {
   // Catch any errors thrown by the Layout component.

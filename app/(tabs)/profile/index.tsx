@@ -1,4 +1,4 @@
-import { View, H1, H2, H3, Text, Button, YStack, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch, YGroup, Label, Input, ScrollView } from 'tamagui';
+import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch, YGroup, Label, Input, ScrollView, YStack } from 'tamagui';
 import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
@@ -8,6 +8,7 @@ import { getUserAvatar, updateDocument, updatePhoneNumber } from '@/lib/appwrite
 import { useEffect, useRef, useState } from 'react'
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
+import { MyStack } from '@/components/ui/MyStack';
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs
@@ -22,7 +23,7 @@ export default function ProfileScreen() {
   const avatar = getUserAvatar(avatarId)
 
   return (
-    <YStack flex={1} padding="$4">
+    <MyStack flex={1} padding="$4">
       <Card padding="$4" borderRadius="$3" marginBottom="$4">
         <YStack alignItems="center">
           <Avatar circular size={isMobile ? 100 : 150}>
@@ -64,7 +65,7 @@ export default function ProfileScreen() {
         value="tab1"
         backgroundColor={"$background"}
         >
-          {profile ? <Profile profile={profile} user={data} /> : <NoProfile />}
+          {profile ? <Profile profile={profile} user={data} /> : <NoProfile data={data}/>}
         </TabsContent>
 
         <TabsContent value="tab2">
@@ -75,7 +76,7 @@ export default function ProfileScreen() {
           <H5 fontSize="$7">Notifications</H5>
         </TabsContent>
       </Tabs>
-    </YStack>
+    </MyStack>
   );
 };
 
@@ -142,7 +143,7 @@ const EditProfileDetails = ({ profile, setIsEditing }: { profile: Models.Documen
   return (
     <ScrollView automaticallyAdjustsScrollIndicatorInsets width={"100%"}>
       <FormCard>
-        <YStack space="$4" padding="$4" width={'100%'}>
+        <MyStack space="$4" padding="$4" width={'100%'}>
 
           <YGroup width="100%">
             <Label>Name</Label>
@@ -231,7 +232,7 @@ const EditProfileDetails = ({ profile, setIsEditing }: { profile: Models.Documen
             />
           </YGroup>
           <Button onPress={handleSubmit}>Submit</Button>
-        </YStack>
+        </MyStack>
       </FormCard>
     </ScrollView>
   )
@@ -241,7 +242,7 @@ const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.D
 
   return (
     <FormCard>
-      <YStack
+      <MyStack
         alignItems='stretch'
         gap="$4"
       >
@@ -256,7 +257,7 @@ const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.D
         <Text fontSize="$6">City: {profile?.city}</Text>
         <Text fontSize="$6">Zip Code: {profile?.zipCode}</Text>
         <Text fontSize="$6">Bank Account: {profile?.bankAccount}</Text>
-      </YStack>
+      </MyStack>
     </FormCard>
   )
 }
@@ -276,16 +277,23 @@ function Profile({ profile, user }: { profile: Models.Document | null, user: Mod
   )
 }
 
-const NoProfile = () => {
+const NoProfile = ({ data }: { data: Models.User<Models.Preferences> | null }) => {
   const router = useRouter();
 
   return (
-    <YStack space="$4" padding="$4" alignItems="center" justifyContent="center">
+    <MyStack space="$4" padding="$4" alignItems="center" justifyContent="center">
       <H5 fontSize="$7">No Profile Found</H5>
       <Text fontSize="$6" textAlign="center">
         It looks like you haven't set up your profile yet. Click the button below to start the onboarding process and set up your profile.
       </Text>
-      <Button onPress={() => router.navigate('/onboarding/')}>Go to Onboarding</Button>
-    </YStack>
+      <Button onPress={() => {
+        if (data?.name) {
+          router.navigate('/onboarding/?initialStep=2');
+        }
+        else {
+          router.navigate('/onboarding/');
+        }
+      }}>Go to Onboarding</Button>
+    </MyStack>
   );
 }

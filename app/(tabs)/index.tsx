@@ -7,6 +7,7 @@ import { ScrollView } from 'tamagui';
 import { useState } from 'react';
 import { Search } from '@/components/home/search';
 import { Search as SearchIcon } from '@tamagui/lucide-icons';
+import { MyStack } from '@/components/ui/MyStack';
 
 export default function HomeScreen() {
 
@@ -14,7 +15,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView>
-    <YStack alignItems={"center"}>
+    <MyStack alignItems={"center"}>
     <Pressable onPress={() => setSearchModalOpen(true)} style={{width: "90%", marginTop: 10}}>
           <View style={{
             borderWidth: 1,
@@ -32,10 +33,10 @@ export default function HomeScreen() {
             </Text>
           </View>
         </Pressable>
-      <Featured />
+      {/* <Featured /> */}
       <Discover />
       <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
-    </YStack>
+    </MyStack>
     </ScrollView>
   );
 }
