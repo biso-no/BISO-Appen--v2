@@ -25,6 +25,11 @@ export async function signIn(email: string) {
     return userId;
 }
 
+export async function getUserPreferences() {
+    const response = await account.getPrefs();
+    return response;
+}
+
 export async function verifyOtp(userId: string, otp: string) {
     
     if (!userId || !otp) {
