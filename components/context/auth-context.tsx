@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUser, updateUserName, updateUserPreferences } from '@/lib/appwrite';
+import { getUser, updateUserName, getUserPreferences, updateUserPreferences } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 
 export const useAppwriteAccount = () => {
@@ -47,23 +47,28 @@ export const useAppwriteAccount = () => {
         }
     };
 
-    const updatePrefs = async (preferences: Models.Preferences) => {
+    const updateUserPrefs = async (key: string, value: any) => {
         try {
-            // Convert Models.Preferences to an array of strings
-            const preferencesArray: string[] = Object.values(preferences);
+            // Get current preferences
+            const currentPrefs = await getUserPreferences();
     
-            const response = await updateUserPreferences(preferencesArray);
-            setData(response); // Update the local state with the new data
-            setError(null);
+            // Update the specific key with the new value
+            const updatedPrefs = {
+                ...currentPrefs,
+                [key]: value,
+            };
+    
+            // Update preferences in Appwrite
+            const response = await updateUserPreferences(updatedPrefs);
+    
+            // Handle the response, e.g., update local state or show a message
+            console.log('Preferences successfully updated', response);
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('An unknown error occurred');
-            }
+            // Handle errors, e.g., show an error message
+            console.error('Error updating preferences', err);
         }
     };
 
-
-    return { data, isLoading, error, updateName, updatePrefs, profile };
+    
+    return { data, isLoading, error, updateName, updateUserPrefs, profile };
 };

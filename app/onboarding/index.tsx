@@ -8,6 +8,10 @@ import CampusSelector from '@/components/SelectCampus';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { MotiView } from 'moti';
 import { useLocalSearchParams } from 'expo-router';
+import { Step1 } from '@/components/onboarding/step1';
+import { Step2 } from '@/components/onboarding/step2';
+import { Step3 } from '@/components/onboarding/step3';
+import { Step4 } from '@/components/onboarding/step4';
 
 enum Campus {
     Bergen = "bergen",
@@ -36,14 +40,13 @@ export default function Onboarding() {
         isVolunteer: false,
         departments: [],
     });
-    const { data, profile, isLoading, error, updateName, updatePrefs } = useAppwriteAccount();
+    const { data, profile, isLoading, error, updateName, updateUserPrefs } = useAppwriteAccount();
 
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [city, setCity] = useState('');
     const [zipCode, setZipCode] = useState('');
-    const [bankAccount, setBankAccount] = useState('');
 
     const [campus, setCampus] = useState<Campus | null>(null);
 
@@ -62,6 +65,14 @@ export default function Onboarding() {
         }
     };
 
+    const handleUpdateName = async (name: string) => {
+        const result = await createDocument('user', {
+            name,
+        }, data?.$id);
+        setDocumentId(result.$id);
+        updateName(name);
+    };
+
     const handleNextStep = () => {
         setStep(step + 1);
     };
@@ -70,9 +81,6 @@ export default function Onboarding() {
         setStep(step - 1);
     };
 
-    const handleNameChange = (name: string) => {
-        setName(name);
-    };
 
     const handleCampusChange = (campus: string | null) => {
         setPreferences({ ...preferences, campus: campus ? (campus as Campus) : Campus.Oslo });
@@ -90,13 +98,6 @@ export default function Onboarding() {
         setPreferences({ ...preferences, studentID });
     };
 
-    const handleVolunteerChange = (isVolunteer: boolean) => {
-        setPreferences({ ...preferences, isVolunteer });
-    };
-
-    const handleDepartmentChange = (departments: string[]) => {
-        setPreferences({ ...preferences, departments });
-    };
 
     const handleUpdate = async (field: string, value: any) => {
         if (documentId && field !== 'campus') {
@@ -106,112 +107,21 @@ export default function Onboarding() {
                 console.error(err);
             }
         } else if (field === 'campus') {
-            updatePrefs({ [field]: value });
+            updateUserPrefs(field, value);
         }
     };
+
+    const firstName = name.split(' ')[0];
 
     return (
         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" minHeight="100vh">
             <FormCard>
                 <YStack flex={1} justifyContent="center" alignItems="stretch" width="100%" gap="$4">
-                    <H1>Welcome to BISO</H1>
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: step === 1 ? 1 : 0 }}
-                        exit={{ opacity: 0 }}
-                        style={{ display: step === 1 ? 'flex' : 'none' }}
-                    >
-                        <View>
-                            <Input size="$4">
-                                <Input.Label htmlFor="name">Name</Input.Label>
-                                <Input.Box>
-                                    <Input.Area
-                                        id="name"
-                                        placeholder="Enter your name"
-                                        value={name}
-                                        onChangeText={handleNameChange}
-                                    />
-                                </Input.Box>
-                            </Input>
-                        </View>
-                    </MotiView>
-
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: step === 2 ? 1 : 0 }}
-                        exit={{ opacity: 0 }}
-                        style={{ display: step === 2 ? 'flex' : 'none' }}
-                    >
-                        <View>
-                            <CampusSelector onSelect={handleCampusChange} />
-                        </View>
-                    </MotiView>
-
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: step === 3 ? 1 : 0 }}
-                        exit={{ opacity: 0 }}
-                        style={{ display: step === 3 ? 'flex' : 'none' }}
-                    >
-                        <View>
-                            {campus && <DepartmentSelector campus={campus} onSelect={handleDepartmentChange} />}
-                        </View>
-                    </MotiView>
-
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: step === 3 ? 1 : 0 }}
-                        exit={{ opacity: 0 }}
-                        style={{ display: step === 3 ? 'flex' : 'none' }}
-                    >
-                        <View>
-                            <Input size="$4">
-                                <Input.Label htmlFor="phone">Phone</Input.Label>
-                                <Input.Box>
-                                    <Input.Area
-                                        id="phone"
-                                        placeholder="Enter your phone number"
-                                        value={phone}
-                                        keyboardType='phone-pad'
-                                        onChangeText={setPhone}
-                                    />
-                                </Input.Box>
-                            </Input>
-                            <Input size="$4">
-                                <Input.Label htmlFor="address">Address</Input.Label>
-                                <Input.Box>
-                                    <Input.Area
-                                        id="address"
-                                        placeholder="Enter your address"
-                                        value={address}
-                                        onChangeText={setAddress}
-                                    />
-                                </Input.Box>
-                            </Input>
-                            <Input size="$4">
-                                <Input.Label htmlFor="city">City</Input.Label>
-                                <Input.Box>
-                                    <Input.Area
-                                        id="city"
-                                        placeholder="Enter your city"
-                                        value={city}
-                                        onChangeText={setCity}
-                                    />
-                                </Input.Box>
-                            </Input>
-                            <Input size="$4">
-                                <Input.Label htmlFor="zipCode">Zip Code</Input.Label>
-                                <Input.Box>
-                                    <Input.Area
-                                        id="zipCode"
-                                        placeholder="Enter your zip code"
-                                        value={zipCode}
-                                        onChangeText={setZipCode}
-                                    />
-                                </Input.Box>
-                            </Input>
-                        </View>
-                    </MotiView>
+                    <H1>{name ? `Hi, ${firstName}!` : 'Welcome!'}</H1>
+                        <Step1 step={step} name={name} setName={setName} />
+                        <Step2 step={step} />
+                        <Step3 step={step} campus='bergen' />
+                        <Step4 step={step} />
 
                     <MotiView
                         from={{ opacity: 0 }}
@@ -292,15 +202,15 @@ export default function Onboarding() {
                 <Button
                     onPress={() => {
                         if (step === 1) {
+                            handleUpdateName(name);
                             handleNext();
                         } else if (step === 2) {
-                            handleUpdate('campus', preferences.campus);
                             handleNext();
                         } else if (step === 3) {
                             handleUpdate('phone', phone);
                             handleUpdate('address', address);
                             handleUpdate('city', city);
-                            handleUpdate('zipCode', zipCode);
+                            handleUpdate('zip', zipCode);
                             handleNext();
                         } else if (step === 4) {
                             handleUpdate('studentID', preferences.studentID);
