@@ -97,11 +97,6 @@ export async function updatePhoneNumber(userId: string, phoneNumber: string) {
     return response;
 }
 
-export async function getUserPreferences() {
-    const response = await account.getPrefs();
-    return response;
-}
-
 export async function updateUserPreferences(preferences: Models.Preferences) {
     const response = await account.updatePrefs(preferences);
     return response;
