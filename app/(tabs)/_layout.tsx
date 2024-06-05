@@ -10,6 +10,16 @@ import { Home, UserRound, LogIn, Info, Settings, Bell } from '@tamagui/lucide-ic
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
+import * as Notifications from 'expo-notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -27,10 +37,28 @@ export default function TabLayout() {
   
 
   useEffect(() => {
+    console.log('isExpoGo', isExpoGo);
     if (!isExpoGo && data?.$id && !isLoading) {
       setupPushNotifications(data.$id);
     }
-  }, [data?.$id]);
+
+    // Listener for receiving notifications
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received!', notification);
+    });
+
+    // Listener for handling interactions with notifications
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response received!', response);
+    });
+
+    // Unsubscribe from listeners when component unmounts
+    return () => {
+      Notifications.removeNotificationSubscription(subscription);
+      Notifications.removeNotificationSubscription(responseSubscription);
+    };
+  }, [data?.$id, isExpoGo, isLoading]);
+
 
   const profileIcon = () => {
     if (isLoading) {

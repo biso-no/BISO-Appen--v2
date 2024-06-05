@@ -1,45 +1,58 @@
 import { registerDeviceToken } from './appwrite';
 import { Platform, PermissionsAndroid } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 // This function could be called from your app's entry point or after a user logs in
 export async function setupPushNotifications(userId: string) {
   await registerForPushNotificationsAsync(userId);
-  setNotificationListeners();
 }
 
 async function registerForPushNotificationsAsync(userId: string) {
+  let token;
 
   if (Platform.OS === 'android') {
-    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-
-    await messaging().registerDeviceForRemoteMessages();
-
-    await registerDeviceToken(userId, await messaging().getToken());
-
-    
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
   }
 
-  if (Platform.OS === 'ios') {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      await registerDeviceToken(userId, await messaging().getToken());
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
     }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    // Learn more about projectId:
+    // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+    // EAS projectId is used here.
+    try {
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      if (!projectId) {
+        throw new Error('Project ID not found');
+      }
+      token = (
+        await Notifications.getDevicePushTokenAsync()
+      ).data;
+      console.log(token);
+    } catch (e) {
+      token = `${e}`;
+    }
+  } else {
+    alert('Must use physical device for Push Notifications');
   }
-}
-  
 
-
-function setNotificationListeners() {
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
-    console.log('Message handled in the background!', remoteMessage);
-  });
-
-  messaging().onMessage(async remoteMessage => {
-    console.log('A new FCM message arrived!', remoteMessage);
-  });
+  if (token) {
+    await registerDeviceToken(userId, token);
+  }
 }
