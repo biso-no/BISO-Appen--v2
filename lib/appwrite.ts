@@ -25,6 +25,10 @@ export async function signIn(email: string) {
     return userId;
 }
 
+export async function signOut() {
+    await account.deleteSession("current");
+}
+
 export async function getUserPreferences() {
     const response = await account.getPrefs();
     return response;
@@ -51,7 +55,7 @@ export async function verifyOtp(userId: string, otp: string) {
 
     if (!response.$id) {
         try {
-            const profile = await databases.getDocument('app', 'users', userId);
+            const profile = await databases.getDocument('app', 'user', userId);
             if (profile) {
                 profileStatus = true;
             }
@@ -208,7 +212,7 @@ export async function uploadFile(bucketId: string, file: File) {
 export function getUserAvatar(fileId: string) {
 
     const result = avatars.getImage(
-        'https://appwrite-a0w8s4o.biso.no/v1/storage/buckets/avatar/files/' + fileId + '/view?project=biso',
+        'https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatar/files/' + fileId + '/view?project=biso',
         100,
         100
     )
