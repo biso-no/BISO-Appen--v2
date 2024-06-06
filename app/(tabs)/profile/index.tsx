@@ -10,16 +10,58 @@ import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
 
+type Notifications = {
+  newEvents: boolean;
+  newPosts: boolean;
+  messages: boolean;
+  expenses: boolean;
+};
+
+type Department = string;
+
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
   const { data, profile: initialProfile } = useAuth();
   const [profile, setProfile] = useState(initialProfile);
+  const [notifications, setNotifications] = useState<Notifications>({
+    newEvents: false,
+    newPosts: false,
+    messages: false,
+    expenses: false,
+  });
+  const [departments, setDepartments] = useState<Department[]>([]);
+
   const avatarId = profile?.avatar;
   const avatar = getUserAvatar(avatarId);
 
-  const updateProfile = (newProfile) => {
+  const updateProfile = (newProfile: any) => {
     setProfile(newProfile);
   };
+
+  const useInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('');
+  };
+
+  const toggleNotification = (type: keyof Notifications) => {
+    setNotifications((prev) => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const updateDepartments = (department: Department) => {
+    setDepartments((prev) => {
+      if (prev.includes(department)) {
+        return prev.filter((dep) => dep !== department);
+      } else {
+        return [...prev, department];
+      }
+    });
+  };
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <ScrollView>
@@ -28,7 +70,9 @@ export default function ProfileScreen() {
           <YStack alignItems="center">
             <Avatar circular size={isMobile ? 100 : 150}>
               <Avatar.Image src={avatar.toString()} />
-              <Avatar.Fallback backgroundColor="$blue10" />
+              <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
+                <Text fontSize={40} >{useInitials(data?.name)}</Text>
+              </Avatar.Fallback>
             </Avatar>
             <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
             <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
@@ -70,13 +114,46 @@ export default function ProfileScreen() {
           </TabsContent>
 
           <TabsContent value="tab3">
-            <H5 fontSize="$7">Notifications</H5>
+            <MyStack space="$4" padding="$4" alignItems="center" justifyContent="center">
+              <H3>Notifications</H3>
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Label>New Events</Label>
+                  <Switch checked={notifications.newEvents} onCheckedChange={() => toggleNotification('newEvents')} />
+                </XStack>
+                <Separator />
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Label>New Posts</Label>
+                  <Switch checked={notifications.newPosts} onCheckedChange={() => toggleNotification('newPosts')} />
+                </XStack>
+                <Separator />
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Label>Messages</Label>
+                  <Switch checked={notifications.messages} onCheckedChange={() => toggleNotification('messages')} />
+                </XStack>
+                <Separator />
+                <XStack alignItems="center" justifyContent="space-between">
+                  <Label>Expenses</Label>
+                  <Switch checked={notifications.expenses} onCheckedChange={() => toggleNotification('expenses')} />
+                </XStack>
+              <Separator />
+              <H3>Departments</H3>
+              <YStack space="$2">
+                {/* Replace with actual departments list */}
+                {['Marketing', 'Sales', 'Engineering', 'HR'].map((department) => (
+                  <XStack alignItems="center" justifyContent="space-between" key={department}>
+                    <Label>{department}</Label>
+                    <Switch checked={departments.includes(department)} onCheckedChange={() => updateDepartments(department)} />
+                  </XStack>
+                ))}
+              </YStack>
+            </MyStack>
           </TabsContent>
         </Tabs>
       </MyStack>
     </ScrollView>
   );
 }
+
 
 const TabsContent = (props: TabsContentProps) => (
   <Tabs.Content

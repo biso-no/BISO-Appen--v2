@@ -18,27 +18,27 @@ export function Events() {
     }, []);
 
     const capitalizeFirstLetter = (str: string) => {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      };
+        return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    };
 
-      const useEventImageUri = (imageId: string) => {
-        return `https://appwrite-rg044w0.biso.no/v1/storage/buckets/events/files/${imageId}/view?project=biso`
-      }
+    const useEventImageUri = (imageId: string) => {
+        return process.env.EXPO_PUBLIC_APPWRITE_URI + `storage/buckets/event/files/${imageId}/view?project=665313680028cb624457`
+    }
 
-      //Display in a grid of 2 columns. One card for each event
+    //Display in a grid of 2 columns. One card for each event
 
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
             <Button>See all</Button>
             </XStack>
-            <XStack space="$3">
+            <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {events.documents.map((event) => (
                     <Card
                         key={event.$id}
                         backgroundColor="$backgroundHover"
                         bordered
-                        width={180}
+                        width={380}
                     >
                         <Card.Header>
                             <Image
@@ -52,10 +52,14 @@ export function Events() {
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
                             <Paragraph>{capitalizeFirstLetter(event.campus)}</Paragraph>
-                            <Paragraph>{getFormattedDateFromString(event.$createdAt)}</Paragraph>
+
                             </XStack>
                             <H6>{event.title}</H6>
+                            <XStack space="$2" alignItems="center" justifyContent="space-between">
                             {event.price > 0 &&<Paragraph>{event.price} kr</Paragraph>}
+                            <Paragraph>·</Paragraph>
+                            <Paragraph>{getFormattedDateFromString(event.event_date)}</Paragraph>
+                            </XStack>
                         </YStack>
                         </Card.Footer>
                     </Card>
