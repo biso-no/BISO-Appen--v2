@@ -53,6 +53,6 @@ async function registerForPushNotificationsAsync(userId: string) {
   }
 
   if (token) {
-    await registerDeviceToken(userId, token);
+    await registerDeviceToken(token);
   }
 }

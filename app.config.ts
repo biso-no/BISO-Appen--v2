@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           newArchEnabled: true,
         },
         android: {
-          newArchEnabled: true,
+          newArchEnabled: false,
         },
       }],
     ['expo-document-picker', { iCloudContainerEnvironment: 'Production' }],

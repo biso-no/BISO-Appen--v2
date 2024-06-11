@@ -167,26 +167,12 @@ export async function updateDocument(collectionId: string, documentId: string, d
     return response;
 }
 
-export async function registerDeviceToken(userId: string, token: string) {
-    // Search for an existing document with the same userId and token
-    const searchResponse = await databases.listDocuments('app', 'device', [
-        Query.equal('user_id', userId),
-        Query.equal('token', token)
-    ]);
-
-    // Check if a document already exists
-    if (searchResponse.documents.length > 0) {
-        // Token already registered, return the existing document or perform an update if needed
-        return searchResponse.documents[0];
-    } else {
-        account.createPushTarget(ID.unique(), token);
-        // Token not registered, create a new document
-        const createResponse = await databases.createDocument('app', 'device', ID.unique(), {
-            user_id: userId,
-            token: token
-        });
-
-        return createResponse;
+export async function registerDeviceToken(token: string) {
+    try {
+        await account.createPushTarget(ID.unique(), token);
+    } catch (error) {
+        console.error("Error registering device token:", error);
+        throw error; // Re-throw the error to be handled by the caller
     }
 }
 
@@ -218,4 +204,9 @@ export function getUserAvatar(fileId: string) {
     )
 
     return result;
+}
+
+export async function getNotificationCount() {
+    const notifications = await databases.listDocuments('app', 'notifications', [Query.equal('status', 'unread')]);
+    return notifications.total;
 }

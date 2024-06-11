@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -11,6 +11,7 @@ import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
+import { getNotificationCount } from '@/lib/appwrite';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,21 +21,39 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { data, profile, isLoading } = useAuth();
   const avatarId = profile?.avatar;
   const isExpoGo = Constants.appOwnership === 'expo';
 
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    getNotificationCount().then((count) => {
+      setNotificationCount(count);
+    });
+  }, []);
+
   const theme = useTheme();
 
-    if (!theme.background) return "#fff"
+  if (!theme.background) return "#fff"
 
   const backgroundColor = theme.background.val
 
-
-  
+  //Notification bell icon including notification count
+  const bellIcon = () => {
+    return (
+      <View style={{ marginRight: 15 }}>
+        <Bell size={25} color={Colors[colorScheme ?? 'light'].text} />
+        {notificationCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{notificationCount}</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   useEffect(() => {
     console.log('isExpoGo', isExpoGo);
@@ -58,7 +77,6 @@ export default function TabLayout() {
       Notifications.removeNotificationSubscription(responseSubscription);
     };
   }, [data?.$id, isExpoGo, isLoading]);
-
 
   const profileIcon = () => {
     if (isLoading) {
@@ -102,11 +120,8 @@ export default function TabLayout() {
             <Link href="/notifications" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <Bell
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
+                  {
+                    ...bellIcon(),}
                 )}
               </Pressable>
             </Link>
@@ -157,3 +172,22 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    right: -5,
+    top: -5,
+    backgroundColor: 'red',
+    borderRadius: 7,
+    padding: 2,
+    minWidth: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+});

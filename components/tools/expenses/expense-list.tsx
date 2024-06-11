@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { getDocuments } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
-import { Wallet } from "@tamagui/lucide-icons";
+import { Wallet, PlusCircle } from "@tamagui/lucide-icons";
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -47,6 +47,29 @@ function ExpenseCard({ expense }: { expense: Models.Document }) {
                         <StatusBadge status={status} />
                     </XStack>
                 </Card.Footer>
+            </YStack>
+        </Card>
+    );
+}
+
+//A component mocking the structure of an expense card, but instead renders "Create new expense" with a plus icon
+function CreateExpenseCard() {
+    return (
+        <Card
+            bordered
+            borderWidth={3}
+            width={"100%"}
+            size="$4"
+        >
+            <YStack space="$5" alignItems="flex-start" justifyContent="center">
+                <Card.Header>
+                    <YStack>
+                        <XGroup marginRight={10}>
+                        <PlusCircle size={20} />
+                        <Text fontSize={15} fontWeight={"bold"}>Create new expense</Text>
+                        </XGroup>
+                    </YStack>
+                </Card.Header>
             </YStack>
         </Card>
     );
@@ -138,6 +161,7 @@ export function ExpenseList() {
                         />
                     </View>
                 </XGroup>
+                <CreateExpenseCard />
                 {expenses?.documents?.length === 0 ? (
                     <NoExpensesPlaceholder />
                 ) : (

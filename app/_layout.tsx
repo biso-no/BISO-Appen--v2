@@ -1,3 +1,5 @@
+import 'expo-dev-client';
+
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -55,6 +57,8 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isExpoGo = Constants.appOwnership === 'expo';
+
+  /*
 useEffect(() => {
   if (!isExpoGo) {
   async function onFetchUpdateAsync() {
@@ -74,7 +78,7 @@ useEffect(() => {
   onFetchUpdateAsync();
   }
 }, []);
-
+*/
   return (
     <AuthProvider>
     <TamaguiProvider config={config}>

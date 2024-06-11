@@ -1,11 +1,15 @@
 import { H1, YStack, XStack, Button, Text, ScrollView } from 'tamagui';
 import React, { useState, useEffect } from 'react';
 import { MotiView, useAnimationState } from 'moti';
+import { getDocuments } from '@/lib/appwrite';
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
   content: string;
+  href?: string;
+  status?: string; // 'read' or 'unread'
+  type: 'message' | 'post' | 'event';
 }
 
 interface Notifications {
@@ -14,28 +18,41 @@ interface Notifications {
   events: Notification[];
 }
 
-const notifications: Notifications = {
-  messages: [
-    { id: 1, title: 'New Message from Alice', content: 'Hey, how are you doing?' },
-    { id: 2, title: 'New Message from Bob', content: 'Don\'t forget our meeting tomorrow.' },
-  ],
-  posts: [
-    { id: 1, title: 'New Post in Tech Group', content: 'Check out the latest tech trends...' },
-    { id: 2, title: 'New Post in Cooking Group', content: 'Here is a new recipe for you to try...' },
-  ],
-  events: [
-    { id: 1, title: 'Upcoming Event: Tech Conference', content: 'Join us for the annual tech conference...' },
-    { id: 2, title: 'Upcoming Event: Cooking Workshop', content: 'Sign up for a fun cooking workshop...' },
-  ],
-};
-
 const NotificationScreen = () => {
+  
   const [selectedTab, setSelectedTab] = useState<keyof Notifications>('messages');
+  const [notifications, setNotifications] = useState<Notifications>({ messages: [], posts: [], events: [] });
   const animationState = useAnimationState({
     from: { opacity: 0, translateY: -10 },
     animate: { opacity: 1, translateY: 0 },
     exit: { opacity: 0, translateY: 10 },
   });
+
+  const getNotifications = async () => {
+    const fetchedDocuments = await getDocuments('notifications');
+    const formattedNotifications: Notifications = { messages: [], posts: [], events: [] };
+    
+    fetchedDocuments.documents.forEach((doc: any) => {
+      const notif: Notification = {
+        id: doc.$id,
+        title: doc.title || `Notification ${doc.$id}`,
+        content: doc.content,
+        href: doc.href,
+        status: doc.status,
+        type: doc.type as 'message' | 'post' | 'event'
+      };
+
+      if (notif.type === 'message') {
+        formattedNotifications.messages.push(notif);
+      } else if (notif.type === 'post') {
+        formattedNotifications.posts.push(notif);
+      } else if (notif.type === 'event') {
+        formattedNotifications.events.push(notif);
+      }
+    });
+
+    setNotifications(formattedNotifications);
+  }
 
   useEffect(() => {
     animationState.transitionTo('from');
@@ -43,6 +60,10 @@ const NotificationScreen = () => {
       animationState.transitionTo('animate');
     }, 50); // Delay slightly to ensure transitionTo is properly called
   }, [selectedTab]);
+
+  useEffect(() => {
+    getNotifications();
+  }, []);
 
   const renderNotifications = () => {
     const currentNotifications = notifications[selectedTab];
@@ -81,7 +102,7 @@ const NotificationScreen = () => {
           translateY: {
             type: 'timing',
             duration: 500,
-            delay: notification.id * 100,
+            delay: parseInt(notification.id) * 100, // Assuming ids are numeric strings
           },
         }}
       >
