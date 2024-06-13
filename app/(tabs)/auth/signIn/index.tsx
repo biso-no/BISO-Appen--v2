@@ -29,7 +29,7 @@ export default function LoginScreen() {
       if (response.hasProfile) {
         push('/profile');
       } else {
-        push('/onboarding');
+        push('/');
       }
     }
   }

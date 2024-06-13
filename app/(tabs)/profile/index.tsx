@@ -2,13 +2,14 @@ import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, 
 import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
-import { useRouter } from 'expo-router'
+import { router, useRouter } from 'expo-router'
 import { FileUpload } from '@/lib/file-upload'
-import { getUserAvatar, updateDocument, updatePhoneNumber, signOut } from '@/lib/appwrite'
+import { getUserAvatar, updateDocument, updatePhoneNumber, signOut, signInWithBI } from '@/lib/appwrite'
 import { useEffect, useRef, useState } from 'react'
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
+import * as WebBrowser from 'expo-web-browser';
 
 type Notifications = {
   newEvents: boolean;
@@ -21,7 +22,7 @@ type Department = string;
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
-  const { data, profile: initialProfile } = useAuth();
+  const { data, profile: initialProfile, isLoading } = useAuth();
   const [profile, setProfile] = useState(initialProfile);
   const [notifications, setNotifications] = useState<Notifications>({
     newEvents: false,
@@ -63,6 +64,26 @@ export default function ProfileScreen() {
     return null;
   }
 
+  const linkIdentity = async () => {
+    try {
+      // First run signInWithBI. This returns a URL to trigger the OAuth flow.
+      // Then we need to redirect the user to that URL for the OAuth flow.
+      // The OAuth flow will redirect the user back to the app.
+      const url = signInWithBI();
+  
+      if (url instanceof URL) {
+        const result = await WebBrowser.openBrowserAsync(url.toString());
+        console.log(result);
+      } else {
+        console.error('Failed to get URL from signInWithBI');
+      }
+    } catch (error) {
+      console.error('Error during linkIdentity', error);
+    }
+  };
+
+
+
   return (
     <ScrollView>
       <MyStack flex={1} padding="$4">
@@ -76,6 +97,7 @@ export default function ProfileScreen() {
             </Avatar>
             <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
             <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
+            <Button onPress={() => linkIdentity()}>Sign in with BI</Button>
           </YStack>
         </Card>
 
@@ -261,11 +283,18 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
   );
 };
 
-const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, setIsEditing: (value: boolean) => void }) => (
+const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, setIsEditing: (value: boolean) => void }) => {
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/');
+  };
+
+  return (
   <MyStack alignItems='stretch' gap="$4">
     <XStack justifyContent="center" space="$4" marginTop="$4">
       <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
-      <Button size="$4" variant="outlined" onPress={() => signOut()}>Sign Out</Button>
+      <Button size="$4" variant="outlined" onPress={() => handleLogout()}>Sign Out</Button>
     </XStack>
     <SizableText fontSize="$6">Phone: {profile?.phone}</SizableText>
     <SizableText fontSize="$6">Address: {profile?.address}</SizableText>
@@ -273,7 +302,7 @@ const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.D
     <SizableText fontSize="$6">Zip Code: {profile?.zip}</SizableText>
     <SizableText fontSize="$6">Bank Account: {profile?.bank_account}</SizableText>
   </MyStack>
-);
+)}
 
 const Profile = ({ profile, user, updateProfile }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, updateProfile: (newProfile: Models.Document) => void }) => {
   const [isEditing, setIsEditing] = useState(false);

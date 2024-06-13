@@ -1,5 +1,6 @@
-import { Models, Query, Client } from 'react-native-appwrite';
+import { Models, Query, Client, OAuthProvider } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars } from 'react-native-appwrite';
+import * as WebBrowser from 'expo-web-browser';
 
 const client = new Client();
 
@@ -209,4 +210,14 @@ export function getUserAvatar(fileId: string) {
 export async function getNotificationCount() {
     const notifications = await databases.listDocuments('app', 'notifications', [Query.equal('status', 'unread')]);
     return notifications.total;
+}
+
+export function signInWithBI() {
+    const response = account.createOAuth2Session(
+        OAuthProvider.Microsoft,
+        'nymheien://(tabs)/index',
+        'nymheien://(tabs)/auth/signIn/failed',
+    )
+    console.log(response)
+    return response;
 }
