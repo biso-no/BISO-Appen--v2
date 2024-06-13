@@ -1,5 +1,5 @@
 import { Models, Query, Client, OAuthProvider } from 'react-native-appwrite';
-import { ID, Account, Databases, Storage, Avatars } from 'react-native-appwrite';
+import { ID, Account, Databases, Storage, Avatars, Messaging } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
 
 const client = new Client();
@@ -17,6 +17,7 @@ const storage = new Storage(client);
 
 const avatars = new Avatars(client);
 
+const messaging = new Messaging(client);
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email)
@@ -220,4 +221,33 @@ export function signInWithBI() {
     )
     console.log(response)
     return response;
+}
+
+export async function createMessagingSubscriber(topic: string, user: Models.User<Models.Preferences>) {
+
+    const targetId = user.targets[0].$id;
+
+    try {
+        const response = await messaging.createSubscriber(
+            topic,
+            ID.unique(),
+            targetId
+        );
+
+        return response;
+    } catch (error) {
+        console.error("Error creating messaging subscriber:", error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
+}
+
+export async function deleteSubscriber(topic: string, subscriberId: string) {
+
+    try {
+        const response = await messaging.deleteSubscriber(topic, subscriberId);
+        return response;
+    } catch (error) {
+        console.error("Error deleting messaging subscriber:", error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
 }
