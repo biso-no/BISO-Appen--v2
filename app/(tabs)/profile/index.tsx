@@ -1,4 +1,4 @@
-import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch, YGroup, Label, Input, ScrollView, YStack } from 'tamagui';
+import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch as DSwitch, YGroup, Label, Input, ScrollView, YStack } from 'tamagui';
 import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
@@ -10,6 +10,7 @@ import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
 import * as WebBrowser from 'expo-web-browser';
+import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 
 type Notifications = {
   newEvents: boolean;
@@ -139,23 +140,19 @@ export default function ProfileScreen() {
             <MyStack space="$4" padding="$4" alignItems="center" justifyContent="center">
               <H3>Notifications</H3>
                 <XStack alignItems="center" justifyContent="space-between">
-                  <Label>New Events</Label>
-                  <Switch checked={notifications.newEvents} onCheckedChange={() => toggleNotification('newEvents')} />
+                  <Switch label='New events' topic='events' size="$4" />
                 </XStack>
                 <Separator />
                 <XStack alignItems="center" justifyContent="space-between">
-                  <Label>New Posts</Label>
-                  <Switch checked={notifications.newPosts} onCheckedChange={() => toggleNotification('newPosts')} />
+                  <Switch label='New posts' topic='posts' size="$4" />
                 </XStack>
                 <Separator />
                 <XStack alignItems="center" justifyContent="space-between">
-                  <Label>Messages</Label>
-                  <Switch checked={notifications.messages} onCheckedChange={() => toggleNotification('messages')} />
+                  <Switch label='New messages' topic='messages' size="$4" />
                 </XStack>
                 <Separator />
                 <XStack alignItems="center" justifyContent="space-between">
-                  <Label>Expenses</Label>
-                  <Switch checked={notifications.expenses} onCheckedChange={() => toggleNotification('expenses')} />
+                  <Switch label='New expenses' topic='expenses' size="$4" />
                 </XStack>
               <Separator />
               <H3>Departments</H3>
@@ -163,8 +160,7 @@ export default function ProfileScreen() {
                 {/* Replace with actual departments list */}
                 {['Marketing', 'Sales', 'Engineering', 'HR'].map((department) => (
                   <XStack alignItems="center" justifyContent="space-between" key={department}>
-                    <Label>{department}</Label>
-                    <Switch checked={departments.includes(department)} onCheckedChange={() => updateDepartments(department)} />
+                    <Switch label={department} topic={department} size="$4" />
                   </XStack>
                 ))}
               </YStack>

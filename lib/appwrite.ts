@@ -1,5 +1,5 @@
-import { Models, Query, Client, OAuthProvider } from 'react-native-appwrite';
-import { ID, Account, Databases, Storage, Avatars, Messaging } from 'react-native-appwrite';
+import { Models, Query, Client, OAuthProvider, Role } from 'react-native-appwrite';
+import { ID, Account, Databases, Storage, Avatars, Messaging, Permission } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
 
 const client = new Client();
@@ -223,7 +223,7 @@ export function signInWithBI() {
     return response;
 }
 
-export async function createMessagingSubscriber(topic: string, user: Models.User<Models.Preferences>) {
+export async function createSubscriber(topic: string, user: Models.User<Models.Preferences>) {
 
     const targetId = user.targets[0].$id;
 
@@ -251,3 +251,52 @@ export async function deleteSubscriber(topic: string, subscriberId: string) {
         throw error; // Re-throw the error to be handled by the caller
     }
 }
+
+export const updateSubscription = async (userId: string, topic: string, subscribed: boolean) => {
+    try {
+      const documents = await databases.listDocuments('app', 'subs', [
+        Query.equal('topic', topic),
+      ]);
+  
+      if (documents.total > 0) {
+        await databases.updateDocument('app', 'subs', documents.documents[0].$id, {
+          subscribed,
+        });
+      } else {
+        await databases.createDocument('app', 'subs', ID.unique(), {
+          user_id: userId,
+          topic,
+          subscribed,
+        }, [
+          Permission.read(Role.user(userId)),
+          Permission.write(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+        ]);
+      }
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
+  };
+  
+  export const fetchSubscription = async (data: Models.User<Models.Preferences>, props: { topic: string }) => {
+    if (data) {
+      try {
+        const documents = await databases.listDocuments('app', 'subs', [
+          Query.equal('topic', props.topic),
+        ]);
+
+        if (documents.total > 0) {
+          return documents.documents[0];
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+        throw error; // Re-throw the error to be handled by the caller
+      }
+    }
+
+    return null;
+  };
