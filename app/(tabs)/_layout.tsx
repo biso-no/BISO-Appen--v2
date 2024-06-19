@@ -6,12 +6,13 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { H5, Avatar } from 'tamagui';
-import { Home, UserRound, LogIn, Info, Settings, Bell } from '@tamagui/lucide-icons';
+import { Home, UserRound, LogIn, Info, Settings, Bell, MessageSquare } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { getNotificationCount } from '@/lib/appwrite';
+import { ChatProvider } from '@/lib/ChatContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -28,12 +29,18 @@ export default function TabLayout() {
   const isExpoGo = Constants.appOwnership === 'expo';
 
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!data?.$id);
 
   useEffect(() => {
     getNotificationCount().then((count) => {
       setNotificationCount(count);
     });
   }, []);
+
+  useEffect(() => {
+    setIsAuthenticated(!!data?.$id);
+  }, [data?.$id]);
+
 
   const theme = useTheme();
 
@@ -101,6 +108,7 @@ export default function TabLayout() {
   }
 
   return (
+    <ChatProvider data={data}>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
@@ -129,10 +137,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="chat/index"
         options={{
           title: '',
-          tabBarIcon: ({ color }) => <Settings color={color} />,
+          tabBarIcon: ({ color }) => <MessageSquare color={color} />,
         }}
       />
       <Tabs.Screen
@@ -140,7 +148,7 @@ export default function TabLayout() {
         options={{
           title: '',
           tabBarIcon: ({ color }) => profileIcon(),
-          href: data?.$id ? 'profile/' : null,
+          href: isAuthenticated  ? 'profile/' : null,
         }}
       />
       <Tabs.Screen
@@ -148,7 +156,7 @@ export default function TabLayout() {
         options={{
           title: '',
           tabBarIcon: ({ color }) => <LogIn color={color} />,
-          href: !data?.$id ? 'auth/signIn' : null,
+          href: !isAuthenticated ? 'auth/signIn' : null,
         }}
       />
       <Tabs.Screen
@@ -169,7 +177,20 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+      name="units/index"
+      options={{
+        href: null,
+      }}
+    />
+    <Tabs.Screen
+    name="chat/[id]"
+    options={{
+      href: null,
+    }}
+  />
     </Tabs>
+    </ChatProvider>
   );
 }
 

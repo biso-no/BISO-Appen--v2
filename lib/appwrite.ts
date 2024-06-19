@@ -1,8 +1,8 @@
 import { Models, Query, Client, OAuthProvider, Role } from 'react-native-appwrite';
-import { ID, Account, Databases, Storage, Avatars, Messaging, Permission } from 'react-native-appwrite';
+import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
 
-const client = new Client();
+export const client = new Client();
 
 client
     .setEndpoint('https://appwrite-rg044w0.biso.no/v1')
@@ -18,6 +18,8 @@ const storage = new Storage(client);
 const avatars = new Avatars(client);
 
 const messaging = new Messaging(client);
+
+const teams = new Teams(client);
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email)
@@ -300,3 +302,105 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
 
     return null;
   };
+
+export async function getDepartments() {
+    const departments = await databases.listDocuments('app', 'departments')
+    return departments
+}
+
+export async function getExpensesDepartments() {
+    const expensesDepartments = await databases.listDocuments('app', 'expense', [
+        Query.select(['department'])
+    ])
+    
+    return expensesDepartments
+}
+
+export async function createTeam(name: string) {
+    const team = await teams.create(ID.unique(), name)
+
+    return team
+}
+
+export async function getTeams() {
+    const fetchedTeams = await teams.list();
+    return fetchedTeams
+}
+
+export async function getTeam(teamId: string) {
+    const team = await teams.get(teamId);
+    return team
+}
+
+export async function getChats() {
+    const fetchedChats = await databases.listDocuments('app', 'chat_group');
+    console.log(fetchedChats)
+    return fetchedChats
+}
+
+export function subScribeToChat(callback: (response: any) => void) {
+
+    const unsubscribe = client.subscribe('databases.app.collections.chat_group.documents', (response) => {
+      console.log(response);
+      callback(response);
+    });
+  
+    return unsubscribe;
+  }
+
+export async function sendChatMessage(recipient: string, message: string, sender: string) {
+    const response = await databases.createDocument('app', 'chat_messages', ID.unique(), {
+        chat_id: recipient,
+        content: message
+    },
+    [
+        Permission.read(Role.user(sender)),
+        Permission.read(Role.team(recipient)),
+        Permission.update(Role.user(sender)),
+        Permission.delete(Role.user(sender)),
+    ])
+    return response
+}
+
+/*
+export async function createChat(name: string, existingUsers: Models.User<Models.Preferences>[], inviteUsers: string[] = []) {
+
+    const team = await createTeam(name)
+
+    let users = existingUsers
+
+    if (existingUsers ?? inviteUsers) {
+
+        const teamId = team.$id
+
+        //existingUsers are users already in the system, and has an ID. inviteUsers are users that are not in the system, and we use email. team.createMembership accepts both email and ID.
+
+        const usersArray = users.map(user => {
+            if (user.$id) {
+                await teams.createMembership(teamId, [],"", user.$id)
+            } 
+
+        })
+
+        if (inviteUsers) {
+            const users = inviteUsers.map(user => {
+                await teams.createMembership(teamId, [],"", user)
+            })
+        }
+
+    const response = await databases.createDocument('app', 'chat', ID.unique(), {
+        name: team.name,
+        users,
+        team_id: teamId
+    },
+
+        [Permission.read(Role.team(teamId)), Permission.write(Role.team(teamId)), Permission.update(Role.team(teamId))]
+)
+    return response
+}
+*/
+
+export async function getUsers() {
+    const users = await databases.listDocuments('app', 'user')
+    return users
+}

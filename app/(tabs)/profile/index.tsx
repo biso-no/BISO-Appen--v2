@@ -1,4 +1,4 @@
-import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch as DSwitch, YGroup, Label, Input, ScrollView, YStack } from 'tamagui';
+import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch as DSwitch, YGroup, Label, Input, ScrollView, YStack, XGroup } from 'tamagui';
 import { FormCard, Hide } from '@/components/auth/layout'
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
@@ -11,6 +11,7 @@ import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
 import * as WebBrowser from 'expo-web-browser';
 import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
+import { CreateExpenseCard } from '@/components/tools/expenses/expense-list';
 
 type Notifications = {
   newEvents: boolean;
@@ -133,7 +134,11 @@ export default function ProfileScreen() {
           </TabsContent>
 
           <TabsContent value="tab2">
-            <ExpenseList />
+          <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
+                <Button onPress={() => router.push("/expenses/create")}>Create new expense</Button>
+                <Button onPress={() => router.push("/expenses")} chromeless>View all</Button>
+                </XGroup>
+            <ExpenseList withFilters={false} />
           </TabsContent>
 
           <TabsContent value="tab3">

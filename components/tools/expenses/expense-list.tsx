@@ -1,11 +1,12 @@
-import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack, Image } from "tamagui";
+import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack, Image, Button } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { ExpenseFilter } from "./filter";
 import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { getDocuments } from "@/lib/appwrite";
+import { getDocuments, getExpensesDepartments } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
 import { Wallet, PlusCircle } from "@tamagui/lucide-icons";
+import { useRouter } from "expo-router";
 
 function StatusBadge({ status }: { status: string }) {
     return (
@@ -53,13 +54,11 @@ function ExpenseCard({ expense }: { expense: Models.Document }) {
 }
 
 //A component mocking the structure of an expense card, but instead renders "Create new expense" with a plus icon
-function CreateExpenseCard() {
+export function CreateExpenseCard() {
     return (
         <Card
             bordered
             borderWidth={3}
-            width={"100%"}
-            size="$4"
         >
             <YStack space="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
@@ -87,16 +86,27 @@ function NoExpensesPlaceholder() {
     );
 }
 
-export function ExpenseList() {
+export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
     const [sortingOption, setSortingOption] = useState("date descending");
     const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedDepartment, setSelectedDepartment] = useState("all");
+    const [departmentFilters, setDepartmentFilters] = useState<string[]>([]);
+
+    const router = useRouter();
 
     const filters = {
         department: selectedDepartment,
         status: selectedStatus
     };
+
+    useEffect(() => {
+        getExpensesDepartments().then((data) => {
+            // Assuming data.documents is the array of department documents
+            const departments = data.documents.map(doc => doc.department);
+            setDepartmentFilters(departments);
+        });
+    }, []);
 
     const filterConfigs = [
         {
@@ -108,20 +118,20 @@ export function ExpenseList() {
             ],
             label: 'Status',
             initialSelected: selectedStatus,
-          },
-          {
+        },
+        {
             filterType: 'department',
             options: [
               { name: "All", value: "all" },
-              { name: "Marketing", value: "marketing" },
-              { name: "IT", value: "it" },
-              { name: "HR", value: "hr" },
-              { name: "Finance", value: "finance" },
+              ...departmentFilters.map(department => ({
+                  name: department,
+                  value: department
+              }))
             ],
             label: 'Department',
             initialSelected: selectedDepartment,
-          },
-      ];
+        },
+    ];
 
     useEffect(() => {
         async function fetchExpenses() {
@@ -140,11 +150,12 @@ export function ExpenseList() {
         }
         const newExpenses = await getDocuments('expenses', { [filterType]: value });
         setExpenses(newExpenses);
-      };
+    };
 
     return (
         <ScrollView>
             <YStack space="$5" alignItems="center" justifyContent="center">
+                {withFilters && (
                 <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
                     <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
                     <View flex={1} maxWidth="300px">
@@ -161,7 +172,8 @@ export function ExpenseList() {
                         />
                     </View>
                 </XGroup>
-                <CreateExpenseCard />
+                )}
+
                 {expenses?.documents?.length === 0 ? (
                     <NoExpensesPlaceholder />
                 ) : (
