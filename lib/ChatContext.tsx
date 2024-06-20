@@ -1,28 +1,24 @@
-// ChatContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { subScribeToChat } from './appwrite';
+import { subScribeToChat, fetchChatMessages } from './appwrite';
 import { Models } from 'react-native-appwrite';
 
-interface ChatMessage {
-  content: string;
-  sender: string;
+interface ChatResponse {
+  channels: string[];
+  events: string[];
+  payload: Models.Document;
   timestamp: string;
 }
 
-interface ChatResponse {
-  chatGroupId: string;
-  message: ChatMessage;
-}
-
 interface MessagesState {
-  [chatGroupId: string]: ChatMessage[];
+  [chatGroupId: string]: Models.Document[];
 }
 
 interface ChatContextType {
   messages: MessagesState;
   notify: (message: string) => void;
-  updateChatList: (chatGroupId: string, message: ChatMessage) => void;
-  updateSpecificChat: (chatGroupId: string, message: ChatMessage) => void;
+  updateChatList: (chatGroupId: string, message: Models.Document) => void;
+  updateSpecificChat: (chatGroupId: string, message: Models.Document) => void;
+  fetchMessages: (chatGroupId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -45,41 +41,52 @@ export const ChatProvider = ({ children, data }: ProviderProps) => {
   const [subscriptions, setSubscriptions] = useState<(() => void)[]>([]);
 
   const notify = (message: string) => {
-    // Implement your notification logic here
     console.log("New notification: ", message);
   };
 
-  const updateChatList = (chatGroupId: string, message: ChatMessage) => {
-    // Implement logic to update the chat list
-    // This can be used to update the latest message preview in the chat list
+  const updateChatList = (chatGroupId: string, message: Models.Document) => {
     console.log(`Update chat list for group ${chatGroupId}: `, message);
   };
 
-  const updateSpecificChat = (chatGroupId: string, message: ChatMessage) => {
-    // Implement logic to update a specific chat
-    // This can be used to update the currently open chat window
+  const updateSpecificChat = (chatGroupId: string, message: Models.Document) => {
     console.log(`Update specific chat ${chatGroupId}: `, message);
+  };
+
+  const fetchMessages = async (chatGroupId: string) => {
+    try {
+      const fetchedMessages = await fetchChatMessages(chatGroupId);
+      setMessages((prevMessages) => ({
+        ...prevMessages,
+        [chatGroupId]: fetchedMessages.documents,
+      }));
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
   };
 
   useEffect(() => {
     if (data?.$id) {
       const unsubscribe = subScribeToChat((response: ChatResponse) => {
-        setMessages((prevMessages) => {
-          const newMessages = {
-            ...prevMessages,
-            [response.chatGroupId]: [
-              ...(prevMessages[response.chatGroupId] || []),
-              response.message,
-            ],
-          };
-          // Notify user
-          notify(response.message.content);
-          // Update chat list
-          updateChatList(response.chatGroupId, response.message);
-          // Update specific chat if open
-          updateSpecificChat(response.chatGroupId, response.message);
-          return newMessages;
-        });
+        const message = response.payload;
+        console.log("Received message:", message);
+
+        if (message && message.content && message.chat_id) {
+          setMessages((prevMessages) => {
+            const newMessages = {
+              ...prevMessages,
+              [message.chat_id]: [
+                ...(prevMessages[message.chat_id] || []),
+                message,
+              ],
+            };
+            notify(message.content);
+            updateChatList(message.chat_id, message);
+            updateSpecificChat(message.chat_id, message);
+            return newMessages;
+          });
+        } else {
+          console.error('Received invalid response:', response);
+        }
       });
 
       setSubscriptions((prev) => [...prev, unsubscribe]);
@@ -91,7 +98,7 @@ export const ChatProvider = ({ children, data }: ProviderProps) => {
   }, [data?.$id]);
 
   return (
-    <ChatContext.Provider value={{ messages, notify, updateChatList, updateSpecificChat }}>
+    <ChatContext.Provider value={{ messages, notify, updateChatList, updateSpecificChat, fetchMessages }}>
       {children}
     </ChatContext.Provider>
   );

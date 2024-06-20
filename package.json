@@ -58,7 +58,8 @@
     "react-native-web": "~0.19.6",
     "tamagui": "^1.98.4",
     "typescript": "~5.3.3",
-    "use-debounce": "^10.0.1"
+    "use-debounce": "^10.0.1",
+    "expo-insights": "~0.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

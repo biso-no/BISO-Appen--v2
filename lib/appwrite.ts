@@ -334,13 +334,13 @@ export async function getTeam(teamId: string) {
 
 export async function getChats() {
     const fetchedChats = await databases.listDocuments('app', 'chat_group');
-    console.log(fetchedChats)
+    console.log(fetchedChats.documents)
     return fetchedChats
 }
 
 export function subScribeToChat(callback: (response: any) => void) {
 
-    const unsubscribe = client.subscribe('databases.app.collections.chat_group.documents', (response) => {
+    const unsubscribe = client.subscribe(['databases.app.collections.chat_group.documents', 'databases.app.collections.chat_messages.documents'], (response) => {
       console.log(response);
       callback(response);
     });
@@ -351,7 +351,8 @@ export function subScribeToChat(callback: (response: any) => void) {
 export async function sendChatMessage(recipient: string, message: string, sender: string) {
     const response = await databases.createDocument('app', 'chat_messages', ID.unique(), {
         chat_id: recipient,
-        content: message
+        content: message,
+        users: sender
     },
     [
         Permission.read(Role.user(sender)),
@@ -403,4 +404,9 @@ export async function createChat(name: string, existingUsers: Models.User<Models
 export async function getUsers() {
     const users = await databases.listDocuments('app', 'user')
     return users
+}
+
+export async function fetchChatMessages(chatId: string) {
+    const messages = await databases.listDocuments('app', 'chat_messages')
+    return messages
 }

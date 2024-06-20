@@ -85,13 +85,13 @@ export default function TabLayout() {
     };
   }, [data?.$id, isExpoGo, isLoading]);
 
-  const profileIcon = () => {
+  const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (isLoading) {
       return null;
     } else if (!data?.$id) {
       return <LogIn size={25} />;
     } else if (!avatarId) {
-      return <UserRound size={25} />;
+      return <UserRound size={25} color={color} />;
     } else {
       const avatarUrl = `https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
@@ -147,7 +147,7 @@ export default function TabLayout() {
         name="profile/index"
         options={{
           title: '',
-          tabBarIcon: ({ color }) => profileIcon(),
+          tabBarIcon: ({ color }) => profileIcon(color),
           href: isAuthenticated  ? 'profile/' : null,
         }}
       />
