@@ -286,8 +286,10 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
 
 const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, setIsEditing: (value: boolean) => void }) => {
 
+  const { refetchUser } = useAuth()
+
   const handleLogout = async () => {
-    await signOut();
+    await signOut(refetchUser);
     router.replace('/');
   };
 

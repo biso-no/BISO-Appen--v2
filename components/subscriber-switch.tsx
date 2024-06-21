@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { SizeTokens } from 'tamagui';
 import { Label, Separator, Switch, XStack } from 'tamagui';
 import { createSubscriber, deleteSubscriber, updateSubscription, fetchSubscription } from '@/lib/appwrite';
-import { useAppwriteAccount } from './context/auth-context';
+import { useAuth } from './context/auth-provider';
 
 interface Props {
   label: string;
@@ -12,7 +12,7 @@ interface Props {
 
 export function SwitchWithLabel(props: Props) {
   const id = `switch-${props.topic}`
-  const { data } = useAppwriteAccount();
+  const { data } = useAuth();
   const [checked, setChecked] = useState<boolean | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 

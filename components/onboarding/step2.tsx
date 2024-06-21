@@ -2,7 +2,7 @@ import { View } from 'tamagui';
 import React from 'react';
 import CampusSelector from '@/components/SelectCampus';
 import { MotiView } from 'moti';
-import { useAppwriteAccount } from '../context/auth-context';
+import { useAuth } from '../context/auth-provider';
 
 interface Step {
     step: number
@@ -10,7 +10,7 @@ interface Step {
 
 export function Step2({ step }: Step) {
 
-    const { updateUserPrefs } = useAppwriteAccount();
+    const { updateUserPrefs } = useAuth();
 
     const handleCampusChange = (campus: string | null) => {
         if (campus) {

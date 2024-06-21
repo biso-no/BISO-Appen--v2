@@ -1,6 +1,7 @@
 import { Models, Query, Client, OAuthProvider, Role } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
+import { AuthContextType } from '@/components/context/auth-provider';
 
 export const client = new Client();
 
@@ -22,23 +23,25 @@ const messaging = new Messaging(client);
 const teams = new Teams(client);
 
 export async function signIn(email: string) {
-    const response = await account.createEmailToken(ID.unique(), email)
-
-    const userId = response.userId
-
+    const response = await account.createEmailToken(ID.unique(), email);
+    const userId = response.userId;
+  
     return userId;
-}
-
-export async function signOut() {
-    await account.deleteSession("current");
-}
+  }
+  
+  export async function signOut(refetchUser: AuthContextType['refetchUser']) {
+    const response = await account.deleteSession("current");
+    console.log(response);
+  
+    await refetchUser();
+  }
 
 export async function getUserPreferences() {
     const response = await account.getPrefs();
     return response;
 }
 
-export async function verifyOtp(userId: string, otp: string) {
+export async function verifyOtp(userId: string, otp: string, refetchUser: AuthContextType['refetchUser']) {
     
     if (!userId || !otp) {
         throw new Error("Missing User ID or OTP. Contact System Admin if the error persists.");
@@ -67,6 +70,8 @@ export async function verifyOtp(userId: string, otp: string) {
             console.error("Error fetching profile:", error);
         }
     }
+
+    await refetchUser();
 
     return {
         user: response,
@@ -99,6 +104,10 @@ export async function getUser() {
     }
 }
 
+export async function getAccount() {
+    const response = await account.get();
+    return response;
+}
 
 export async function updateUserName(name: string) {
     const response = await account.updateName(name);

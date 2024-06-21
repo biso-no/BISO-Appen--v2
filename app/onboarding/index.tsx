@@ -2,7 +2,7 @@ import { H1, Text, View, YStack, Button, XStack, Label, Switch } from 'tamagui';
 import React, { useState } from 'react';
 import { FormCard } from '@/components/auth/layout';
 import { Input } from '@/components/auth/input';
-import { useAppwriteAccount } from '@/components/context/auth-context';
+import { useAuth } from '@/components/context/auth-provider';
 import { createDocument, updateDocument } from '@/lib/appwrite';
 import CampusSelector from '@/components/SelectCampus';
 import DepartmentSelector from '@/components/SelectDepartments';
@@ -40,7 +40,7 @@ export default function Onboarding() {
         isVolunteer: false,
         departments: [],
     });
-    const { data, profile, isLoading, error, updateName, updateUserPrefs } = useAppwriteAccount();
+    const { data, profile, isLoading, error, updateName, updateUserPrefs } = useAuth();
 
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');

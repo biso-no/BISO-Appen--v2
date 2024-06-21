@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Link, Tabs } from 'expo-router';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { H5, Avatar } from 'tamagui';
-import { Home, UserRound, LogIn, Info, Settings, Bell, MessageSquare } from '@tamagui/lucide-icons';
+import { Bell, UserRound, LogIn } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { getNotificationCount } from '@/lib/appwrite';
 import { ChatProvider } from '@/lib/ChatContext';
+import AuthenticatedTabs from '@/components/tabs/authenticated-tabs';
+import UnauthenticatedTabs from '@/components/tabs/unauthenticated-tabs';
+import { View, Text } from 'tamagui';
+import { useNotificationObserver } from '@/lib/useNotifications';
+import { router } from 'expo-router';
+import { useLastNotificationResponse } from 'expo-notifications'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -30,6 +34,13 @@ export default function TabLayout() {
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(!!data?.$id);
+  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
+    undefined
+  );
+
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   useEffect(() => {
     getNotificationCount().then((count) => {
@@ -38,9 +49,13 @@ export default function TabLayout() {
   }, []);
 
   useEffect(() => {
+    console.log({
+      "Status": isAuthenticated,
+      "User ID": data?.$id,
+    });
     setIsAuthenticated(!!data?.$id);
-  }, [data?.$id]);
 
+  }, [data?.$id]);
 
   const theme = useTheme();
 
@@ -67,29 +82,17 @@ export default function TabLayout() {
     if (!isExpoGo && data?.$id && !isLoading) {
       setupPushNotifications(data.$id);
     }
-
-    // Listener for receiving notifications
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received!', notification);
-    });
-
-    // Listener for handling interactions with notifications
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response received!', response);
-    });
-
-    // Unsubscribe from listeners when component unmounts
-    return () => {
-      Notifications.removeNotificationSubscription(subscription);
-      Notifications.removeNotificationSubscription(responseSubscription);
-    };
+  
   }, [data?.$id, isExpoGo, isLoading]);
 
+useLastNotificationResponse();
+  
+
+
+
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
-    if (isLoading) {
-      return null;
-    } else if (!data?.$id) {
-      return <LogIn size={25} />;
+    if (isLoading || !data?.$id) {
+      return <LogIn size={25} color={color} />;
     } else if (!avatarId) {
       return <UserRound size={25} color={color} />;
     } else {
@@ -109,87 +112,19 @@ export default function TabLayout() {
 
   return (
     <ChatProvider data={data}>
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: useClientOnlyValue(false, true),
-      }}
-      sceneContainerStyle={{
-        backgroundColor: backgroundColor
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '',
-          headerTitle: () => <H5>Welcome to BISO</H5>,
-          tabBarIcon: ({ color }) => <Home color={color} />,
-          headerRight: () => (
-            <Link href="/notifications" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  {
-                    ...bellIcon(),}
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat/index"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => <MessageSquare color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile/index"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => profileIcon(color),
-          href: isAuthenticated  ? 'profile/' : null,
-        }}
-      />
-      <Tabs.Screen
-        name="auth/signIn/index"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => <LogIn color={color} />,
-          href: !isAuthenticated ? 'auth/signIn' : null,
-        }}
-      />
-      <Tabs.Screen
-        name="expenses/index"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="expenses/create/index"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="auth/verify-otp/[userId]/index"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-      name="units/index"
-      options={{
-        href: null,
-      }}
-    />
-    <Tabs.Screen
-    name="chat/[id]"
-    options={{
-      href: null,
-    }}
-  />
-    </Tabs>
+      {isAuthenticated ? (
+        <AuthenticatedTabs
+          profileIcon={profileIcon}
+          bellIcon={bellIcon}
+          backgroundColor={backgroundColor}
+        />
+      ) : (
+        <UnauthenticatedTabs
+          profileIcon={profileIcon}
+          bellIcon={bellIcon}
+          backgroundColor={backgroundColor}
+        />
+      )}
     </ChatProvider>
   );
 }

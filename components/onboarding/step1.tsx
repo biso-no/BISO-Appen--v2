@@ -2,7 +2,7 @@ import { View } from 'tamagui';
 import React, { useState } from 'react';
 import { Input } from '@/components/auth/input';
 import { MotiView } from 'moti';
-import { useAppwriteAccount } from '../context/auth-context';
+import { useAuth } from '../context/auth-provider';
 
 interface Step1Props {
     step: number;

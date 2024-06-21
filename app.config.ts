@@ -18,6 +18,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
+    infoPlist: {
+      UIBackgroundModes: ['remote-notification'],
+    },
     bundleIdentifier: 'com.biso.no',
     googleServicesFile: process.env.GOOGLE_SERVICES_IOS ?? './GoogleService-Info.plist',
     privacyManifests: {

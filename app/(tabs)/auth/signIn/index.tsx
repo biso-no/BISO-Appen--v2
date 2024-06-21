@@ -1,15 +1,32 @@
 import { OTPInput } from '@/components/ui/otp-input';
 import { AnimatedView } from '@tamagui/animations-react-native';
-import React, { useState } from 'react';
+import React, { RefObject, useRef, useState } from 'react';
 import { Button, Input, Text, YStack, AnimatePresence } from 'tamagui';
 import { signIn, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
+import { OTPInput as OTP } from '@/components/ui/otp';
+import { TextInput } from 'react-native';
+import { MyStack } from '@/components/ui/MyStack';
+import { MotiView } from 'moti';
+import { useAuth } from '@/components/context/auth-provider';
 
 export default function LoginScreen() {
-  const [step, setStep] = useState('email');
+  const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
+  const [codes, setCodes] = useState<string[] | undefined>(Array(6).fill(""));
+  const [errorMessages, setErrorMessages] = useState<string[]>();
+
+  const { refetchUser } = useAuth();
+
+  const refs: RefObject<TextInput>[] = [
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+  ];
 
   const { push } = useRouter();
 
@@ -17,28 +34,55 @@ export default function LoginScreen() {
     // Here you would typically send the OTP to the user's email
     const response = await signIn(email);
     if (response) {
-      setStep('otp');
+      setStep(1);
       setUserId(response);
     }
   }
 
   const handleOtpSubmit = async () => {
     // Handle OTP submission
-    const response = await verifyOtp(userId, otp);
+    const otp = codes?.join("");
+    if (!otp) {
+      setErrorMessages(["Please enter a valid OTP."]);
+      return;
+    }
+    const response = await verifyOtp(userId, otp, refetchUser);
     if (response) {
       if (response.hasProfile) {
         push('/profile');
+
       } else {
         push('/');
       }
     }
   }
 
+  const onChangeCode = (text: string, index: number) => {
+    if (text.length > 1) {
+      setErrorMessages(undefined);
+      const newCodes = text.split("");
+      setCodes(newCodes);
+      refs[5]!.current?.focus();
+      return;
+    }
+    setErrorMessages(undefined);
+    const newCodes = [...codes!];
+    newCodes[index] = text;
+    setCodes(newCodes);
+    if (text !== "" && index < 5) {
+      refs[index + 1]!.current?.focus();
+    }
+  };
+
   return (
-    <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
-      <AnimatePresence>
-        {step === 'email' && (
-          <AnimatedView key="email" >
+    <MyStack flex={1} justifyContent="center" alignItems="center" padding="$4">
+          <MotiView
+            key="email"
+            from={{ opacity: 0 }}
+            animate={{ opacity: step === 0 ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            style={{ display: step === 0 ? "flex" : "none" }}
+          >
             <Text fontSize="$4" marginBottom="$2">Enter your email address</Text>
             <Input
               placeholder="Email"
@@ -49,16 +93,34 @@ export default function LoginScreen() {
               marginBottom="$4"
             />
             <Button onPress={handleEmailSubmit}>Next</Button>
-          </AnimatedView>
-        )}
-        {step === 'otp' && (
-          <AnimatedView key="otp">
-            <Text fontSize="$4" marginBottom="$2">Enter the OTP sent to your email</Text>
-            <OTPInput numberOfDigits={6} onChange={setOtp} />
-            <Button onPress={handleOtpSubmit}>Submit</Button>
-          </AnimatedView>
-        )}
-      </AnimatePresence>
-    </YStack>
+          </MotiView>
+                  <MotiView
+                  key="otp"
+                  from={{ opacity: 0 }}
+                  animate={{ opacity: step === 1 ? 1 : 0 }}
+                  exit={{ opacity: 0 }}
+                  style={{ display: step === 1 ? "flex" : "none" }}
+              >
+                <YStack space="$4" maxWidth="100%">
+            <Text fontSize="$4" marginBottom="$2">An email has been sent to {email}</Text>
+            <OTP 
+            onChangeCode={onChangeCode}
+            codes={codes!}
+            refs={refs}
+            errorMessages={errorMessages}
+            config={
+              {
+                backgroundColor: "transparent",
+                borderColor: "white",
+                errorColor: "red",
+                focusColor: "transparent",
+                textColor: "black",
+            }
+            }
+             />
+            <Button onPress={handleOtpSubmit}>Sign in</Button>
+          </YStack>
+          </MotiView>
+    </MyStack>
   );
 }
