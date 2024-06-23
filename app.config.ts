@@ -21,6 +21,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
     },
+    entitlements: {
+      "aps-environment": "production"
+    },
     bundleIdentifier: 'com.biso.no',
     googleServicesFile: process.env.GOOGLE_SERVICES_IOS ?? './GoogleService-Info.plist',
     privacyManifests: {
@@ -48,7 +51,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
-    ['expo-notifications'],
+    [
+      "expo-notifications",
+      {
+        "color": "#ffffff",
+        "defaultChannel": "default",
+      }
+    ],
     [
       'expo-build-properties',
        { 
@@ -61,6 +70,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       }],
     ['expo-document-picker', { iCloudContainerEnvironment: 'Production' }],
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "The app accesses your photos to allow you to upload."
+      }
+    ],
+    [
+      "expo-camera",
+      {
+        "cameraPermission": "Allow BISO to access your camera",
+        "microphonePermission": "Allow BISO to access your microphone",
+        "recordAudioAndroid": true
+      }
+    ]
   ],
   extra: {
     router: {

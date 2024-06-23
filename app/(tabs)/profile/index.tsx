@@ -12,6 +12,7 @@ import { MyStack } from '@/components/ui/MyStack';
 import * as WebBrowser from 'expo-web-browser';
 import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import { CreateExpenseCard } from '@/components/tools/expenses/expense-list';
+import { ImagePopover } from '@/components/image-popover';
 
 type Notifications = {
   newEvents: boolean;
@@ -91,12 +92,7 @@ export default function ProfileScreen() {
       <MyStack flex={1} padding="$4">
         <Card padding="$4" borderRadius="$3" marginBottom="$4">
           <YStack alignItems="center">
-            <Avatar circular size={isMobile ? 100 : 150}>
-              <Avatar.Image src={avatar.toString()} />
-              <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
-                <Text fontSize={40} >{useInitials(data?.name)}</Text>
-              </Avatar.Fallback>
-            </Avatar>
+            <ImagePopover initialAvatar={avatar.toString()} name={data?.name} />
             <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
             <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
             <Button onPress={() => linkIdentity()}>Sign in with BI</Button>

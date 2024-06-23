@@ -15,8 +15,21 @@ import AuthenticatedTabs from '@/components/tabs/authenticated-tabs';
 import UnauthenticatedTabs from '@/components/tabs/unauthenticated-tabs';
 import { View, Text } from 'tamagui';
 import { useNotificationObserver } from '@/lib/useNotifications';
-import { router } from 'expo-router';
-import { useLastNotificationResponse } from 'expo-notifications'
+import { router } from 'expo-router';  // Import the router
+import {
+  addNotificationReceivedListener,
+  addNotificationResponseReceivedListener,
+  AndroidImportance,
+  getNotificationChannelsAsync,
+  NotificationResponse,
+  registerTaskAsync,
+  removeNotificationSubscription,
+  setNotificationChannelAsync,
+  Subscription,
+  useLastNotificationResponse,
+} from 'expo-notifications';
+import { defineTask } from 'expo-task-manager';
+import { AppState } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,6 +39,53 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
+const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
+defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
+  console.log(
+    `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: App in ${AppState.currentState} state.`,
+  );
+
+  if (error) {
+    console.log(`${Platform.OS} BACKGROUND-NOTIFICATION-TASK: Error! ${JSON.stringify(error)}`);
+
+    return;
+  }
+
+  if (AppState.currentState.match(/inactive|background/) === null) {
+    console.log(
+      `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: App not in background state, skipping task.`,
+    );
+
+    return;
+  }
+
+  console.log(
+    `${
+      Platform.OS
+    } BACKGROUND-NOTIFICATION-TASK: Received a notification in the background! ${JSON.stringify(
+      data,
+      null,
+      2,
+    )}`,
+  );
+});
+
+registerTaskAsync(BACKGROUND_NOTIFICATION_TASK)
+  .then(() => {
+    console.log(
+      `${Platform.OS} Notifications.registerTaskAsync success: ${BACKGROUND_NOTIFICATION_TASK}`,
+    );
+  })
+  .catch((reason) => {
+    console.log(`${Platform.OS} Notifications registerTaskAsync failed: ${reason}`);
+  });
+
+function handleRegistrationError(errorMessage: string) {
+  alert(errorMessage);
+  throw new Error(errorMessage);
+}
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { data, profile, isLoading } = useAuth();
@@ -34,13 +94,86 @@ export default function TabLayout() {
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(!!data?.$id);
+
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
+  const [pushToken, setPushToken] = useState<string | null>(null);
+  const [response, setResponse] = useState<NotificationResponse | undefined>(undefined);
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(
     undefined
   );
 
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Subscription>();
+  const responseListener = useRef<Subscription>();
+
+  const theme = useTheme();
+
+  if (!theme.background) return "#fff"
+
+  const backgroundColor = theme.background.val
+
+  useEffect(() => {
+    console.log('isExpoGo', isExpoGo);
+    if (!isExpoGo && data?.$id && !isLoading) {
+      setupPushNotifications(data.$id).then((token) => {
+        setPushToken(token);
+      });
+    }
+
+  }, [data?.$id, isExpoGo, isLoading]);
+
+  useEffect(() => {
+
+    if (Platform.OS === 'android') {
+      setNotificationChannelAsync('Miscellaneous', {
+        name: 'Miscellaneous',
+        importance: AndroidImportance.HIGH,
+      })
+        .then((value) => {
+          console.log(`Set channel ${value?.name}`);
+          getNotificationChannelsAsync().then((value) =>
+            setChannels(value ?? []),
+          );
+        })
+        .catch((error) => {
+          console.log(`Error in setting channel: ${error}`);
+        });
+    }
+
+    notificationListener.current = addNotificationReceivedListener(
+      (notification) => {
+        setNotification(notification);
+        console.log(
+          `${Platform.OS} saw notification ${notification.request.content.title}`,
+        );
+      },
+    );
+
+    responseListener.current = addNotificationResponseReceivedListener(
+      (response) => {
+        setResponse(response);
+        console.log(
+          `${Platform.OS} saw response for ${JSON.stringify(response, null, 2)}`,
+        );
+
+        // Handle navigation when a notification is pressed
+        const notificationData = response.notification.request.trigger.remoteMessage.data;
+        if (notificationData && notificationData.href) {
+          console.log('Now redirecting to:', notificationData.href);
+          router.push(notificationData.href);
+        }
+      },
+    );
+
+    console.log(`${Platform.OS} added listeners`);
+
+    return () => {
+      console.log(`${Platform.OS} removed listeners`);
+      notificationListener.current &&
+        removeNotificationSubscription(notificationListener.current);
+      responseListener.current &&
+        removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
   useEffect(() => {
     getNotificationCount().then((count) => {
@@ -57,39 +190,6 @@ export default function TabLayout() {
 
   }, [data?.$id]);
 
-  const theme = useTheme();
-
-  if (!theme.background) return "#fff"
-
-  const backgroundColor = theme.background.val
-
-  //Notification bell icon including notification count
-  const bellIcon = () => {
-    return (
-      <View style={{ marginRight: 15 }}>
-        <Bell size={25} color={Colors[colorScheme ?? 'light'].text} />
-        {notificationCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{notificationCount}</Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  useEffect(() => {
-    console.log('isExpoGo', isExpoGo);
-    if (!isExpoGo && data?.$id && !isLoading) {
-      setupPushNotifications(data.$id);
-    }
-  
-  }, [data?.$id, isExpoGo, isLoading]);
-
-useLastNotificationResponse();
-  
-
-
-
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (isLoading || !data?.$id) {
       return <LogIn size={25} color={color} />;
@@ -105,6 +205,21 @@ useLastNotificationResponse();
       );
     }
   };
+
+  //Notification bell icon including notification count
+  const bellIcon = () => {
+    return (
+      <View style={{ marginRight: 15 }}>
+        <Bell size={25} color={Colors[colorScheme ?? 'light'].text} />
+        {notificationCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{notificationCount}</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
 
   if (isLoading) {
     return null;

@@ -7,9 +7,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateDocument } from '@/lib/appwrite';
 
 export function MultiStepForm() {
-    const { data, isLoading } = useAuth();
+    const { data, isLoading, updateUserPrefs } = useAuth();
+
+    const isRemembered = data?.prefs?.expenseRememberMe || false;
+
     const [currentStep, setCurrentStep] = useState(1);
-    const [rememberMe, setRememberMe] = useState(true);
+    const [rememberMe, setRememberMe] = useState(isRemembered);
     const [formData, setFormData] = useState({
         contactDetails: {
             name: data?.name || "",
@@ -44,7 +47,6 @@ export function MultiStepForm() {
         }
     };
     
-
     useEffect(() => {
         loadSteps();
     }, []);
@@ -52,6 +54,18 @@ export function MultiStepForm() {
     useEffect(() => {
         saveSteps(completedSteps);
     }, [completedSteps]);
+
+    useEffect(() => {
+        if (isRemembered) {
+            let startStep = 1;
+            while (completedSteps.has(startStep)) {
+                startStep++;
+            }
+            setCurrentStep(startStep);
+        } else {
+            setCurrentStep(1);
+        }
+    }, [isRemembered, completedSteps]);
 
     const nextStep = () => {
         if (rememberMe) {
@@ -100,22 +114,22 @@ export function MultiStepForm() {
                             <Input placeholder="Phone" keyboardType='phone-pad' onChangeText={(value) => handleInputChange('contactDetails.phone', value)} value={formData.contactDetails.phone} />
                         </YGroup>
                         <XStack width={300} alignItems="center" space="$4">
-                        <Checkbox 
+                            <Checkbox 
                                 id="remember-me" 
                                 size="$4" 
                                 checked={rememberMe}
                                 onCheckedChange={(checked) => {
                                     if (checked === true || checked === false) {
                                         setRememberMe(checked);
+                                        updateUserPrefs('expenseRememberMe', checked);
                                     }
                                 }}>
                                 <Checkbox.Indicator>
                                     <CheckIcon />
                                 </Checkbox.Indicator>
                             </Checkbox>
-
                             <Label size="$4" htmlFor="remember-me">
-                                Remember contact details
+                                Skip this step in the future
                             </Label>
                         </XStack>
                         <Button onPress={() => {
@@ -155,14 +169,6 @@ export function MultiStepForm() {
                 );
         }
     };
-
-    useEffect(() => {
-        let startStep = 1;
-        while (completedSteps.has(startStep)) {
-            startStep++;
-        }
-        setCurrentStep(startStep);
-    }, []);
 
     return (
         <YStack space="$4" padding="$4">

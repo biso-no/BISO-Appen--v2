@@ -5,12 +5,12 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
 // This function could be called from your app's entry point or after a user logs in
-export async function setupPushNotifications(userId: string) {
-  await registerForPushNotificationsAsync(userId);
+export async function setupPushNotifications(userId: string): Promise<string | null> {
+  return await registerForPushNotificationsAsync(userId);
 }
 
-async function registerForPushNotificationsAsync(userId: string) {
-  let token;
+async function registerForPushNotificationsAsync(userId: string): Promise<string | null> {
+  let token: string | null = null;
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
@@ -30,7 +30,7 @@ async function registerForPushNotificationsAsync(userId: string) {
     }
     if (finalStatus !== 'granted') {
       alert('Failed to get push token for push notification!');
-      return;
+      return null;
     }
     // Learn more about projectId:
     // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
@@ -41,9 +41,9 @@ async function registerForPushNotificationsAsync(userId: string) {
       if (!projectId) {
         throw new Error('Project ID not found');
       }
-      token = (
-        await Notifications.getDevicePushTokenAsync()
-      ).data;
+      token = (await Notifications.getDevicePushTokenAsync()).data;
+      const expoToken = await Notifications.getExpoPushTokenAsync();
+      console.log(`Expo token: ${expoToken.data}`);
       console.log(token);
     } catch (e) {
       token = `${e}`;
@@ -55,4 +55,6 @@ async function registerForPushNotificationsAsync(userId: string) {
   if (token) {
     await registerDeviceToken(token);
   }
+
+  return token;
 }
