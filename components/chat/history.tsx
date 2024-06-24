@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ListItem, Text, YStack, XStack, YGroup } from "tamagui";
+import { ListItem, Text, YStack, XStack, YGroup, View, Button } from "tamagui";
 import { getChats } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "../ui/MyStack";
@@ -29,6 +29,7 @@ export function ChatHistory() {
     }
 
     return (
+        <View flex={1}>
         <MyStack>
             <YGroup alignSelf="center" bordered>
                 {chats.documents.map((chat) => {
@@ -46,5 +47,9 @@ export function ChatHistory() {
                 })}
             </YGroup>
         </MyStack>
+        <Button onPress={() => router.push('/chat/create')} position="absolute" right={16} bottom={16} width={56} height={56} borderRadius={28} justifyContent="center" alignItems="center" fontSize={28}>
+            +
+        </Button>
+        </View>
     );
 }

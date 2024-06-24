@@ -1,131 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { TamaguiProvider, Button, Input, YStack, Text, View, XGroup, Label } from 'tamagui';
-import { useDebounce } from 'use-debounce';
+import { useState } from 'react';
+import { XStack, YStack, Card, Avatar, SizableText, Text, Separator, View, ScrollView } from 'tamagui';
+import { CheckCircle } from '@tamagui/lucide-icons';
 import { MotiView } from 'moti';
-import { MyStack } from '../ui/MyStack';
 
-type User = {
+type Contact = {
   id: number;
   name: string;
-  email: string;
+  campus: string;
+  avatarUrl: string;
 };
 
-type SearchResult = User | { email: string };
+const contactsData: Contact[] = [
+  { id: 1, name: 'John Doe', campus: 'Main Campus', avatarUrl: 'https://example.com/avatar1.png' },
+  { id: 2, name: 'Jane Smith', campus: 'North Campus', avatarUrl: 'https://example.com/avatar2.png' },
+  // Add more contacts as needed
+];
 
-const Badge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <View
-            style={{
-                padding: 5,
-                borderRadius: 5,
-                backgroundColor: 'red',
-                margin: 5
-            }}
-        >
-            <Text style={{ color: 'white' }}>{children}</Text>
-        </View>
-    );
-}
+export function CreateChatGroup() {
+  const [contacts, setContacts] = useState<Contact[]>(contactsData);
+  const [groupMembers, setGroupMembers] = useState<Contact[]>([]);
 
-const GroupComponent = () => {
-  const [groupName, setGroupName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [users, setUsers] = useState<User[]>([]);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [addedUsers, setAddedUsers] = useState<SearchResult[]>([]);
-  const [debouncedEmail] = useDebounce(email, 500);
-  const [step, setStep] = useState(1);
-
-  useEffect(() => {
-    if (debouncedEmail) {
-      searchForUser(debouncedEmail);
-    }
-  }, [debouncedEmail]);
-
-  const searchForUser = (email: string) => {
-    // Simulate an API call to search for a user
-    const dummyUsers: User[] = [
-      { id: 1, name: 'John Doe', email: 'john@example.com' },
-      { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    ];
-
-    const results = dummyUsers.filter(user =>
-      user.email.includes(email) || user.name.includes(email)
-    );
-
-    setSearchResults(results.length ? results : [{ email }]);
+  const addToGroup = (contact: Contact) => {
+    setGroupMembers((prev) => {
+      if (prev.includes(contact)) {
+        return prev.filter((member) => member.id !== contact.id);
+      } else {
+        return [...prev, contact];
+      }
+    });
   };
 
-  const addUserToGroup = (user: SearchResult) => {
-    setAddedUsers([...addedUsers, user]);
-    setEmail('');
-    setSearchResults([]);
+  const useInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('');
   };
 
   return (
-      <MyStack>
-            <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: step === 1 ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        style={{ display: step === 1 ? 'flex' : 'none' }}
-        >
-            <Label>Group Name</Label>
-            <Input
-            placeholder="Enter group name"
-            value={groupName}
-            onChangeText={setGroupName}
-            />
-            </MotiView>
-            <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: step === 2 ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        style={{ display: step === 2 ? 'flex' : 'none' }}
-        >
-            <Input
-            placeholder="Enter email address"
-            value={email}
-            onChangeText={setEmail}
-            />
-            <YStack space>
-            {addedUsers.map((user, index) => (
-                <Badge key={index}>
-                {'name' in user ? user.name : user.email}
-                </Badge>
-            ))}
-            </YStack>
-            <YStack>
-            {searchResults.map((user, index) => (
-                <YStack key={index} flexDirection='row' alignItems="center">
-                <Text>
-                    {'name' in user ? user.name : user.email}
-                </Text>
-                {'email' in user && !('name' in user) && (
-                    <Button onPress={() => addUserToGroup(user)}>
-                    Add to Group
-                    </Button>
-                )}
+    <ScrollView>
+      <YStack padding="$4">
+        {groupMembers.length > 0 && (
+          <View space="$2" marginVertical={16}>
+            <XStack flexWrap="wrap" gap="$2" marginTop="$2">
+              {groupMembers.map((member) => (
+                <MotiView
+                  key={member.id}
+                  from={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                >
+                  <Avatar size={60} circular>
+                    <Avatar.Image src={member.avatarUrl} />
+                    <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
+                      <Text fontSize={30}>{useInitials(member.name)}</Text>
+                    </Avatar.Fallback>
+                  </Avatar>
+                </MotiView>
+              ))}
+            </XStack>
+            <Separator direction='ltr' />
+          </View>
+        )}
+        
+        <View>
+          {contacts.map((contact) => (
+            <Card key={contact.id} padding="$4" marginBottom="$2" onPress={() => addToGroup(contact)}>
+              <XStack alignItems="center" gap="$2">
+                <View style={{ position: 'relative' }}>
+                  <Avatar size={60} circular>
+                    <Avatar.Image src={contact.avatarUrl} />
+                    <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
+                      <Text fontSize={30}>{useInitials(contact.name)}</Text>
+                    </Avatar.Fallback>
+                  </Avatar>
+                  {groupMembers.some((member) => member.id === contact.id) && (
+                    <View style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      borderRadius: 50,
+                    }}>
+                      <CheckCircle size={20} color="green" />
+                    </View>
+                  )}
+                </View>
+                <YStack>
+                  <SizableText>{contact.name}</SizableText>
+                  <SizableText color="$color10">{contact.campus}</SizableText>
                 </YStack>
-            ))}
-        </YStack>
-        </MotiView>
-        <XGroup justifyContent="space-between">
-            <Button
-            onPress={() => setStep(step - 1)}
-            disabled={step === 1}
-            >
-            Back
-            </Button>
-            <Button
-            onPress={() => setStep(step + 1)}
-            disabled={step === 2}
-            >
-            Next
-            </Button>
-        </XGroup>
-      </MyStack>
+              </XStack>
+            </Card>
+          ))}
+        </View>
+      </YStack>
+    </ScrollView>
   );
-};
-
-export default GroupComponent;
+}

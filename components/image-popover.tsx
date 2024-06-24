@@ -46,6 +46,25 @@ export function ImagePopover({ initialAvatar, name}: Props) {
           .join('');
     };
 
+    const handleImageUpload = async (imageUri: string) => {
+        try {
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            const file = new File([blob], 'profile-image.png', { type: blob.type });
+
+            const result = await storage.createFile('YOUR_BUCKET_ID', 'unique()', file); // Replace 'YOUR_BUCKET_ID' with your bucket ID
+            console.log('File uploaded successfully', result);
+            // Set the uploaded image URL or handle the result as needed
+        } catch (error) {
+            console.error('Error uploading file', error);
+        }
+    };
+
+    const handleImageChange = (imageUri) => {
+        setImage(imageUri);
+        handleImageUpload(imageUri);
+    };
+
     return (
         <Popover size="$5">
             <Popover.Trigger asChild>

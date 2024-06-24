@@ -1,7 +1,7 @@
 import { OTPInput } from '@/components/ui/otp-input';
 import { AnimatedView } from '@tamagui/animations-react-native';
 import React, { RefObject, useRef, useState } from 'react';
-import { Button, Input, Text, YStack, AnimatePresence } from 'tamagui';
+import { Button, Input, Text, YStack, AnimatePresence, XGroup } from 'tamagui';
 import { signIn, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { OTPInput as OTP } from '@/components/ui/otp';
@@ -37,6 +37,10 @@ export default function LoginScreen() {
       setStep(1);
       setUserId(response);
     }
+  }
+
+  const handleGoBack = async () => {
+    setStep(0);
   }
 
   const handleOtpSubmit = async () => {
@@ -108,17 +112,13 @@ export default function LoginScreen() {
             codes={codes!}
             refs={refs}
             errorMessages={errorMessages}
-            config={
-              {
-                backgroundColor: "transparent",
-                borderColor: "white",
-                errorColor: "red",
-                focusColor: "transparent",
-                textColor: "black",
-            }
-            }
              />
+             <XGroup justifyContent='center' space="$4">
+             <Button onPress={handleGoBack}>
+              Back
+             </Button>
             <Button onPress={handleOtpSubmit}>Sign in</Button>
+            </XGroup>
           </YStack>
           </MotiView>
     </MyStack>
