@@ -63,7 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
        { 
         ios: { 
           useFrameworks: 'static',
-          newArchEnabled: true,
+          newArchEnabled: false,
         },
         android: {
           newArchEnabled: false,

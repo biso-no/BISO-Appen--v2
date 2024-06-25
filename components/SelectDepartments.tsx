@@ -77,12 +77,14 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelec
 
   return (
     <YStack>
+      {!selectedDepartment && (
       <Input
         placeholder="Search departments..."
         value={searchTerm}
         onChangeText={setSearchTerm}
         marginBottom={20}
       />
+      )}
       {loading ? (
         <Spinner size="large" />
       ) : (

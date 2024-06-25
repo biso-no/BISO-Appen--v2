@@ -168,18 +168,26 @@ export function MultiStepForm() {
             )}
 
             {currentStep === 2 && (
-                <>
+                <YStack>
+                <YGroup>
+                    <YGroup.Item>
+                    <Label>Campus</Label>
                     <CampusSelector 
                         onSelect={(value) => handleCampusChange(value ?? 'national')} 
                         campus={formData.campus} 
                     />
+                    </YGroup.Item>
                     {formData.campus && (
+                        <YGroup.Item>
+                            <Label>Department</Label>
                         <DepartmentSelector 
                             onSelect={(value) => handleDepartmentChange(value[0] ?? 'undefined')} 
                             campus={formData.campus} 
                         />
+                        </YGroup.Item>
                     )}
-                </>
+                </YGroup>
+                </YStack>
             )}
 
             {currentStep === 3 && (
