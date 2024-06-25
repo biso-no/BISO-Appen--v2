@@ -4,13 +4,9 @@ import { MyCamera } from "./camera";
 import { useState } from "react";
 import { Models } from "react-native-appwrite";
 import { Camera } from "@tamagui/lucide-icons";
-import { uploadFile } from "@/lib/appwrite";
+import { getUserAvatar, uploadFile } from "@/lib/appwrite";
 import { uriToBlob } from "@/lib/utils/uriToBlob";
-
-interface Props {
-    initialAvatar: string;
-    name: string;
-}
+import { useAuth } from "./context/auth-provider";
 
 const CameraIcon = styled(Image, {
     position: 'absolute',
@@ -36,9 +32,14 @@ const HighlightedAvatar = styled(Avatar, {
     }
 });
 
-export function ImagePopover({ initialAvatar, name}: Props) {
+export function ImagePopover() {
     const [image, setImage] = useState('');
     const [isPressed, setIsPressed] = useState(false);
+
+    const { data, profile, isLoading } = useAuth();
+
+    const avatarId = profile?.avatar_id;
+    const initialAvatar = getUserAvatar(avatarId);
 
     const avatar = image ? image : initialAvatar;
     const useInitials = (name: string) => {
@@ -49,6 +50,10 @@ export function ImagePopover({ initialAvatar, name}: Props) {
     };
 
     const handleImageUpload = async (imageUri: string) => {
+
+        if (!data) {
+            return;
+        }
         try {
             const blob = await uriToBlob(imageUri); // Convert URI to Blob
     
@@ -60,7 +65,7 @@ export function ImagePopover({ initialAvatar, name}: Props) {
                 uri: imageUri              // Include the original URI
             };
     
-            const result = await uploadFile('avatars', customFile); // Upload the file
+            const result = await uploadFile('avatars', customFile, 'user', data.$id, 'avatar_id'); // Upload the file
             console.log('File uploaded successfully', result);
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -75,6 +80,10 @@ export function ImagePopover({ initialAvatar, name}: Props) {
         handleImageUpload(imageUri);
     };
 
+    if (!data) {
+        return null;
+    }
+
     return (
         <Popover size="$5">
             <Popover.Trigger asChild>
@@ -87,7 +96,7 @@ export function ImagePopover({ initialAvatar, name}: Props) {
                 >
                     <Avatar.Image src={avatar?.toString()} />
                     <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
-                        <Text fontSize={40}>{useInitials(name)}</Text>
+                        <Text fontSize={40}>{useInitials(data.name)}</Text>
                     </Avatar.Fallback>
                     <Camera size={60} color="#FFFFFF" opacity={0.6} />
                 </HighlightedAvatar>

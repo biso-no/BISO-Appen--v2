@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getAccount, updateUserName, getUserPreferences, updateUserPreferences } from '@/lib/appwrite';
+import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 
 // Define the shape of your context state and functions
@@ -44,6 +44,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     fetchAccount();
   }, [fetchAccount]);
+
+  const fetchProfile = useCallback(async () => {
+    if (data && data.$id) {
+    try {
+      const response = await getDocument('user', data.$id);
+      setProfile(response);
+      setError(null);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
+      setProfile(null);
+    }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const updateName = async (name: string) => {
     try {

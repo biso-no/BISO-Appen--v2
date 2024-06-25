@@ -1,7 +1,6 @@
-// fileUtils.ts
 import * as DocumentPicker from 'expo-document-picker';
 import { uploadFile } from "./appwrite";
-import { Models } from 'appwrite';
+import { Models } from 'react-native-appwrite';
 
 export interface File {
     name: string;
@@ -22,10 +21,15 @@ export const pickFile = async (): Promise<File | undefined> => {
     }
 };
 
-export const upload = async (bucketId: string, file: File): Promise<Models.File> => {
-    const result = await uploadFile(bucketId, file);
-    if (!result) {
-        throw new Error("Failed to upload file.");
+export const pickFiles = async (): Promise<File[]> => {
+    const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: true });
+    if (!result.canceled && result.assets[0].name && result.assets[0].uri) {
+        return result.assets.map((asset) => ({
+            name: asset.name,
+            type: asset.mimeType || '',
+            size: asset.size || 0,
+            uri: asset.uri,
+        }));
     }
-    return result;
+    return [];
 };

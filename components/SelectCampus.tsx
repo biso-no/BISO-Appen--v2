@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { H1, YStack, Text, Stack, useTheme, styled } from 'tamagui';
+import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 
-interface Campus {
-  id: string;
-  name: string;
-}
 
 interface CampusSelectorProps {
   onSelect: (campus: string | null) => void;
+  campus?: string;
 }
 
-const campuses: Campus[] = [
-  { id: 'bergen', name: 'Bergen' },
-  { id: 'oslo', name: 'Oslo' },
-  { id: 'trondheim', name: 'Trondheim' },
-  { id: 'stavanger', name: 'Stavanger' },
+const campuses: string[] = [
+  "bergen",
+  "oslo",
+  "trondheim",
+  "stavanger",
+  "national"
 ];
 
 const StyledCard = styled(Stack, {
@@ -31,34 +30,35 @@ const StyledCard = styled(Stack, {
   },
 });
 
-const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect }) => {
-  const [selectedCampus, setSelectedCampus] = useState<Campus | null>(null);
+const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect, campus }) => {
+  const [selectedCampus, setSelectedCampus] = useState(campus ? campus : null);
   const theme = useTheme();
 
-  const handleSelect = (campus: Campus) => {
-    const newSelection = selectedCampus?.id === campus.id ? null : campus;
+
+  const handleSelect = useCallback((campus: string) => {
+    const newSelection = selectedCampus === campus ? null : campus;
     setSelectedCampus(newSelection);
-    onSelect(newSelection?.id || null);
-  };
+    onSelect(newSelection);
+  }, [selectedCampus, onSelect]);
 
   return (
     <YStack>
       {selectedCampus ? (
         <StyledCard
-          key={selectedCampus.id}
+          key={selectedCampus}
           onPress={() => handleSelect(selectedCampus)}
           backgroundColor={theme.gray2}
         >
-          <Text>{selectedCampus.name}</Text>
+          <Text>{capitalizeFirstLetter(selectedCampus)}</Text>
         </StyledCard>
       ) : (
         campuses.map((campus) => (
           <StyledCard
-            key={campus.id}
+            key={campus}
             onPress={() => handleSelect(campus)}
             backgroundColor={theme.gray1}
           >
-            <Text>{campus.name}</Text>
+            <Text>{capitalizeFirstLetter(campus)}</Text>
           </StyledCard>
         ))
       )}

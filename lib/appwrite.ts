@@ -2,6 +2,7 @@ import { Models, Query, Client, OAuthProvider, Role } from 'react-native-appwrit
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
 import { AuthContextType } from '@/components/context/auth-provider';
+import { capitalizeFirstLetter } from './utils/helpers';
 
 export const client = new Client();
 
@@ -196,12 +197,16 @@ interface File {
     uri: string;
 }
 
-export async function uploadFile(bucketId: string, file: File) {
+export async function uploadFile(bucketId: string, file: File, refCollection: string, refDocument: string, refField: string) {
     console.log("Uploading file: ", file);
     try {
         const response = await storage.createFile(bucketId, ID.unique(), file);
-        console.log("Response: ", response);
-        return response;
+        if (response.$id) {
+            const result = await databases.updateDocument('app', refCollection, refDocument, {
+                [refField]: response.$id
+            })
+            return result;
+        }
     } catch (error) {
         console.error("Error uploading file:", error);
     }
@@ -211,11 +216,11 @@ export async function uploadFile(bucketId: string, file: File) {
 export function getUserAvatar(fileId: string) {
 
     const result = avatars.getImage(
-        'https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatar/files/' + fileId + '/view?project=biso',
+        'https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatars/files/' + fileId + '/view?project=665313680028cb624457',
         100,
         100
     )
-
+    console.log(result)
     return result;
 }
 
@@ -419,4 +424,11 @@ export async function getUsers() {
 export async function fetchChatMessages(chatId: string) {
     const messages = await databases.listDocuments('app', 'chat_messages')
     return messages
+}
+
+export async function getDepartmentsByCampus(campus: string) {
+    const departments = await databases.listDocuments('24so', 'departments', [
+        Query.equal('Campus', capitalizeFirstLetter(campus))
+    ])
+    return departments
 }

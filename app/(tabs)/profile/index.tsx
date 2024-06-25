@@ -1,11 +1,9 @@
-import { View, H1, H2, H3, Text, Button, XStack, Card, Avatar, Tabs, Accordion, SizableText, Separator, H5, TabsContentProps, Switch as DSwitch, YGroup, Label, Input, ScrollView, YStack, XGroup } from 'tamagui';
-import { FormCard, Hide } from '@/components/auth/layout'
+import { View, H1, H3, Button, XStack, Card, Tabs, SizableText, Separator, H5, TabsContentProps, YGroup, Label, Input, ScrollView, YStack, XGroup } from 'tamagui';
 import { useMedia } from 'tamagui'
 import { useAuth } from '@/components/context/auth-provider'
 import { router, useRouter } from 'expo-router'
-import { FileUpload } from '@/lib/file-upload'
-import { getUserAvatar, updateDocument, updatePhoneNumber, signOut, signInWithBI } from '@/lib/appwrite'
-import { useEffect, useRef, useState } from 'react'
+import { getUserAvatar, updateDocument, signOut, signInWithBI } from '@/lib/appwrite'
+import { useState } from 'react'
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
@@ -35,23 +33,14 @@ export default function ProfileScreen() {
   });
   const [departments, setDepartments] = useState<Department[]>([]);
 
-  const avatarId = profile?.avatar;
-  const avatar = getUserAvatar(avatarId);
+
+
 
   const updateProfile = (newProfile: any) => {
     setProfile(newProfile);
   };
 
-  const useInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('');
-  };
-
-  const toggleNotification = (type: keyof Notifications) => {
-    setNotifications((prev) => ({ ...prev, [type]: !prev[type] }));
-  };
+  console.log(profile);
 
   const updateDepartments = (department: Department) => {
     setDepartments((prev) => {
@@ -92,7 +81,7 @@ export default function ProfileScreen() {
       <MyStack flex={1} padding="$4">
         <Card padding="$4" borderRadius="$3" marginBottom="$4">
           <YStack alignItems="center">
-            <ImagePopover initialAvatar={avatar.toString()} name={data?.name} />
+            <ImagePopover />
             <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
             <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
             <Button onPress={() => linkIdentity()}>Sign in with BI</Button>
