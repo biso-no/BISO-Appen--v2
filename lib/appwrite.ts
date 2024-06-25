@@ -219,11 +219,6 @@ export function getUserAvatar(fileId: string) {
     return result;
 }
 
-export async function updateUserAvatar(imageUri) => {
-    try {
-        const response 
-    }
-}
 
 export async function getNotificationCount() {
     const notifications = await databases.listDocuments('app', 'notifications', [Query.equal('status', 'unread')]);

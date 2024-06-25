@@ -4,6 +4,8 @@ import { MyCamera } from "./camera";
 import { useState } from "react";
 import { Models } from "react-native-appwrite";
 import { Camera } from "@tamagui/lucide-icons";
+import { uploadFile } from "@/lib/appwrite";
+import { uriToBlob } from "@/lib/utils/uriToBlob";
 
 interface Props {
     initialAvatar: string;
@@ -48,19 +50,27 @@ export function ImagePopover({ initialAvatar, name}: Props) {
 
     const handleImageUpload = async (imageUri: string) => {
         try {
-            const response = await fetch(imageUri);
-            const blob = await response.blob();
-            const file = new File([blob], 'profile-image.png', { type: blob.type });
-
-            const result = await storage.createFile('YOUR_BUCKET_ID', 'unique()', file); // Replace 'YOUR_BUCKET_ID' with your bucket ID
+            const blob = await uriToBlob(imageUri); // Convert URI to Blob
+    
+            // Create a custom file object that matches the interface expected by uploadFile
+            const customFile = {
+                name: 'profile-image.png', // Set the file name
+                type: blob.type,           // Use the MIME type from the blob
+                size: blob.size,           // Use the size property from the blob
+                uri: imageUri              // Include the original URI
+            };
+    
+            const result = await uploadFile('avatars', customFile); // Upload the file
             console.log('File uploaded successfully', result);
-            // Set the uploaded image URL or handle the result as needed
         } catch (error) {
-            console.error('Error uploading file', error);
+            console.error('Error uploading file:', error);
         }
     };
+    
+    
+    
 
-    const handleImageChange = (imageUri) => {
+    const handleImageChange = (imageUri: string) => {
         setImage(imageUri);
         handleImageUpload(imageUri);
     };
@@ -99,7 +109,7 @@ export function ImagePopover({ initialAvatar, name}: Props) {
             >
                 <YGroup space="$4">
                     <MyCamera />
-                    <MyImagePicker image={image} setImage={setImage} />
+                    <MyImagePicker image={image} setImage={setImage} handleImageChange={handleImageChange} />
                 </YGroup>
             </Popover.Content>
         </Popover>
