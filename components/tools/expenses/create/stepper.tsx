@@ -6,7 +6,7 @@ import { Check as CheckIcon } from '@tamagui/lucide-icons';
 import CampusSelector from '@/components/SelectCampus';
 import { MyStack } from '@/components/ui/MyStack';
 import DepartmentSelector from '@/components/SelectDepartments';
-import { updateDocument } from '@/lib/appwrite';
+import { createDocument, updateDocument } from '@/lib/appwrite';
 
 export function MultiStepForm() {
     const { data, profile, isLoading, updateUserPrefs } = useAuth();
@@ -15,12 +15,11 @@ export function MultiStepForm() {
 
     const [currentStep, setCurrentStep] = useState(isRemembered ? 2 : 1);
     const [rememberMe, setRememberMe] = useState(isRemembered);
+    const [expenseId, setExpenseId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
-        contactDetails: {
-            name: data?.name || "",
-            email: data?.email || "",
-            phone: profile?.phone || "",
-        },
+        name: data?.name || "",
+        email: data?.email || "",
+        phone: profile?.phone || "",
         address: profile?.address || "",
         city: profile?.city || "",
         zipCode: profile?.zip || "",
@@ -52,10 +51,7 @@ export function MultiStepForm() {
     const handleInputChange = (field: string, value: string) => {
         setFormData(prevData => ({
             ...prevData,
-            contactDetails: {
-                ...prevData.contactDetails,
-                [field]: value,
-            }
+            [field]: value,
         }));
     };
 
@@ -89,7 +85,7 @@ export function MultiStepForm() {
                         <Input 
                             placeholder="Name" 
                             onChangeText={(value) => handleInputChange('name', value)} 
-                            value={formData.contactDetails.name}
+                            value={formData.name}
                             disabled 
                         />
                     </YGroup.Item>
@@ -99,7 +95,7 @@ export function MultiStepForm() {
                             placeholder="Email" 
                             keyboardType='email-address' 
                             onChangeText={(value) => handleInputChange('email', value)} 
-                            value={formData.contactDetails.email}
+                            value={formData.email}
                             disabled
                         />
                     </YGroup.Item>
@@ -109,7 +105,7 @@ export function MultiStepForm() {
                             placeholder="Phone" 
                             keyboardType='phone-pad' 
                             onChangeText={(value) => handleInputChange('phone', value)} 
-                            value={formData.contactDetails.phone} 
+                            value={formData.phone} 
                         />
                     </YGroup.Item>
                     <YGroup.Item>
@@ -190,9 +186,9 @@ export function MultiStepForm() {
                 </YStack>
             )}
 
-            {currentStep === 3 && (
+            {currentStep === 3 && expenseId && (
                 <>
-                    <FileUpload bucketId='expenses' />
+                    <FileUpload bucketId='expense_attachments' expenseId={expenseId} />
                 </>
             )}
 
@@ -220,15 +216,30 @@ export function MultiStepForm() {
                 <XStack space="$4">
                     {currentStep > 1 && <Button onPress={handlePrevStep}>Back</Button>}
                     <Button onPress={() => {
-                        if (currentStep === 1) {
+                        if (currentStep === 1 || currentStep === 2) {
+                            if (currentStep === 1) {
                             updateDocument('user', data.$id, {
-                                name: formData.contactDetails.name,
-                                phone: formData.contactDetails.phone,
+                                name: formData.name,
+                                phone: formData.phone,
                                 address: formData.address,
                                 city: formData.city,
                                 zip: formData.zipCode,
                                 bank_account: formData.bankAccount,
                             });
+                            }
+                            if (!expenseId) { 
+                                createDocument('expense', {
+                                    name: formData.name,
+                                    email: formData.email,
+                                    phone: formData.phone,
+                                    address: formData.address,
+                                    city: formData.city,
+                                    zip: formData.zipCode,
+                                    bankAccount: formData.bankAccount,
+                                }).then((response) => {
+                                    setExpenseId(response.$id);
+                                })
+                            }
                         }
                         handleNextStep();
                     }}>

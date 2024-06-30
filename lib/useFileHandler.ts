@@ -35,7 +35,7 @@ export const useFileHandler = (bucketId: string) => {
     }: {
         files: File[],
         collection: string,
-        document: string,
+        document?: string,
         field: string,
     }) => {
         if (files.length === 0) {
@@ -45,7 +45,7 @@ export const useFileHandler = (bucketId: string) => {
         setUploading(true);
         try {
           const results = await Promise.allSettled(files.map(file => 
-            uploadFile(bucketId, file, collection, document, field)
+            uploadFile(bucketId, file, collection, field)
           ));
           const formattedResults: UploadResult[] = results.map((result, index) => ({
             file: files[index].name,

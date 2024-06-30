@@ -1,5 +1,5 @@
-import { Models, Query, Client, OAuthProvider, Role } from 'react-native-appwrite';
-import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams } from 'react-native-appwrite';
+import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod } from 'react-native-appwrite';
+import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
 import * as WebBrowser from 'expo-web-browser';
 import { AuthContextType } from '@/components/context/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
@@ -15,13 +15,15 @@ const account = new Account(client);
 
 const databases = new Databases(client);
 
-const storage = new Storage(client);
+export const storage = new Storage(client);
 
 const avatars = new Avatars(client);
 
 const messaging = new Messaging(client);
 
 const teams = new Teams(client);
+
+const functions = new Functions(client);
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email);
@@ -168,7 +170,7 @@ export async function getDocuments(collectionId: string, filters?: Record<string
     }
   }
 
-export async function createDocument(collectionId: string, data: any, id?: string) {
+export async function createDocument(collectionId: string, data?: any, id?: string) {
 
     const documentId = id ?? ID.unique();
 
@@ -197,12 +199,13 @@ interface File {
     uri: string;
 }
 
-export async function uploadFile(bucketId: string, file: File, refCollection: string, refDocument: string, refField: string) {
-    console.log("Uploading file: ", file);
+export async function uploadFile(bucketId: string, file: File, refCollection: string, refField: string, refDocument?: string) {
+    console.log("Uploading file: ", file); 
+    const fileId = ID.unique();
     try {
-        const response = await storage.createFile(bucketId, ID.unique(), file);
+        const response = await storage.createFile(bucketId, fileId, file);
         if (response.$id) {
-            const result = await databases.updateDocument('app', refCollection, refDocument, {
+            const result = await databases.updateDocument('app', refCollection, refDocument || fileId, {
                 [refField]: response.$id
             })
             return result;
@@ -431,4 +434,24 @@ export async function getDepartmentsByCampus(campus: string) {
         Query.equal('Campus', capitalizeFirstLetter(campus))
     ])
     return departments
+}
+
+export async function triggerFunction({
+    functionId,
+    data,
+    async,
+    xpath,
+    method,
+    headers
+}: {
+    functionId: string
+    data?: string
+    async?: boolean
+    xpath?: string
+    method?: ExecutionMethod
+    headers?: object
+}) {
+    const response = await functions.createExecution(functionId, data, async, xpath, method, headers)
+
+    return response
 }
