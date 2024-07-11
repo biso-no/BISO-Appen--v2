@@ -1,42 +1,35 @@
 import { View } from 'tamagui';
 import React, { useState } from 'react';
-import { Input } from '@/components/auth/input';
+import { Input } from 'tamagui';
 import { MotiView } from 'moti';
-import { useAuth } from '../context/auth-provider';
 
 interface Step1Props {
-    step: number;
-    name: string;
-    setName: (name: string) => void;
+    onNext: () => void;
 }
 
-export function Step1({ step, name, setName }: Step1Props) {
+export function Step1({ onNext }: Step1Props) {
 
+    const [name, setName] = useState('');
+    
     const handleNameChange = (name: string) => {
-        setName(name);
-    }
+      setName(name);
+    };
+    
+    if (onNext) {
+      onNext();
+    };
 
-    return (
-        <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: step === 1 ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        style={{ display: step === 1 ? 'flex' : 'none' }}
-    >
-        <View>
-            <Input size="$4">
-                <Input.Label htmlFor="name">Name</Input.Label>
-                <Input.Box>
-                    <Input.Area
-                        id="name"
-                        placeholder="Enter your name"
-                        value={name}
-                        onChangeText={handleNameChange}
-                    />
-                </Input.Box>
-            </Input>
-        </View>
+  return (
+    <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <View>
+        <Input
+          id="name"
+          placeholder="Enter your name"
+          value={name}
+          onChangeText={handleNameChange}
+          size="4"
+        />
+      </View>
     </MotiView>
-    )
-
-}
+  );
+};

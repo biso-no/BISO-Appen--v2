@@ -187,7 +187,7 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
   const [address, setAddress] = useState(profile?.address ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
   const [zipCode, setZipCode] = useState(profile?.zipCode ?? '');
-  const [bankAccount, setBankAccount] = useState(profile?.bankAccount ?? '');
+  const [bankAccount, setBankAccount] = useState(profile?.bank_account ?? '');
 
   const handleSubmit = async () => {
     if (!profile?.$id) {

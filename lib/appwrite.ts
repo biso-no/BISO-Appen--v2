@@ -7,8 +7,8 @@ import { capitalizeFirstLetter } from './utils/helpers';
 export const client = new Client();
 
 client
-    .setEndpoint('https://appwrite-rg044w0.biso.no/v1')
-    .setProject('665313680028cb624457')
+    .setEndpoint('https://appwrite.biso.no/v1')
+    .setProject('biso')
 
 
 const account = new Account(client);
@@ -128,7 +128,7 @@ export async function updateUserPreferences(preferences: Models.Preferences) {
 }
 
 export async function getNews() {
-    const response = await databases.listDocuments('app', 'post');
+    const response = await databases.listDocuments('app', 'news');
     return response;
 }
 
@@ -219,7 +219,7 @@ export async function uploadFile(bucketId: string, file: File, refCollection: st
 export function getUserAvatar(fileId: string) {
 
     const result = avatars.getImage(
-        'https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatars/files/' + fileId + '/view?project=665313680028cb624457',
+        'https://appwrite.biso.no/v1/storage/buckets/avatars/files/' + fileId + '/view?project=665313680028cb624457',
         100,
         100
     )
@@ -351,14 +351,14 @@ export async function getTeam(teamId: string) {
 }
 
 export async function getChats() {
-    const fetchedChats = await databases.listDocuments('app', 'chat_group');
+    const fetchedChats = await databases.listDocuments('app', 'chats');
     console.log(fetchedChats.documents)
     return fetchedChats
 }
 
 export function subScribeToChat(callback: (response: any) => void) {
 
-    const unsubscribe = client.subscribe(['databases.app.collections.chat_group.documents', 'databases.app.collections.chat_messages.documents'], (response) => {
+    const unsubscribe = client.subscribe(['databases.app.collections.chats.documents', 'databases.app.collections.chat_messages.documents'], (response) => {
       console.log(response);
       callback(response);
     });
@@ -454,4 +454,18 @@ export async function triggerFunction({
     const response = await functions.createExecution(functionId, data, async, xpath, method, headers)
 
     return response
+}
+
+export async function getFunctionExecution(functionId: string, executionId: string) {
+    const executions = await functions.getExecution(functionId, executionId)
+
+    return executions
+}
+
+export async function getFunctionExecutions(functionId: string, executionIds: string[]) {
+    const executions = await functions.listExecutions(functionId, [
+        Query.and(executionIds.map(executionId => Query.equal('$id', executionId)))
+    ])
+
+    return executions
 }

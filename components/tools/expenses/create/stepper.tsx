@@ -1,252 +1,256 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Text, YStack, Input, H6, YGroup, Label, Checkbox, XStack, ScrollView } from 'tamagui';
-import { FileUpload } from '@/lib/file-upload';
-import { useAuth } from '@/components/context/auth-provider';
-import { Check as CheckIcon } from '@tamagui/lucide-icons';
-import CampusSelector from '@/components/SelectCampus';
-import { MyStack } from '@/components/ui/MyStack';
-import DepartmentSelector from '@/components/SelectDepartments';
-import { createDocument, updateDocument } from '@/lib/appwrite';
+import React, { useEffect, useState } from 'react'; 
+import { Button, Text, YStack, Input, H6, YGroup, Label, Checkbox, XStack, ScrollView } from 'tamagui'; 
+import { FileUpload } from '@/lib/file-upload'; 
+import { useAuth } from '@/components/context/auth-provider'; 
+import { Check as CheckIcon } from '@tamagui/lucide-icons'; 
+import CampusSelector from '@/components/SelectCampus'; 
+import { MyStack } from '@/components/ui/MyStack'; 
+import DepartmentSelector from '@/components/SelectDepartments'; 
+import { createDocument, updateDocument, triggerFunction } from '@/lib/appwrite'; 
+import { Switch } from 'tamagui'; 
+import { MotiView } from 'moti';
+import { useDebounce } from 'use-debounce';
+import OverviewScreen from './overview';
 
-export function MultiStepForm() {
-    const { data, profile, isLoading, updateUserPrefs } = useAuth();
+export interface Attachment { 
+    url: string; 
+    description: string; 
+    date: string; 
+    amount: string; 
+}
 
-    const isRemembered = data?.prefs?.expenseRememberMe || false;
+type FormData = {
+  bank_account: string;
+  campus: string;
+  department: string;
+  expenseAttachments: Attachment[];
+  description: string;
+  prepayment_amount: number;
+  total: number;
+  status: string;
+};
 
-    const [currentStep, setCurrentStep] = useState(isRemembered ? 2 : 1);
-    const [rememberMe, setRememberMe] = useState(isRemembered);
-    const [expenseId, setExpenseId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
-        name: data?.name || "",
-        email: data?.email || "",
-        phone: profile?.phone || "",
-        address: profile?.address || "",
-        city: profile?.city || "",
-        zipCode: profile?.zip || "",
-        bankAccount: profile?.bank_account || "",
-        campus: profile?.campus || "",
-        department: profile?.departments[0] || "",
-        attachments: [],
-        description: ""
-    });
+export function MultiStepForm() { 
+    const { data, profile, isLoading } = useAuth(); 
+    const [currentStep, setCurrentStep] = useState(1); 
+    const [expenseId, setExpenseId] = useState<string | null>(null); 
+    const [forEvent, setForEvent] = useState(false);
+    const [eventName, setEventName] = useState<string>("");
+    const [debouncedEventName] = useDebounce(eventName, 500);
+    const [showGenerateButton, setShowGenerateButton] = useState(false);
+    const [formData, setFormData] = useState<FormData>({ 
+        bank_account: profile?.bank_account || "", 
+        campus: profile?.campus || "", 
+        department: profile?.departments?.[0] || "", 
+        expenseAttachments: [], 
+        description: "", 
+        prepayment_amount: 0, 
+        total: 0, 
+        status: "pending", 
+    }); 
+    const [receivedPrepayment, setReceivedPrepayment] = useState(formData.prepayment_amount > 0); 
+ 
+    const handleNextStep = () => { 
+        console.log('Current Step:', currentStep);
+        if (currentStep < 5) { 
+            setCurrentStep(prevStep => prevStep + 1); 
+        } 
+    }; 
+
+    const handlePrevStep = () => { 
+        console.log('Current Step:', currentStep);
+        if (currentStep > 1) { 
+            setCurrentStep(prevStep => prevStep - 1); 
+        } 
+    }; 
+
+    const handleInputChange = (field: keyof FormData, value: string | number | Attachment[]) => { 
+        setFormData(prevData => ({ 
+            ...prevData, 
+            [field]: value, 
+        })); 
+    }; 
+
+    const handleCampusChange = (campus: string) => { 
+        handleInputChange('campus', campus);
+        handleInputChange('department', ''); 
+    }; 
+
+    const handleDepartmentChange = (department: string) => { 
+        handleInputChange('department', department); 
+    }; 
+
+    const handleSaveDraft = async () => { 
+        if (!profile) { 
+            return; 
+        } 
+        const newExpense = await updateDocument('user', profile.$id, { 
+            expenses: [{ 
+                ...formData, 
+                status: 'draft', 
+            }], 
+        });
+        setExpenseId(newExpense.$id); 
+    }; 
+
+    const handleSubmit = async () => { 
+        if (!profile) { 
+            return; 
+        } 
+        const newExpense = await updateDocument('user', profile.$id, { 
+            expenses: [{ 
+                ...formData, 
+                status: 'pending', 
+            }], 
+        });
+        setExpenseId(newExpense.$id); 
+    };
+
+    if (isLoading || !data || !profile) { 
+        return <Text>Loading...</Text>; 
+    } 
 
     useEffect(() => {
-        if (isRemembered) {
-            setCurrentStep(2);
+        if (debouncedEventName) {
+            setShowGenerateButton(true);
+        } else {
+            setShowGenerateButton(false);
         }
-    }, [isRemembered]);
+    }, [debouncedEventName]);
 
-    const handleNextStep = () => {
-        if (currentStep < 4) {
-            setCurrentStep(prevStep => prevStep + 1);
+    const handleGenerateDescription = async () => {
+        const descriptions = formData.expenseAttachments.map(attachment => attachment.description).join(', ');
+        const event = eventName ? `for ${eventName}` : '';
+
+        const body = {
+            descriptions: descriptions,
+            event: event
         }
-    };
-
-    const handlePrevStep = () => {
-        if (currentStep > 1) {
-            setCurrentStep(prevStep => prevStep - 1);
+        const overallDescription = await triggerFunction({
+            functionId: 'generate_expense_description',
+            async: false,
+            data: JSON.stringify(body)
+        });
+        if (!overallDescription) {
+            return;
         }
+        const responseBody = JSON.parse(overallDescription.responseBody);
+        handleInputChange('description', responseBody.description);
     };
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prevData => ({
-            ...prevData,
-            [field]: value,
-        }));
-    };
-
-    const handleCampusChange = (campus: string) => {
-        setFormData(prevData => ({
-            ...prevData,
-            campus,
-            department: '' // Reset department when campus changes
-        }));
-    };
-
-    const handleDepartmentChange = (department: string) => {
-        setFormData(prevData => ({
-            ...prevData,
-            department
-        }));
-    };
-
-    if (isLoading || !data) {
-        return <Text>Loading...</Text>;
-    }
+    //Whenever an attachment is added, update the total
+    useEffect(() => {
+        let total = 0;
+        formData.expenseAttachments.forEach(attachment => {
+            total += parseInt(attachment.amount);
+        });
+        handleInputChange('total', total);
+    }, [formData.expenseAttachments]);  // Dependencies updated to prevent re-render loop
+    
+    
 
     return (
         <MyStack space="$4" padding="$4">
-            {currentStep === 1 && (
-                <ScrollView>
-                    <H6 fontWeight="bold">Are the details correct?</H6>
-                    <YGroup>
-                        <YGroup.Item>
-                        <Label>Name</Label>
-                        <Input 
-                            placeholder="Name" 
-                            onChangeText={(value) => handleInputChange('name', value)} 
-                            value={formData.name}
-                            disabled 
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>Email</Label>
-                        <Input 
-                            placeholder="Email" 
-                            keyboardType='email-address' 
-                            onChangeText={(value) => handleInputChange('email', value)} 
-                            value={formData.email}
-                            disabled
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>Phone</Label>
-                        <Input 
-                            placeholder="Phone" 
-                            keyboardType='phone-pad' 
-                            onChangeText={(value) => handleInputChange('phone', value)} 
-                            value={formData.phone} 
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>Address</Label>
-                        <Input 
-                            placeholder="Address" 
-                            onChangeText={(value) => handleInputChange('address', value)} 
-                            value={formData.address} 
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>City</Label>
-                        <Input 
-                            placeholder="City" 
-                            onChangeText={(value) => handleInputChange('city', value)} 
-                            value={formData.city} 
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>Zip Code</Label>
-                        <Input 
-                            placeholder="Zip Code" 
-                            onChangeText={(value) => handleInputChange('zipCode', value)} 
-                            value={formData.zipCode} 
-                        />
-                    </YGroup.Item>
-                    <YGroup.Item>
-                        <Label>Bank Account</Label>
-                        <Input
-                            placeholder="Bank Account"
-                            onChangeText={(value) => handleInputChange('bankAccount', value)}
-                            value={formData.bankAccount}
-                        />
-                    </YGroup.Item>
-                    </YGroup>
-                    <XStack width={300} alignItems="center" space="$4">
-                        <Checkbox 
-                            id="remember-me" 
-                            size="$4" 
-                            checked={rememberMe}
-                            onCheckedChange={(checked) => {
-                                if (checked === true || checked === false) {
-                                    setRememberMe(checked);
-                                    updateUserPrefs('expenseRememberMe', checked);
-                                }
-                            }}>
-                            <Checkbox.Indicator>
-                                <CheckIcon />
-                            </Checkbox.Indicator>
-                        </Checkbox>
-                        <Label size="$4" htmlFor="remember-me">
-                            Skip this step in the future
-                        </Label>
-                    </XStack>
-                </ScrollView>
-            )}
-
-            {currentStep === 2 && (
-                <YStack>
-                <YGroup>
-                    <YGroup.Item>
-                    <Label>Campus</Label>
-                    <CampusSelector 
-                        onSelect={(value) => handleCampusChange(value ?? 'national')} 
-                        campus={formData.campus} 
+          {currentStep === 1 && (
+            <ScrollView>
+              <H6 fontWeight="bold">Are the details correct?</H6>
+              <YGroup>
+                <YGroup.Item>
+                  <Label>Bank Account</Label>
+                  <Input
+                    placeholder="Bank Account"
+                    onChangeText={(value) => handleInputChange('bank_account', value)}
+                    value={formData.bank_account}
+                  />
+                </YGroup.Item>
+                <YGroup.Item>
+                  <Label>Did you receive a prepayment?</Label>
+                  <Switch checked={receivedPrepayment} onCheckedChange={() => setReceivedPrepayment(!receivedPrepayment)} />
+                </YGroup.Item>
+              </YGroup>
+            </ScrollView>
+          )}
+    
+          {currentStep === 2 && (
+            <YStack>
+              <YGroup>
+                <YGroup.Item>
+                  <Label>Campus</Label>
+                  <CampusSelector
+                    onSelect={(value) => handleCampusChange(value ?? 'national')}
+                    campus={formData.campus}
+                  />
+                </YGroup.Item>
+                {formData.campus && (
+                  <YGroup.Item>
+                    <Label>Department</Label>
+                    <DepartmentSelector
+                      onSelect={(value) => handleDepartmentChange(value[0] ?? 'undefined')}
+                      campus={formData.campus}
                     />
+                  </YGroup.Item>
+                )}
+              </YGroup>
+            </YStack>
+          )}
+    
+          {currentStep === 3 && (
+            <YStack>
+              <FileUpload
+                ocrResults={formData.expenseAttachments}
+                setOcrResults={(attachments) => setFormData(prevData => ({
+                  ...prevData,
+                  expenseAttachments: attachments as Attachment[]
+                }))}
+              />
+            </YStack>
+          )}
+    
+          {currentStep === 4 && (
+            <YStack>
+              <YGroup space="$4">
+                <YGroup.Item>
+                  <Label>Is this expense related to a specific event?</Label>
+                  <Switch checked={forEvent} onCheckedChange={() => setForEvent(!forEvent)} />
+                </YGroup.Item>
+                {forEvent && (
+                  <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <YGroup.Item>
+                      <Label>Event Name</Label>
+                      <Input
+                        placeholder="Event Name"
+                        onChangeText={(value) => setEventName(value)}
+                        value={eventName}
+                      />
                     </YGroup.Item>
-                    {formData.campus && (
-                        <YGroup.Item>
-                            <Label>Department</Label>
-                        <DepartmentSelector 
-                            onSelect={(value) => handleDepartmentChange(value[0] ?? 'undefined')} 
-                            campus={formData.campus} 
-                        />
-                        </YGroup.Item>
-                    )}
-                </YGroup>
-                </YStack>
-            )}
-
-            {currentStep === 3 && expenseId && (
-                <>
-                    <FileUpload bucketId='expense_attachments' expenseId={expenseId} />
-                </>
-            )}
-
-            {currentStep === 4 && (
-                <>
-                    <Input 
-                        placeholder="Description of the Expense" 
-                        onChangeText={(value) => setFormData(prevData => ({
-                            ...prevData,
-                            description: value
-                        }))} 
-                        value={formData.description}
-                    />
-                </>
-            )}
-
-            {currentStep > 4 && (
-                <>
-                    <Text>All steps completed - Review and Submit</Text>
-                    <Button onPress={() => setCurrentStep(1)}>Start Over</Button>
-                </>
-            )}
-
-            {currentStep <= 4 && (
-                <XStack space="$4">
-                    {currentStep > 1 && <Button onPress={handlePrevStep}>Back</Button>}
-                    <Button onPress={() => {
-                        if (currentStep === 1 || currentStep === 2) {
-                            if (currentStep === 1) {
-                            updateDocument('user', data.$id, {
-                                name: formData.name,
-                                phone: formData.phone,
-                                address: formData.address,
-                                city: formData.city,
-                                zip: formData.zipCode,
-                                bank_account: formData.bankAccount,
-                            });
-                            }
-                            if (!expenseId) { 
-                                createDocument('expense', {
-                                    name: formData.name,
-                                    email: formData.email,
-                                    phone: formData.phone,
-                                    address: formData.address,
-                                    city: formData.city,
-                                    zip: formData.zipCode,
-                                    bankAccount: formData.bankAccount,
-                                }).then((response) => {
-                                    setExpenseId(response.$id);
-                                })
-                            }
-                        }
-                        handleNextStep();
-                    }}>
-                        {currentStep === 4 ? 'Submit' : 'Next'}
-                    </Button>
-                </XStack>
-            )}
+                  </MotiView>
+                )}
+                {(!forEvent || showGenerateButton) && (
+                  <Button onPress={handleGenerateDescription}>Try generate a description!</Button>
+                )}
+                <YGroup.Item>
+                  <Label>Description</Label>
+                  <Input
+                    placeholder="Description of the Expense"
+                    multiline
+                    onChangeText={(value) => handleInputChange('description', value)}
+                    value={formData.description}
+                  />
+                </YGroup.Item>
+              </YGroup>
+            </YStack>
+          )}
+    
+          {currentStep === 5 && (
+            <OverviewScreen formData={formData} />
+          )}
+    
+          <XStack space="$4">
+            {currentStep > 1 && <Button onPress={handlePrevStep}>Back</Button>}
+            <Button onPress={currentStep === 5 ? handleSubmit : handleNextStep}>
+              {currentStep === 5 ? 'Submit' : 'Next'}
+            </Button>
+          </XStack>
         </MyStack>
-    );
-}
+      );
+    }

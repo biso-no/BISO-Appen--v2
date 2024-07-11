@@ -196,7 +196,7 @@ export default function TabLayout() {
     } else if (!avatarId) {
       return <UserRound size={25} color={color} />;
     } else {
-      const avatarUrl = `https://appwrite-rg044w0.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
+      const avatarUrl = `https://appwrite.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
         <Avatar circular size={25}>
           <Avatar.Image src={avatarUrl} />

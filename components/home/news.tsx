@@ -30,7 +30,7 @@ export function News() {
       };
 
       const useNewsImageUri = (imageId: string) => {
-        return `https://appwrite-rg044w0.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
+        return `https://appwrite.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
       }
 
 

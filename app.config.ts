@@ -2,12 +2,12 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
-  name: 'ny',
-  slug: 'ny',
-  version: process.env.VERSION,
+  name: 'BISO',
+  slug: 'BISO',
+  version: "0.9.90",
   orientation: 'portrait',
   icon: './assets/images/icon.png',
-  scheme: 'nymheien',
+  scheme: 'biso',
   userInterfaceStyle: 'automatic',
   backgroundColor: "#fff",
   splash: {

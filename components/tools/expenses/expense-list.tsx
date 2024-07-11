@@ -148,7 +148,7 @@ export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
         } else if (filterType === 'department') {
           setSelectedDepartment(value);
         }
-        const newExpenses = await getDocuments('expenses', { [filterType]: value });
+        const newExpenses = await getDocuments('expense', { [filterType]: value });
         setExpenses(newExpenses);
     };
 

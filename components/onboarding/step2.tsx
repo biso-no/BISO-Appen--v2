@@ -4,31 +4,27 @@ import CampusSelector from '@/components/SelectCampus';
 import { MotiView } from 'moti';
 import { useAuth } from '../context/auth-provider';
 
-interface Step {
-    step: number
+interface Step2Props {
+  onNext?: () => void | Promise<void>;
 }
 
-export function Step2({ step }: Step) {
+export function Step2({ onNext }: Step2Props) {
+  const { updateUserPrefs } = useAuth();
 
-    const { updateUserPrefs } = useAuth();
-
-    const handleCampusChange = (campus: string | null) => {
-        if (campus) {
-            updateUserPrefs('campus', campus);
-        }
+  const handleCampusChange = (campus: string | null) => {
+    if (campus) {
+      updateUserPrefs('campus', campus);
     }
+    if (onNext) {
+      onNext();
+    }
+  };
 
-    return (
-        <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: step === 2 ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        style={{ display: step === 2 ? 'flex' : 'none' }}
-    >
-        <View>
-            <CampusSelector onSelect={handleCampusChange} />
-        </View>
+  return (
+    <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <View>
+        <CampusSelector onSelect={handleCampusChange} />
+      </View>
     </MotiView>
-    )   
-
-}
+  );
+};
