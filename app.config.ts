@@ -37,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.biso.no',
+    versionCode: 30,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon.png',
@@ -90,7 +91,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: "c457ab17-1389-42bc-affd-800f0dd0768e"
+      projectId: "4416309c-fcb7-4282-ad1a-2cad0300086f"
     },
   },
   experiments: {
