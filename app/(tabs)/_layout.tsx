@@ -30,6 +30,7 @@ import {
 } from 'expo-notifications';
 import { defineTask } from 'expo-task-manager';
 import { AppState } from 'react-native';
+import { CampusProvider } from '@/lib/hooks/useCampus';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -224,9 +225,10 @@ export default function TabLayout() {
   if (isLoading) {
     return null;
   }
-
+	
   return (
     <ChatProvider data={data}>
+          <CampusProvider>
       {isAuthenticated ? (
         <AuthenticatedTabs
           profileIcon={profileIcon}
@@ -240,6 +242,7 @@ export default function TabLayout() {
           backgroundColor={backgroundColor}
         />
       )}
+      </CampusProvider>
     </ChatProvider>
   );
 }

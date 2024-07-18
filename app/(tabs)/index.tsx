@@ -4,18 +4,24 @@ import { H3, Text, View, YStack, Input } from 'tamagui';
 import { Featured } from '@/components/home/featured';
 import { Discover } from '@/components/home/discover';
 import { ScrollView } from 'tamagui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from '@/components/home/search';
 import { Search as SearchIcon } from '@tamagui/lucide-icons';
 import { MyStack } from '@/components/ui/MyStack';
+import { useAuth } from '@/components/context/auth-provider';
 
 export default function HomeScreen() {
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+const { profile } = useAuth();
+  useEffect(() => {
+    console.log('Profile:', profile);
+  }, [profile]);
 
   return (
     <ScrollView>
     <MyStack alignItems={"center"}>
+            {/* 
     <Pressable onPress={() => setSearchModalOpen(true)} style={{width: "90%", marginTop: 10}}>
           <View style={{
             borderWidth: 1,
@@ -28,12 +34,12 @@ export default function HomeScreen() {
             alignItems: "center",
           }}>
             <SearchIcon />
-            <Text style={{ marginLeft: 10 }}> {/* Adjust marginLeft as needed */}
+            <Text style={{ marginLeft: 10 }}>
               Find something new
             </Text>
           </View>
         </Pressable>
-      {/* <Featured /> */}
+<Featured /> */}
       <Discover />
       <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
     </MyStack>

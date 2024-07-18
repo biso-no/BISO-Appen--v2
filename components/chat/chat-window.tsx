@@ -8,34 +8,31 @@ import { Equal } from "@tamagui/lucide-icons";
 import { useAuth } from "../context/auth-provider";
 import { Models } from 'react-native-appwrite';
 import { getFormattedDateFromString } from "@/lib/format-time";
+import { Pressable } from "react-native";
+import { ChatBubble } from "./chat-bubble";
 
 interface ChatWindowProps {
   chatGroupId: string;
 }
 
 export function ChatWindow({ chatGroupId }: ChatWindowProps) {
-  const { messages, fetchMessages } = useChat();
+  const { messages, fetchMessages, setUserTyping, messageStatus, addReaction } = useChat();
   const [newMessage, setNewMessage] = useState("");
   const scrollViewRef = useRef<ScrollViewType>(null);
   const router = useRouter();
-
   const { data } = useAuth();
 
   useEffect(() => {
-
     fetchMessages(chatGroupId);
   }, [chatGroupId]);
 
   useEffect(() => {
-
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, chatGroupId]);
 
   useEffect(() => {
     console.log("Chat Group ID:", chatGroupId);
     console.log("Messages:", messages);
-
-    // Log the users object within each message
     messages[chatGroupId]?.forEach((message: Models.Document, index: number) => {
       console.log(`Message ${index}: Users ${message.users}`);
     });
@@ -45,7 +42,19 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
     if (newMessage.trim() && data) {
       await sendChatMessage(chatGroupId, newMessage, data.$id);
       setNewMessage("");
+      setUserTyping(chatGroupId, data.$id, false);
     }
+  };
+
+  const handleInputChange = (text: string) => {
+    setNewMessage(text);
+    if (data) {
+      setUserTyping(chatGroupId, data.$id, text.length > 0);
+    }
+  };
+
+  const handleReaction = (messageId: string, reaction: string) => {
+    addReaction(chatGroupId, messageId, reaction);
   };
 
   return (
@@ -53,23 +62,11 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
       <ScrollView ref={scrollViewRef} flex={1} padding={8} borderRadius={8}>
         {messages[chatGroupId]?.map((message: Models.Document, index: number) => {
           const user = message.users;
-          const isSender = user.$id === data?.$id;
+          const isSender = user === data?.$id;
+          const status = messageStatus[message.$id];
+
           return (
-            <YStack key={index} alignSelf={isSender ? "flex-end" : "flex-start"} marginBottom={8} maxWidth="80%">
-              <YStack
-                backgroundColor={isSender ? "#0b93f6" : "#e5e5ea"}
-                padding={10}
-                borderRadius={16}
-              >
-                <Text color={isSender ? "white" : "black"}>{message.content}</Text>
-                {user && (
-                  <Text fontSize={10} color={isSender ? "white" : "gray"}>{user.name}</Text>
-                )}
-              </YStack>
-              <Text fontSize={10} color="gray" marginTop={4} alignSelf="center">
-                {getFormattedDateFromString(message.$createdAt)}
-              </Text>
-            </YStack>
+            <ChatBubble key={message.$id} message={message} status={status} senderName={user} />
           );
         })}
       </ScrollView>
@@ -77,7 +74,7 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
         <Input
           flex={1}
           value={newMessage}
-          onChangeText={setNewMessage}
+          onChangeText={handleInputChange}
           placeholder="Type a message..."
           borderRadius={16}
           paddingHorizontal={16}

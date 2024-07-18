@@ -4,12 +4,13 @@ import { MyStack } from '@/components/ui/MyStack';
 import type { Attachment } from './stepper';
 import { formatDate } from '@/lib/format-time';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
+import { Models } from 'react-native-appwrite';
 
 interface OverviewScreenProps {
   formData: {
     bank_account: string;
     campus: string;
-    department: string;
+    department: Models.Document;
     expenseAttachments: Attachment[];
     description: string;
     prepayment_amount: number;
@@ -42,7 +43,7 @@ const OverviewScreen: React.FC<OverviewScreenProps> = ({ formData }) => {
           <Card padding="$4" bordered space="$2">
             <Text>Prepayment Amount: {formData.prepayment_amount} kr</Text>
             <Separator />
-            <Text>Total Amount: {formData.total} kr</Text>
+            <Text>Total Amount: {formData.total.toString()} kr</Text>
             <Separator />
           </Card>
         )}

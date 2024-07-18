@@ -3,14 +3,20 @@ import { getEvents } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import type { Models } from "react-native-appwrite";
 import { getFormattedDateFromString } from "@/lib/format-time";
+import { Frown } from "@tamagui/lucide-icons";
+import { MyStack } from "../ui/MyStack";
+import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
+import { useCampus } from "@/lib/hooks/useCampus";
 
 export function Events() {
 
-    const [events, setEvents] = useState<Models.DocumentList<Models.Document>>({ documents: [], total: 0 });
+    const [events, setEvents] = useState<Event[]>();
+
+    const { campus } = useCampus();
 
     useEffect(() => {
         async function fetchEvents() {
-            const fetchedEvents = await getEvents();
+            const fetchedEvents = await getWebsiteEvents(campus);
             setEvents(fetchedEvents);
             console.log(fetchedEvents);
         }
@@ -25,7 +31,14 @@ export function Events() {
         return process.env.EXPO_PUBLIC_APPWRITE_URI + `storage/buckets/event/files/${imageId}/view?project=665313680028cb624457`
     }
 
-    //Display in a grid of 2 columns. One card for each event
+    if (!events || events.length === 0) {
+        return (
+            <MyStack justifyContent="center" alignItems="center" space="$2">
+              <Frown size={48} />
+              <H6>No events found</H6>
+            </MyStack>
+          );
+        }
 
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
@@ -33,16 +46,16 @@ export function Events() {
             <Button>See all</Button>
             </XStack>
             <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
-                {events.documents.map((event) => (
+                {events.map((event) => (
                     <Card
-                        key={event.$id}
+                        key={event.id}
                         backgroundColor="$backgroundHover"
                         bordered
                         width={380}
                     >
                         <Card.Header>
                             <Image
-                                source={{ uri: useEventImageUri(event.image_id) }}
+                                source={{ uri: useEventImageUri(event.image) }}
                                 alt="image"
                                 height={120}
                                 borderRadius="$2"
@@ -51,14 +64,12 @@ export function Events() {
                         <Card.Footer>
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
-                            <Paragraph>{capitalizeFirstLetter(event.campus)}</Paragraph>
+                            <Paragraph>{capitalizeFirstLetter(event.organizer[0].organizer)}</Paragraph>
 
                             </XStack>
                             <H6>{event.title}</H6>
                             <XStack space="$2" alignItems="center" justifyContent="space-between">
-                            {event.price > 0 &&<Paragraph>{event.price} kr</Paragraph>}
-                            <Paragraph>·</Paragraph>
-                            <Paragraph>{getFormattedDateFromString(event.event_date)}</Paragraph>
+                            <Paragraph>{getFormattedDateFromString(event.start_date)}</Paragraph>
                             </XStack>
                         </YStack>
                         </Card.Footer>

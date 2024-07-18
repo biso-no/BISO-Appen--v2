@@ -14,6 +14,7 @@ import { AuthProvider } from '@/components/context/auth-provider';
 import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
 import 'react-native-gesture-handler';
+import { useLocalSearchParams } from 'expo-router';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -58,6 +59,8 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isExpoGo = Constants.appOwnership === 'expo';
 
+
+
   /*
 useEffect(() => {
   if (!isExpoGo) {
@@ -79,6 +82,9 @@ useEffect(() => {
   }
 }, []);
 */
+
+
+
   return (
     <AuthProvider>
     <TamaguiProvider config={config}>

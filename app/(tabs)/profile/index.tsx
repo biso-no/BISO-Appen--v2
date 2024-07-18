@@ -1,9 +1,13 @@
-import { View, H1, H3, Button, XStack, Card, Tabs, SizableText, Separator, H5, TabsContentProps, YGroup, Label, Input, ScrollView, YStack, XGroup } from 'tamagui';
-import { useMedia } from 'tamagui'
-import { useAuth } from '@/components/context/auth-provider'
-import { router, useRouter } from 'expo-router'
-import { getUserAvatar, updateDocument, signOut, signInWithBI } from '@/lib/appwrite'
-import { useState } from 'react'
+import { 
+  View, H1, H3, Button, XStack, Card, Tabs, SizableText, 
+  Separator, H5, TabsContentProps, YGroup, Label, Input, 
+  ScrollView, YStack, XGroup 
+} from 'tamagui';
+import { useMedia } from 'tamagui';
+import { useAuth } from '@/components/context/auth-provider';
+import { router, useRouter } from 'expo-router';
+import { getUserAvatar, updateDocument, signOut, signInWithBI, updateUserPreferences } from '@/lib/appwrite';
+import { useState } from 'react';
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
@@ -11,6 +15,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import { CreateExpenseCard } from '@/components/tools/expenses/expense-list';
 import { ImagePopover } from '@/components/image-popover';
+import DepartmentSelector from '@/components/SelectDepartments';
 
 type Notifications = {
   newEvents: boolean;
@@ -23,7 +28,7 @@ type Department = string;
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
-  const { data, profile: initialProfile, isLoading } = useAuth();
+  const { data, profile: initialProfile, isLoading, updateUserPrefs } = useAuth();
   const [profile, setProfile] = useState(initialProfile);
   const [notifications, setNotifications] = useState<Notifications>({
     newEvents: false,
@@ -31,25 +36,51 @@ export default function ProfileScreen() {
     messages: false,
     expenses: false,
   });
-  const [departments, setDepartments] = useState<Department[]>([]);
 
 
+  const initialDepartments = initialProfile?.departments ?? [];
 
+  const [departments, setDepartments] = useState<Models.Document[]>(initialDepartments);
 
   const updateProfile = (newProfile: any) => {
     setProfile(newProfile);
   };
 
-  console.log(profile);
+  const addDepartment = async (selectedDepartment: Models.Document) => {
+    if (!profile) {
+      return;
+    }
+    const newDepartments = [...departments, selectedDepartment];
+    setDepartments(newDepartments);
+    const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
+    if (response) {
+      setProfile(response);
+    }
+  };
+  
+  const removeDepartment = async (selectedDepartment: Models.Document) => {
+    if (!profile) {
+      return;
+    }
+    const newDepartments = departments.filter((department) => department.$id !== selectedDepartment.$id);
+    setDepartments(newDepartments);
+    const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
+    if (response) {
+      setProfile(response);
+    }
+  };
+  
 
-  const updateDepartments = (department: Department) => {
-    setDepartments((prev) => {
-      if (prev.includes(department)) {
-        return prev.filter((dep) => dep !== department);
-      } else {
-        return [...prev, department];
-      }
-    });
+  const handleUpdateDepartment = async (selectedDepartment: Models.Document) => {
+    if (!profile) {
+      return;
+    }
+    //If the selected department is already in the list, remove it
+    if (departments.some((department) => department.$id === selectedDepartment.$id)) {
+      await removeDepartment(selectedDepartment);
+    } else {
+      await addDepartment(selectedDepartment);
+    }
   };
 
   if (!data) {
@@ -58,11 +89,7 @@ export default function ProfileScreen() {
 
   const linkIdentity = async () => {
     try {
-      // First run signInWithBI. This returns a URL to trigger the OAuth flow.
-      // Then we need to redirect the user to that URL for the OAuth flow.
-      // The OAuth flow will redirect the user back to the app.
       const url = signInWithBI();
-  
       if (url instanceof URL) {
         const result = await WebBrowser.openBrowserAsync(url.toString());
         console.log(result);
@@ -74,8 +101,6 @@ export default function ProfileScreen() {
     }
   };
 
-
-
   return (
     <ScrollView>
       <MyStack flex={1} padding="$4">
@@ -84,7 +109,7 @@ export default function ProfileScreen() {
             <ImagePopover />
             <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
             <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
-            <Button onPress={() => linkIdentity()}>Sign in with BI</Button>
+            <Button marginTop="$2" onPress={linkIdentity}>Sign in with BI</Button>
           </YStack>
         </Card>
 
@@ -114,45 +139,43 @@ export default function ProfileScreen() {
             </Tabs.Tab>
           </Tabs.List>
           <Separator />
-          <TabsContent value="tab1" backgroundColor="$background">
-            {profile ? <Profile profile={profile} user={data} updateProfile={updateProfile} /> : <NoProfile data={data} />}
+
+          <TabsContent value="tab1">
+            {profile ? (
+              <Profile />
+            ) : (
+              <NoProfile />
+            )}
           </TabsContent>
 
           <TabsContent value="tab2">
-          <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
+            <MyStack space="$4" padding="$4">
+              <XGroup space="$4" alignItems="center" justifyContent="center" width="100%">
                 <Button onPress={() => router.push("/expenses/create")}>Create new expense</Button>
                 <Button onPress={() => router.push("/expenses")} chromeless>View all</Button>
-                </XGroup>
-            <ExpenseList withFilters={false} />
+              </XGroup>
+              <ExpenseList withFilters={false} />
+            </MyStack>
           </TabsContent>
 
           <TabsContent value="tab3">
-            <MyStack space="$4" padding="$4" alignItems="center" justifyContent="center">
+            <MyStack space="$4" padding="$4" alignItems="center">
               <H3>Notifications</H3>
-                <XStack alignItems="center" justifyContent="space-between">
-                  <Switch label='New events' topic='events' size="$4" />
-                </XStack>
-                <Separator />
-                <XStack alignItems="center" justifyContent="space-between">
-                  <Switch label='New posts' topic='posts' size="$4" />
-                </XStack>
-                <Separator />
-                <XStack alignItems="center" justifyContent="space-between">
-                  <Switch label='New messages' topic='messages' size="$4" />
-                </XStack>
-                <Separator />
-                <XStack alignItems="center" justifyContent="space-between">
-                  <Switch label='New expenses' topic='expenses' size="$4" />
-                </XStack>
+              <YStack space="$4" width="100%">
+                <NotificationSwitch label="New events" topic="events" />
+                <NotificationSwitch label="New posts" topic="posts" />
+                <NotificationSwitch label="New messages" topic="messages" />
+                <NotificationSwitch label="New expense details" topic="expenses" />
+              </YStack>
               <Separator />
               <H3>Departments</H3>
-              <YStack space="$2">
-                {/* Replace with actual departments list */}
-                {['Marketing', 'Sales', 'Engineering', 'HR'].map((department) => (
-                  <XStack alignItems="center" justifyContent="space-between" key={department}>
-                    <Switch label={department} topic={department} size="$4" />
-                  </XStack>
-                ))}
+              <YStack space="$2" width="100%">
+              <DepartmentSelector
+              campus={data.prefs.campus}
+              onSelect={handleUpdateDepartment}
+              selectedDepartments={departments}
+              multiSelect
+            />
               </YStack>
             </MyStack>
           </TabsContent>
@@ -162,14 +185,10 @@ export default function ProfileScreen() {
   );
 }
 
-
 const TabsContent = (props: TabsContentProps) => (
   <Tabs.Content
     backgroundColor="$background"
-    key="tab3"
     padding="$4"
-    alignItems="flex-start"
-    justifyContent="flex-start"
     flex={1}
     borderColor="$background"
     borderRadius="$2"
@@ -182,11 +201,14 @@ const TabsContent = (props: TabsContentProps) => (
   </Tabs.Content>
 );
 
-const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile: Models.Document | null, setIsEditing: (value: boolean) => void, updateProfile: (newProfile: Models.Document) => void }) => {
+const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
+  
+  const { profile } = useAuth();
+  
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState(profile?.address ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
-  const [zipCode, setZipCode] = useState(profile?.zipCode ?? '');
+  const [zip, setZip] = useState(profile?.zip ?? '');
   const [bankAccount, setBankAccount] = useState(profile?.bank_account ?? '');
 
   const handleSubmit = async () => {
@@ -195,17 +217,15 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
     }
 
     const updatedProfile = {
-      ...profile,
       phone,
       address,
       city,
-      zipCode,
-      bankAccount
+      zip,
+      bank_account: bankAccount,
     };
 
     try {
       await updateDocument('user', profile.$id, updatedProfile);
-      updateProfile(updatedProfile);
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating document:', error);
@@ -213,8 +233,8 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
   };
 
   return (
-    <ScrollView automaticallyAdjustsScrollIndicatorInsets width={"100%"} contentContainerStyle={{ flexGrow: 1 }}>
-      <MyStack space="$4" padding="$4" width={'100%'}>
+    <ScrollView automaticallyAdjustsScrollIndicatorInsets width="100%" contentContainerStyle={{ flexGrow: 1 }}>
+      <MyStack space="$4" padding="$4" width="100%">
         <YGroup width="100%">
           <Label>Phone</Label>
           <Input
@@ -247,8 +267,8 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
           <Label>Zip Code</Label>
           <Input
             placeholder="Zip Code"
-            value={zipCode}
-            onChangeText={setZipCode}
+            value={zip}
+            onChangeText={setZip}
             keyboardType='number-pad'
             width="100%"
           />
@@ -263,15 +283,14 @@ const EditProfileDetails = ({ profile, setIsEditing, updateProfile }: { profile:
             width="100%"
           />
         </YGroup>
-        <Button onPress={handleSubmit}>Submit</Button>
+        <Button marginTop="$2" onPress={handleSubmit}>Submit</Button>
       </MyStack>
     </ScrollView>
   );
 };
 
-const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, setIsEditing: (value: boolean) => void }) => {
-
-  const { refetchUser } = useAuth()
+const ViewProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
+  const { refetchUser, profile } = useAuth();
 
   const handleLogout = async () => {
     await signOut(refetchUser);
@@ -279,34 +298,37 @@ const ViewProfileDetails = ({ profile, user, setIsEditing }: { profile: Models.D
   };
 
   return (
-  <MyStack alignItems='stretch' gap="$4">
-    <XStack justifyContent="center" space="$4" marginTop="$4">
-      <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
-      <Button size="$4" variant="outlined" onPress={() => handleLogout()}>Sign Out</Button>
-    </XStack>
-    <SizableText fontSize="$6">Phone: {profile?.phone}</SizableText>
-    <SizableText fontSize="$6">Address: {profile?.address}</SizableText>
-    <SizableText fontSize="$6">City: {profile?.city}</SizableText>
-    <SizableText fontSize="$6">Zip Code: {profile?.zip}</SizableText>
-    <SizableText fontSize="$6">Bank Account: {profile?.bank_account}</SizableText>
-  </MyStack>
-)}
+    <MyStack alignItems='stretch' gap="$4">
+      <XStack justifyContent="center" space="$4" marginTop="$4">
+        <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
+        <Button size="$4" variant="outlined" onPress={handleLogout}>Sign Out</Button>
+      </XStack>
+      <SizableText fontSize="$6">Phone: {profile?.phone}</SizableText>
+      <SizableText fontSize="$6">Address: {profile?.address}</SizableText>
+      <SizableText fontSize="$6">City: {profile?.city}</SizableText>
+      <SizableText fontSize="$6">Zip Code: {profile?.zip}</SizableText>
+      <SizableText fontSize="$6">Bank Account: {profile?.bank_account}</SizableText>
+    </MyStack>
+  );
+};
 
-const Profile = ({ profile, user, updateProfile }: { profile: Models.Document | null, user: Models.User<Models.Preferences> | null, updateProfile: (newProfile: Models.Document) => void }) => {
+function Profile() {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
     <View style={{ flex: 1 }}>
       {isEditing ? (
-        <EditProfileDetails profile={profile} setIsEditing={setIsEditing} updateProfile={updateProfile} />
+        <EditProfileDetails setIsEditing={setIsEditing} />
       ) : (
-        <ViewProfileDetails profile={profile} user={user} setIsEditing={setIsEditing} />
+        <ViewProfileDetails setIsEditing={setIsEditing} />
       )}
     </View>
   );
 };
 
-const NoProfile = ({ data }: { data: Models.User<Models.Preferences> | null }) => {
+function NoProfile() {
+  
+  const { data } = useAuth();
   const router = useRouter();
 
   return (
@@ -325,3 +347,18 @@ const NoProfile = ({ data }: { data: Models.User<Models.Preferences> | null }) =
     </MyStack>
   );
 };
+
+interface Props {
+  label: string;
+  topic: string;
+}
+
+const NotificationSwitch = ({ label, topic }: Props) => (
+  
+  <>
+    <XStack alignItems="center" justifyContent="space-between">
+      <Switch label={label} topic={topic} size="$4" />
+    </XStack>
+    <Separator />
+  </>
+);

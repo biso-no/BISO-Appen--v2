@@ -3,6 +3,8 @@ import { getNews } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import type { Models } from "react-native-appwrite";
 import { getFormattedDateFromString } from "@/lib/format-time";
+import { Frown } from "@tamagui/lucide-icons";
+import { MyStack } from "../ui/MyStack";
 
 export function News() {
 
@@ -33,6 +35,14 @@ export function News() {
         return `https://appwrite.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
       }
 
+      if (!news || news.total === 0) {
+        return (
+          <MyStack justifyContent="center" alignItems="center" space="$2">
+            <Frown size={48} />
+            <H6>No news available</H6>
+          </MyStack>
+        );
+      }
 
     return (
         <YStack justifyContent="center" alignItems="center" space="$2">

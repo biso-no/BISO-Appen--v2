@@ -9,6 +9,7 @@ export const client = new Client();
 client
     .setEndpoint('https://appwrite.biso.no/v1')
     .setProject('biso')
+    .setEndpointRealtime('wss://appwrite.biso.no/v1/realtime')
 
 
 const account = new Account(client);
@@ -123,7 +124,9 @@ export async function updatePhoneNumber(userId: string, phoneNumber: string) {
 }
 
 export async function updateUserPreferences(preferences: Models.Preferences) {
-    const response = await account.updatePrefs(preferences);
+    const existingPrefs = await getUserPreferences();
+    const mergedPrefs = { ...existingPrefs, ...preferences };
+    const response = await account.updatePrefs(mergedPrefs);
     return response;
 }
 
@@ -430,7 +433,7 @@ export async function fetchChatMessages(chatId: string) {
 }
 
 export async function getDepartmentsByCampus(campus: string) {
-    const departments = await databases.listDocuments('24so', 'departments', [
+    const departments = await databases.listDocuments('app', 'departments', [
         Query.equal('Campus', capitalizeFirstLetter(campus))
     ])
     return departments
@@ -468,4 +471,51 @@ export async function getFunctionExecutions(functionId: string, executionIds: st
     ])
 
     return executions
+}
+
+export async function searchUsers(query: string) {
+    const users = await databases.listDocuments('app', 'user', [
+        Query.search("name", query)
+    ])
+    return users
+}
+
+export async function createChatGroup({
+    name,
+    users,
+    emails
+}: {
+    name: string
+    users?: Models.Document[]
+    emails?: string[]
+}) {
+    const execution = await triggerFunction({
+        functionId: 'create_chat_group',
+        async: false,
+        data: JSON.stringify({
+            name,
+            users,
+            emails
+        })
+    })
+
+    return execution
+
+}
+
+export async function acceptChatInvite({
+    teamId,
+    membershipId,
+    userId,
+    secret
+}: {
+    teamId: string
+    membershipId: string
+    userId: string
+    secret: string
+}) {
+    const acception = await teams.updateMembershipStatus(teamId, membershipId, userId, secret)
+
+    return acception
+
 }

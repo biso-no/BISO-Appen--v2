@@ -103,6 +103,12 @@ export default function UnauthenticatedTabs({ profileIcon, bellIcon, backgroundC
       href: null,
     }}
     />
+          <Tabs.Screen
+      name="chat/invite"
+      options={{
+        href: null,
+      }}
+      />
     </Tabs>
   );
 }

@@ -9,7 +9,7 @@ import { useChat } from "@/lib/ChatContext";
 export function ChatHistory() {
     const [chats, setChats] = useState<Models.DocumentList<Models.Document>>();
 
-    const { messages } = useChat();
+    const { messages, currentChatGroup, setCurrentChatGroup, setCurrentChatGroupName, unreadMessages, typingUsers } = useChat();
 
     const router = useRouter();
 
@@ -30,26 +30,36 @@ export function ChatHistory() {
 
     return (
         <View flex={1}>
-        <MyStack>
-            <YGroup alignSelf="center" bordered>
-                {chats.documents.map((chat) => {
-                    const latestMessage = messages[chat.$id]?.slice(-1)[0]; // Get the latest message
-                    return (
-                        <YGroup.Item key={chat.$id}>
-                            <ListItem
-                                hoverTheme
-                                title={chat.name}
-                                subTitle={latestMessage ? latestMessage.content : "No messages yet"}
-                                onPress={() => router.push(`/chat/${chat.$id}`)}
-                            />
-                        </YGroup.Item>
-                    );
-                })}
-            </YGroup>
-        </MyStack>
-        <Button onPress={() => router.push('/chat/create')} position="absolute" right={16} bottom={16} width={56} height={56} borderRadius={28} justifyContent="center" alignItems="center" fontSize={28}>
-            +
-        </Button>
+            <MyStack>
+                <YGroup alignSelf="center" bordered>
+                    {chats.documents.map((chat) => {
+                        const chatGroupId = chat.$id;
+                        const latestMessage = messages[chatGroupId]?.slice(-1)[0]; // Get the latest message
+                        const unreadCount = unreadMessages[chatGroupId] || 0;
+                        const typingUsersInChat = typingUsers[chatGroupId] || new Set();
+                        const typingIndicator = typingUsersInChat.size > 0 ? "Someone is typing..." : "";
+
+                        return (
+                            <YGroup.Item key={chatGroupId}>
+                                <ListItem
+                                    hoverTheme
+                                    title={chat.name}
+                                    subTitle={latestMessage ? latestMessage.content : "No messages yet"}
+                                    onPress={() => {
+                                        setCurrentChatGroup(chatGroupId);
+                                        setCurrentChatGroupName(chat.name);
+                                        router.push(`/chat/${chatGroupId}`);
+                                    }}
+                                    right={unreadCount > 0 ? unreadCount : null}
+                                    />
+                            </YGroup.Item>
+                        );
+                    })}
+                </YGroup>
+            </MyStack>
+            <Button onPress={() => router.push('/chat/create')} position="absolute" right={16} bottom={16} width={56} height={56} borderRadius={28} justifyContent="center" alignItems="center" fontSize={28}>
+                +
+            </Button>
         </View>
     );
 }

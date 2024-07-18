@@ -1,26 +1,19 @@
 import { useState } from 'react';
-import { XStack, YStack, Card, Avatar, SizableText, Text, Separator, View, ScrollView } from 'tamagui';
+import { XStack, YStack, Card, Avatar, SizableText, Text, Separator, View, ScrollView, Input, YGroup, Button } from 'tamagui';
 import { CheckCircle } from '@tamagui/lucide-icons';
 import { MotiView } from 'moti';
+import { searchUsers, createChatGroup } from '@/lib/appwrite';
+import { Models } from 'react-native-appwrite';
 
-type Contact = {
-  id: number;
-  name: string;
-  campus: string;
-  avatarUrl: string;
-};
 
-const contactsData: Contact[] = [
-  { id: 1, name: 'John Doe', campus: 'Main Campus', avatarUrl: 'https://example.com/avatar1.png' },
-  { id: 2, name: 'Jane Smith', campus: 'North Campus', avatarUrl: 'https://example.com/avatar2.png' },
-  // Add more contacts as needed
-];
+
 
 export function CreateChatGroup() {
-  const [contacts, setContacts] = useState<Contact[]>(contactsData);
-  const [groupMembers, setGroupMembers] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<Models.DocumentList<Models.Document>>();
+  const [groupMembers, setGroupMembers] = useState<Models.Document[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const addToGroup = (contact: Contact) => {
+  const addToGroup = (contact: Models.Document) => {
     setGroupMembers((prev) => {
       if (prev.includes(contact)) {
         return prev.filter((member) => member.id !== contact.id);
@@ -37,11 +30,29 @@ export function CreateChatGroup() {
       .join('');
   };
 
+  const handleSearch = async () => {
+    const users = await searchUsers(searchQuery);
+    setContacts(users);
+  };
+
+  const handleCreateGroup = async () => {
+    const group = await createChatGroup({
+      name: 'test1',
+      emails: ['markushei@hotmail.no'],
+    });
+  };
+
+
   return (
     <ScrollView>
       <YStack padding="$4">
+        <YGroup>
+          <YGroup.Item>
+        <Input onBlur={handleSearch} onChangeText={setSearchQuery} placeholder="Search" />
+        </YGroup.Item>
         {groupMembers.length > 0 && (
-          <View space="$2" marginVertical={16}>
+          <YGroup.Item>
+          <View space="$2" marginVertical={16} key={groupMembers.length}>
             <XStack flexWrap="wrap" gap="$2" marginTop="$2">
               {groupMembers.map((member) => (
                 <MotiView
@@ -60,10 +71,11 @@ export function CreateChatGroup() {
             </XStack>
             <Separator direction='ltr' />
           </View>
+          </YGroup.Item>
         )}
         
         <View>
-          {contacts.map((contact) => (
+          {contacts?.documents.map((contact) => (
             <Card key={contact.id} padding="$4" marginBottom="$2" onPress={() => addToGroup(contact)}>
               <XStack alignItems="center" gap="$2">
                 <View style={{ position: 'relative' }}>
@@ -93,6 +105,8 @@ export function CreateChatGroup() {
             </Card>
           ))}
         </View>
+        </YGroup>
+        <Button onPress={handleCreateGroup}>Create Group</Button>
       </YStack>
     </ScrollView>
   );

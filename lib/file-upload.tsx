@@ -7,8 +7,8 @@ import { File } from "./file-utils";
 import { triggerFunction } from "./appwrite";
 import { pickFiles } from "./file-utils";
 import MlkitOcr from 'react-native-mlkit-ocr';
-import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome for icons
 import { formatDate } from "./format-time";
+import { File as FileIcon, Camera, Plus, FileCog } from "@tamagui/lucide-icons";
 
 interface Attachment {
     url: string;
@@ -144,19 +144,26 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
         }
     };
 
+    const handleDeleteResult = () => {
+        if (selectedOcrResult) {
+            setOcrResults(prevResults => prevResults.filter(result => result.url !== selectedOcrResult.url));
+            handleCloseBottomSheet();
+        }
+    }
+
     return (
         <YStack space="$4" padding="$4">
             <XStack space="$4">
                 <Button onPress={handlePickFiles} disabled={picking}>
                     <XStack alignItems="center">
-                        <FontAwesome name="file" size={16} color="white" />
+                        <FileIcon size={16} />
                         <Text marginLeft="$2">{picking ? "Picking..." : "Pick Files"}</Text>
                         {picking && <Spinner marginLeft="$2" />}
                     </XStack>
                 </Button>
                 <Button onPress={handleCaptureImage} disabled={capturing}>
                     <XStack alignItems="center">
-                        <FontAwesome name="camera" size={16} color="white" />
+                        <Camera size={16} />
                         <Text marginLeft="$2">{capturing ? "Capturing..." : "Capture Image"}</Text>
                         {capturing && <Spinner marginLeft="$2" />}
                     </XStack>
@@ -164,7 +171,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
             </XStack>
             <Button onPress={handleProcessWithGPT} disabled={isProcessing || filesToProcess.length === 0}>
                 <XStack alignItems="center">
-                    <FontAwesome name="cogs" size={16} color="white" />
+                    <FileCog size={16} />
                     <Text marginLeft="$2">{isProcessing ? "Processing..." : "Process"}</Text>
                     {isProcessing && <Spinner marginLeft="$2" />}
                 </XStack>
@@ -197,6 +204,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                     onOpenChange={handleCloseBottomSheet}
                     handleEditOcrResult={handleEditOcrResult}
                     handleSaveOcrResult={handleSaveOcrResult}
+                    handleDeleteResult={handleDeleteResult}
                 />
             )}
         </YStack>
@@ -209,9 +217,10 @@ interface EditAttachmentProps {
     open: boolean;
     handleEditOcrResult: (key: keyof Attachment, value: string) => void;
     handleSaveOcrResult: () => void;
+    handleDeleteResult: () => void;
 }
 
-function EditAttachmentSheet({ attachment, onOpenChange, open, handleEditOcrResult, handleSaveOcrResult }: EditAttachmentProps) {
+function EditAttachmentSheet({ attachment, onOpenChange, open, handleEditOcrResult, handleSaveOcrResult, handleDeleteResult }: EditAttachmentProps) {
 
     return (
         <Sheet modal snapPoints={[85, 50, 25]} dismissOnSnapToBottom open={open} onOpenChange={onOpenChange}>
@@ -246,6 +255,7 @@ function EditAttachmentSheet({ attachment, onOpenChange, open, handleEditOcrResu
                     </YGroup.Item>
                 </YGroup>
                 <Button onPress={handleSaveOcrResult}>Save</Button>
+                <Button onPress={handleDeleteResult}>Delete</Button>
             </Sheet.Frame>
         </Sheet>
     );

@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { YStack, Text, Input, Spinner, ScrollView, YGroup, ListItem, Separator, styled, useTheme, Stack, Card } from 'tamagui';
 import { getDepartmentsByCampus } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
+import { Check } from '@tamagui/lucide-icons';
 
 interface DepartmentSelectorProps {
   campus: string;
-  onSelect: (departments: string[]) => void;
+  onSelect: (departments: Models.Document) => void;
+  selectedDepartments: Models.Document[];
   multiSelect?: boolean;
 }
 
@@ -23,16 +25,12 @@ const StyledCard = styled(Stack, {
   },
 });
 
-const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelect, multiSelect = false }) => {
+const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelect, selectedDepartments, multiSelect = false }) => {
   const [departments, setDepartments] = useState<Models.DocumentList<Models.Document>>();
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   const theme = useTheme();
-
-  const background = theme?.background?.get();
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -45,72 +43,60 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelec
     fetchDepartments();
   }, [campus]);
 
-  useEffect(() => {
-    setSelectedDepartment(null);
-    setSelectedDepartments([]);
-  }, [campus]);
-
-  const handleSelect = useCallback((departmentId: string | null) => {
-
-    if (!departmentId) {
-      setSelectedDepartment(null);
-      onSelect([]);
-      return;
-    }
-
-    if (!multiSelect) {
-      const newSelection = selectedDepartment === departmentId ? null : departmentId;
-      setSelectedDepartment(newSelection);
-      onSelect(newSelection ? [newSelection] : []);
+  const handleSelect = useCallback((department: Models.Document) => {
+    let newSelection;
+    if (multiSelect) {
+      newSelection = selectedDepartments.some(d => d.$id === department.$id)
+        ? selectedDepartments.filter((d) => d.$id !== department.$id)
+        : [...selectedDepartments, department];
     } else {
-      const newSelection = selectedDepartments.includes(departmentId)
-        ? selectedDepartments.filter((id) => id !== departmentId)
-        : [...selectedDepartments, departmentId];
-      setSelectedDepartments(newSelection);
-      onSelect(newSelection);
+      newSelection = [department];
     }
-  }, [selectedDepartment, selectedDepartments, multiSelect, onSelect]);
+    onSelect({...department, ...newSelection});
+  }, [selectedDepartments, multiSelect, onSelect]);
+
+  const handleRemove = useCallback((department: Models.Document) => {
+    const newSelection = selectedDepartments.filter((d) => d.$id !== department.$id);
+    onSelect({...department, ...newSelection});
+  }, [selectedDepartments, onSelect]);
 
   const filteredDepartments = departments?.documents.filter((department) =>
     department.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const isSelected = (department: Models.Document) => selectedDepartments.some(d => d.$id === department.$id);
+
   return (
     <YStack>
-      {!selectedDepartment && (
       <Input
         placeholder="Search departments..."
         value={searchTerm}
         onChangeText={setSearchTerm}
         marginBottom={20}
       />
-      )}
       {loading ? (
         <Spinner size="large" />
       ) : (
         <ScrollView flexGrow={1}>
-          {selectedDepartment && !multiSelect ? (
-            <Card animation="medium" key={selectedDepartment} width="100%" padding="$3" backgroundColor="$background" borderRadius="$3" bordered onPress={() => handleSelect("")}>
-              <Card.Header>
-                <YStack>
-                  <Text>{departments?.documents.find((department) => department.$id === selectedDepartment)?.Name}</Text>
-                </YStack>
-              </Card.Header>
-            </Card>
-          ) : (
-            
-            <YGroup alignSelf='center' size="$4" animation="medium" bordered>
-              {filteredDepartments?.map((department) => (
-                <YGroup.Item key={department.$id}>
-                                <ListItem
-                title={department.Name}
-                onPress={() => handleSelect(department.$id)}
-              />
-                  <Separator direction='rtl' />
-                </YGroup.Item>
-              ))}
-            </YGroup>
-          )}
+          <YGroup alignSelf='center' size="$4" animation="medium" bordered>
+            {filteredDepartments?.map((department) => (
+              <YGroup.Item key={department.$id}>
+                <ListItem
+                  title={department.Name}
+                  icon={isSelected(department) ? <Check animation={'spring'} /> : undefined}
+                  backgroundColor={isSelected(department) ? theme?.primary?.get() : undefined}
+                  onPress={() => {
+                    if (isSelected(department)) {
+                      handleRemove(department);
+                    } else {
+                      handleSelect(department);
+                    }
+                  }}
+                />
+                <Separator direction='rtl' />
+              </YGroup.Item>
+            ))}
+          </YGroup>
         </ScrollView>
       )}
     </YStack>
