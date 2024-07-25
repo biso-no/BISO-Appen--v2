@@ -86,19 +86,18 @@ export function ImagePopover() {
 
     return (
         <Popover size="$5">
-            <Popover.Trigger asChild>
+            <Popover.Trigger asChild zIndex={100}>
                 <HighlightedAvatar
                     circular
-                    size={100}
+                    size={50}
                     highlighted={isPressed}
                     onPressIn={() => setIsPressed(true)}
                     onPressOut={() => setIsPressed(false)}
                 >
                     <Avatar.Image src={avatar?.toString()} />
-                    <Avatar.Fallback backgroundColor="$blue10" alignItems='center' justifyContent='center'>
-                        <Text fontSize={40}>{useInitials(data.name)}</Text>
+                    <Avatar.Fallback backgroundColor="gray" alignItems='center' justifyContent='center' borderColor="white" borderWidth={2} borderRadius={50}>
+                        <Text fontSize={25}>{useInitials(data.name)}</Text>
                     </Avatar.Fallback>
-                    <Camera size={60} color="#FFFFFF" opacity={0.6} />
                 </HighlightedAvatar>
             </Popover.Trigger>
             <Popover.Content

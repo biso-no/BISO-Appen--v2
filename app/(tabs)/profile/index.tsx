@@ -1,7 +1,7 @@
-import { 
-  View, H1, H3, Button, XStack, Card, Tabs, SizableText, 
-  Separator, H5, TabsContentProps, YGroup, Label, Input, 
-  ScrollView, YStack, XGroup 
+import {
+  View, H1, H3, Button, XStack, Card, Tabs, SizableText,
+  Separator, H5, TabsContentProps, YGroup, Label, Input,
+  ScrollView, YStack, XGroup
 } from 'tamagui';
 import { useMedia } from 'tamagui';
 import { useAuth } from '@/components/context/auth-provider';
@@ -16,6 +16,9 @@ import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import { CreateExpenseCard } from '@/components/tools/expenses/expense-list';
 import { ImagePopover } from '@/components/image-popover';
 import DepartmentSelector from '@/components/SelectDepartments';
+import { BILoginButton } from '@/components/bi-login-button';
+import { ProfileCard } from '@/components/profile/profile-card';
+import { ParallaxScrollView } from '@/components/ParallaxScrollView';
 
 type Notifications = {
   newEvents: boolean;
@@ -57,7 +60,7 @@ export default function ProfileScreen() {
       setProfile(response);
     }
   };
-  
+
   const removeDepartment = async (selectedDepartment: Models.Document) => {
     if (!profile) {
       return;
@@ -69,7 +72,7 @@ export default function ProfileScreen() {
       setProfile(response);
     }
   };
-  
+
 
   const handleUpdateDepartment = async (selectedDepartment: Models.Document) => {
     if (!profile) {
@@ -89,7 +92,7 @@ export default function ProfileScreen() {
 
   const linkIdentity = async () => {
     try {
-      const url = signInWithBI();
+      const url = signInWithBI();  // Make sure this is properly calling your cloud function
       if (url instanceof URL) {
         const result = await WebBrowser.openBrowserAsync(url.toString());
         console.log(result);
@@ -101,17 +104,11 @@ export default function ProfileScreen() {
     }
   };
 
+
   return (
     <ScrollView>
       <MyStack flex={1} padding="$4">
-        <Card padding="$4" borderRadius="$3" marginBottom="$4">
-          <YStack alignItems="center">
-            <ImagePopover />
-            <H1 size="$8" marginTop="$2" color="$color11">{data?.name}</H1>
-            <SizableText color="$color10" fontSize="$6">{data?.email}</SizableText>
-            <Button marginTop="$2" onPress={linkIdentity}>Sign in with BI</Button>
-          </YStack>
-        </Card>
+        <ProfileCard />
 
         <Tabs
           defaultValue="tab1"
@@ -170,12 +167,12 @@ export default function ProfileScreen() {
               <Separator />
               <H3>Departments</H3>
               <YStack space="$2" width="100%">
-              <DepartmentSelector
-              campus={data.prefs.campus}
-              onSelect={handleUpdateDepartment}
-              selectedDepartments={departments}
-              multiSelect
-            />
+                <DepartmentSelector
+                  campus={data.prefs.campus}
+                  onSelect={handleUpdateDepartment}
+                  selectedDepartments={departments}
+                  multiSelect
+                />
               </YStack>
             </MyStack>
           </TabsContent>
@@ -202,9 +199,9 @@ const TabsContent = (props: TabsContentProps) => (
 );
 
 const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
-  
+
   const { profile } = useAuth();
-  
+
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState(profile?.address ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
@@ -327,7 +324,7 @@ function Profile() {
 };
 
 function NoProfile() {
-  
+
   const { data } = useAuth();
   const router = useRouter();
 
@@ -354,7 +351,7 @@ interface Props {
 }
 
 const NotificationSwitch = ({ label, topic }: Props) => (
-  
+
   <>
     <XStack alignItems="center" justifyContent="space-between">
       <Switch label={label} topic={topic} size="$4" />

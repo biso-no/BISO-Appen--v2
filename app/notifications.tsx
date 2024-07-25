@@ -9,7 +9,7 @@ interface Notification {
   content: string;
   href?: string;
   status?: string; // 'read' or 'unread'
-  type: 'message' | 'post' | 'event';
+  type: 'post' | 'event';
 }
 
 interface Notifications {
@@ -39,12 +39,11 @@ const NotificationScreen = () => {
         content: doc.content,
         href: doc.href,
         status: doc.status,
-        type: doc.type as 'message' | 'post' | 'event'
+        type: doc.type as 'post' | 'event'
       };
 
-      if (notif.type === 'message') {
-        formattedNotifications.messages.push(notif);
-      } else if (notif.type === 'post') {
+
+      if (notif.type === 'post') {
         formattedNotifications.posts.push(notif);
       } else if (notif.type === 'event') {
         formattedNotifications.events.push(notif);
@@ -117,13 +116,6 @@ const NotificationScreen = () => {
   return (
     <YStack flex={1} padding="$4">
       <XStack justifyContent="space-around" marginBottom="$4">
-        <Button
-          size="$4"
-          backgroundColor={selectedTab === 'messages' ? '$primary' : '$background'}
-          onPress={() => setSelectedTab('messages')}
-        >
-          Messages
-        </Button>
         <Button
           size="$4"
           backgroundColor={selectedTab === 'posts' ? '$primary' : '$background'}

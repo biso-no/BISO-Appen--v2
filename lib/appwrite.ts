@@ -239,12 +239,13 @@ export async function getNotificationCount() {
 export function signInWithBI() {
     const response = account.createOAuth2Session(
         OAuthProvider.Microsoft,
-        'nymheien://(tabs)/index',
-        'nymheien://(tabs)/auth/signIn/failed',
+        'biso://(tabs)/index',
+        'biso://(tabs)/auth/signIn/failed',
     )
     console.log(response)
     return response;
 }
+
 
 export async function createSubscriber(topic: string, user: Models.User<Models.Preferences>) {
 
@@ -518,4 +519,21 @@ export async function acceptChatInvite({
 
     return acception
 
+}
+
+export async function getBisoMembership(userId: string) {
+
+    const functionResponse = await triggerFunction({
+        functionId: 'get_biso_membership',
+        async: false
+    })
+
+    return functionResponse.responseBody
+}
+
+export async function createSession(userId: string, secret: string) {
+
+    const session = await account.createSession(userId, secret);
+
+    return session
 }

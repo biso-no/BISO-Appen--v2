@@ -12,6 +12,7 @@ export function CreateChatGroup() {
   const [contacts, setContacts] = useState<Models.DocumentList<Models.Document>>();
   const [groupMembers, setGroupMembers] = useState<Models.Document[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [groupName, setGroupName] = useState('navn');
 
   const addToGroup = (contact: Models.Document) => {
     setGroupMembers((prev) => {
@@ -37,7 +38,7 @@ export function CreateChatGroup() {
 
   const handleCreateGroup = async () => {
     const group = await createChatGroup({
-      name: 'test1',
+      name: groupName,
       emails: ['markushei@hotmail.no'],
     });
   };
@@ -47,6 +48,9 @@ export function CreateChatGroup() {
     <ScrollView>
       <YStack padding="$4">
         <YGroup>
+            <YGroup.Item>
+                <Input value={groupName} onChangeText={setGroupName} placeholder="Group Name" />
+            </YGroup.Item>
           <YGroup.Item>
         <Input onBlur={handleSearch} onChangeText={setSearchQuery} placeholder="Search" />
         </YGroup.Item>
