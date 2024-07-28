@@ -3,6 +3,8 @@ import React from 'react';
 import CampusSelector from '@/components/SelectCampus';
 import { MotiView } from 'moti';
 import { useAuth } from '../context/auth-provider';
+import { Models } from 'react-native-appwrite';
+import { useCampus } from '@/lib/hooks/useCampus';
 
 interface Step2Props {
   onNext?: () => void | Promise<void>;
@@ -10,10 +12,11 @@ interface Step2Props {
 
 export function Step2({ onNext }: Step2Props) {
   const { updateUserPrefs } = useAuth();
+  const { campus, onChange } = useCampus();
 
-  const handleCampusChange = (campus: string | null) => {
+  const handleCampusChange = (campus: Models.Document | null) => {
     if (campus) {
-      updateUserPrefs('campus', campus);
+      onChange(campus);
     }
     if (onNext) {
       onNext();

@@ -42,7 +42,10 @@ export default function Onboarding() {
   const [documentId, setDocumentId] = useState<string | null>(null);
 
   const handleUpdateName = async (name: string) => {
-    const result = await createDocument('user', { name }, data?.$id);
+    if (!data) {
+      return;
+    }
+    const result = await updateDocument('user', data.$id, { name });
     setDocumentId(result.$id);
     updateName(name);
   };

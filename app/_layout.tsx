@@ -89,7 +89,7 @@ useEffect(() => {
     <AuthProvider>
     <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+      <Theme name={colorScheme === 'dark' ? 'dark_accent' : 'light_accent'}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

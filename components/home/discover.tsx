@@ -5,6 +5,7 @@ import { Calendar, Newspaper, Hash, ShoppingBag } from "@tamagui/lucide-icons";
 import { News } from "./news";
 import { Events } from "./events";
 import { MyStack } from "../ui/MyStack";
+import { HomeProducts } from "./shop";
 
 interface Category {
     title: string;
@@ -42,8 +43,9 @@ export function Discover() {
             {selectedCategory.title === "News" && <News />}
                         {/*
             {selectedCategory.title === "Community" && <Community />}
-            {selectedCategory.title === "Shop" && <Shop />}
-            */}
+                        */}
+            {selectedCategory.title === "Shop" && <HomeProducts />}
+
         </MyStack>
     );
 }

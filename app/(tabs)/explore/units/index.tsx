@@ -3,14 +3,17 @@ import { YStack, Card, Paragraph, Image, ScrollView, XGroup, H3 } from "tamagui"
 import { getDepartments } from "@/lib/appwrite";
 import { useState, useEffect } from 'react';
 import type { Models } from "react-native-appwrite";
+import { useCampus } from "@/lib/hooks/useCampus";
 
 export default function DepartmentsScreen() {
 
     const [departments, setDepartments] = useState<Models.DocumentList<Models.Document>>();
 
+    const { campus } = useCampus();
+
     useEffect(() => {
         async function fetchDepartments() {
-            const departments = await getDepartments()
+            const departments = await getDepartments(campus?.$id)
             console.log(departments)
             setDepartments(departments)
         }
@@ -33,7 +36,7 @@ export default function DepartmentsScreen() {
                                     height={40}
                                 />
                             </XGroup>
-                            <H3>{department.name}</H3>
+                            <H3>{department.Name}</H3>
                         </YStack>
                     </Card.Header>
                     <Card.Footer>

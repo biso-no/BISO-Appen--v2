@@ -6,19 +6,15 @@ import {
 import { useMedia } from 'tamagui';
 import { useAuth } from '@/components/context/auth-provider';
 import { router, useRouter } from 'expo-router';
-import { getUserAvatar, updateDocument, signOut, signInWithBI, updateUserPreferences } from '@/lib/appwrite';
-import { useState } from 'react';
+import { updateDocument, signOut, signInWithBI } from '@/lib/appwrite';
+import { useEffect, useState, useCallback } from 'react';
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
 import { Models } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
 import * as WebBrowser from 'expo-web-browser';
 import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
-import { CreateExpenseCard } from '@/components/tools/expenses/expense-list';
-import { ImagePopover } from '@/components/image-popover';
 import DepartmentSelector from '@/components/SelectDepartments';
-import { BILoginButton } from '@/components/bi-login-button';
 import { ProfileCard } from '@/components/profile/profile-card';
-import { ParallaxScrollView } from '@/components/ParallaxScrollView';
 
 type Notifications = {
   newEvents: boolean;
@@ -26,8 +22,6 @@ type Notifications = {
   messages: boolean;
   expenses: boolean;
 };
-
-type Department = string;
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
@@ -40,13 +34,11 @@ export default function ProfileScreen() {
     expenses: false,
   });
 
-
   const initialDepartments = initialProfile?.departments ?? [];
-
   const [departments, setDepartments] = useState<Models.Document[]>(initialDepartments);
 
   const updateProfile = (newProfile: any) => {
-    setProfile(newProfile);
+    setProfile((prevProfile) => ({ ...prevProfile, ...newProfile }));
   };
 
   const addDepartment = async (selectedDepartment: Models.Document) => {
@@ -57,7 +49,7 @@ export default function ProfileScreen() {
     setDepartments(newDepartments);
     const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
     if (response) {
-      setProfile(response);
+      updateProfile(response);
     }
   };
 
@@ -69,16 +61,14 @@ export default function ProfileScreen() {
     setDepartments(newDepartments);
     const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
     if (response) {
-      setProfile(response);
+      updateProfile(response);
     }
   };
-
 
   const handleUpdateDepartment = async (selectedDepartment: Models.Document) => {
     if (!profile) {
       return;
     }
-    //If the selected department is already in the list, remove it
     if (departments.some((department) => department.$id === selectedDepartment.$id)) {
       await removeDepartment(selectedDepartment);
     } else {
@@ -92,7 +82,7 @@ export default function ProfileScreen() {
 
   const linkIdentity = async () => {
     try {
-      const url = signInWithBI();  // Make sure this is properly calling your cloud function
+      const url = signInWithBI();
       if (url instanceof URL) {
         const result = await WebBrowser.openBrowserAsync(url.toString());
         console.log(result);
@@ -104,12 +94,14 @@ export default function ProfileScreen() {
     }
   };
 
+  useEffect(() => {
+    console.log('Campus: ', profile?.campus?.departments);
+  }, [profile]);
 
   return (
     <ScrollView>
       <MyStack flex={1} padding="$4">
         <ProfileCard />
-
         <Tabs
           defaultValue="tab1"
           orientation="horizontal"
@@ -136,25 +128,22 @@ export default function ProfileScreen() {
             </Tabs.Tab>
           </Tabs.List>
           <Separator />
-
           <TabsContent value="tab1">
-            {profile ? (
+            {profile?.name ? (
               <Profile />
             ) : (
               <NoProfile />
             )}
           </TabsContent>
-
           <TabsContent value="tab2">
             <MyStack space="$4" padding="$4">
               <XGroup space="$4" alignItems="center" justifyContent="center" width="100%">
-                <Button onPress={() => router.push("/expenses/create")}>Create new expense</Button>
-                <Button onPress={() => router.push("/expenses")} chromeless>View all</Button>
+                <Button onPress={() => router.push("/explore/expenses/create")}>Create new expense</Button>
+                <Button onPress={() => router.push("/explore/expenses")} chromeless>View all</Button>
               </XGroup>
               <ExpenseList withFilters={false} />
             </MyStack>
           </TabsContent>
-
           <TabsContent value="tab3">
             <MyStack space="$4" padding="$4" alignItems="center">
               <H3>Notifications</H3>
@@ -168,7 +157,7 @@ export default function ProfileScreen() {
               <H3>Departments</H3>
               <YStack space="$2" width="100%">
                 <DepartmentSelector
-                  campus={data.prefs.campus}
+                  campus={profile?.campus}
                   onSelect={handleUpdateDepartment}
                   selectedDepartments={departments}
                   multiSelect
@@ -181,6 +170,7 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
+
 
 const TabsContent = (props: TabsContentProps) => (
   <Tabs.Content
@@ -197,6 +187,9 @@ const TabsContent = (props: TabsContentProps) => (
     {props.children}
   </Tabs.Content>
 );
+
+
+
 
 const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
 

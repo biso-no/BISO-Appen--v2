@@ -15,7 +15,7 @@ export function ProfileCard() {
     const isDarkMode = colorScheme === 'dark';
 
     return (
-        <Card>
+        <Card theme="accent">
             <Card.Header height="$13">
                 <ZStack maxWidth={"100%"} maxHeight={85} width={"100%"} flex={1}>
                     <YStack marginTop="$3">
@@ -71,7 +71,7 @@ export function ProfileCard() {
                     <BILoginButton />
                 ) : (
                     isBisoMember ? (
-                        <Text color="green">You are a BISO member</Text>
+                        <Text theme="alt2">You are a BISO member</Text>
                     ) : (
                         <Button variant="outlined">Buy BISO membership</Button>
                     )

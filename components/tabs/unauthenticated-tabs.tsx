@@ -3,9 +3,10 @@ import { Link, Tabs } from 'expo-router';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
 import { H5, Avatar } from 'tamagui';
-import { Home, LogIn, Bell, MessageSquare } from '@tamagui/lucide-icons';
+import { Home, LogIn, Bell, MessageSquare, LayoutList } from '@tamagui/lucide-icons';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '../useClientOnlyValue';
+import CampusPopover from '../CampusPopover';
 
 interface UnauthenticatedTabsProps {
     profileIcon: () => JSX.Element
@@ -19,6 +20,7 @@ export default function UnauthenticatedTabs({ profileIcon, bellIcon, backgroundC
   
   return (
     <Tabs
+      backBehavior='history'
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: useClientOnlyValue(false, true),
@@ -27,54 +29,54 @@ export default function UnauthenticatedTabs({ profileIcon, bellIcon, backgroundC
         backgroundColor: backgroundColor
       }}
     >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: '',
+            headerTitleAlign: 'center',
+            headerTitle: () => (
+              <CampusPopover />
+            ),
+            tabBarIcon: ({ color }) => <Home color={color} />
+          }}
+        />
+        <Tabs.Screen
+          name="explore/chat/index"
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="explore/index"
+          options={{
+            title: '',
+            tabBarIcon: ({ color }) => <LayoutList color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: '',
+            href: null
+          }}
+        />
+        <Tabs.Screen
+          name="auth/signIn/index"
+          options={{
+            title: '',
+            tabBarIcon: ({ color }) => <LogIn color={color} />,
+            href: null,
+          }}
+        />
       <Tabs.Screen
-        name="index"
+        name="explore/expenses/index"
         options={{
-          title: '',
-          headerTitle: () => <H5>Welcome to BISO</H5>,
-          tabBarIcon: ({ color }) => <Home color={color} />,
-          headerRight: () => (
-            <Link href="/notifications" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  {
-                    ...bellIcon(),}
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat/index"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => <MessageSquare color={color} />,
           href: null,
         }}
       />
       <Tabs.Screen
-        name="profile/index"
-        options={{
-          title: '',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="auth/signIn/index"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => <LogIn color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="expenses/index"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="expenses/create/index"
+        name="explore/expenses/create/index"
         options={{
           href: null,
         }}
@@ -86,29 +88,60 @@ export default function UnauthenticatedTabs({ profileIcon, bellIcon, backgroundC
         }}
       />
       <Tabs.Screen
-      name="units/index"
+      name="explore/units/index"
       options={{
         href: null,
       }}
     />
     <Tabs.Screen
-    name="chat/[id]"
+    name="explore/chat/[id]"
     options={{
       href: null,
     }}
   />
   <Tabs.Screen
-    name="chat/create"
+    name="explore/chat/create"
     options={{
       href: null,
     }}
     />
           <Tabs.Screen
-      name="chat/invite"
+      name="explore/chat/invite"
       options={{
         href: null,
       }}
       />
+                <Tabs.Screen
+      name="explore/chat/index"
+      options={{
+        href: null,
+      }}
+      />
+            <Tabs.Screen
+      name="explore/products/index"
+      options={{
+        href: null,
+      }}
+      />
+      <Tabs.Screen
+        name="explore/news/index"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+          name="explore/products/[id]"
+          options={{
+            href: null,
+          }}
+       />
+             <Tabs.Screen
+          name="explore/elections/index"
+          options={{
+            href: null,
+          }}
+       />
+
     </Tabs>
   );
 }

@@ -2,20 +2,34 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/auth-provider';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { Models } from 'react-native-appwrite';
+import { getDocuments } from '@/lib/appwrite';
 
-const CampusContext = createContext<string | null>(null);
+type PartialCampus = {
+    $id: string;
+    name: string;
+};
+
+const CampusContext = createContext<{
+    campus: Models.Document | null,
+    setCampus: React.Dispatch<React.SetStateAction<Models.Document | null>>
+} | undefined>(undefined);
 
 export const useCampus = () => {
-    const context = useContext(CampusContext) || "national";
+    const context = useContext(CampusContext);
     if (context === undefined) {
         throw new Error('useCampus must be used within a CampusProvider');
     }
-    const [campus, setCampus] = useState<string>(context);
+    const { campus, setCampus } = context;
 
-    const onChange = async (newCampus: string) => {
+    const onChange = async (newCampus: Models.Document) => {
         setCampus(newCampus);
         try {
-            await AsyncStorage.default.setItem('campus', newCampus);
+            const campusData: PartialCampus = {
+                $id: newCampus.$id,
+                name: newCampus.name
+            };
+            await AsyncStorage.default.setItem('campus', JSON.stringify(campusData));
+            console.log('Saved to storage:', campusData);
         } catch (error) {
             console.error('Error saving campus to async storage:', error);
         }
@@ -25,48 +39,65 @@ export const useCampus = () => {
 };
 
 export const CampusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [campus, setCampus] = useState<string | null>(null);
-    const { data } = useAuth();
+    const [campus, setCampus] = useState<Models.Document | null>(null);
+    const [loading, setLoading] = useState(true);
+    const { profile } = useAuth();
 
     useEffect(() => {
-        fetchCampusFromStorage().then((storedCampus) => {
+        const initializeCampus = async () => {
+            const storedCampus = await fetchCampusFromStorage();
             if (storedCampus) {
                 setCampus(storedCampus);
-            } else if (data && data.prefs && !storedCampus) {
-                fetchCampusFromAppwrite(data).then((appwriteCampus) => {
-                    if (appwriteCampus) {
-                        setCampus(appwriteCampus);
-                    }
-                });
+            } else if (profile && profile.campus) {
+                const appwriteCampus = await fetchCampusFromAppwrite(profile);
+                if (appwriteCampus) {
+                    setCampus(appwriteCampus);
+                }
             }
-        })
+            setLoading(false);
+        };
 
-    }, [data]);
+        initializeCampus();
+    }, [profile]);
+
+    if (loading) {
+        return null; // or a loading spinner
+    }
 
     return (
-        <CampusContext.Provider value={campus}>
+        <CampusContext.Provider value={{ campus, setCampus }}>
             {children}
-        </CampusContext.Provider>   
+        </CampusContext.Provider>
     );
-}
+};
 
-const fetchCampusFromStorage = async () => {
+const fetchCampusFromStorage = async (): Promise<Models.Document | null> => {
     try {
         const storedCampus = await AsyncStorage.default.getItem('campus');
         if (storedCampus !== null) {
-            return storedCampus;
+            const campusData: PartialCampus = JSON.parse(storedCampus);
+            return {
+                $id: campusData.$id,
+                name: campusData.name,
+                $collectionId: '', // Provide default or fetch from somewhere
+                $databaseId: '', // Provide default or fetch from somewhere
+                $createdAt: '', // Provide default or fetch from somewhere
+                $updatedAt: '', // Provide default or fetch from somewhere
+                $permissions: [] // Provide default or fetch from somewhere
+            } as Models.Document;
         }
     } catch (error) {
         console.error('Error fetching campus from async storage:', error);
     }
     return null;
-}
+};
 
-const fetchCampusFromAppwrite = async (user?: Models.User<Models.Preferences>) => {
+const fetchCampusFromAppwrite = async (user?: Models.Document) => {
     try {
-        const response = await user?.prefs?.campus;
-        if (response) {
-            return response;
+        const campus = user?.campus;
+
+        if (campus) {
+            return campus;
         }
     } catch (error) {
         console.log("Found no campus in Appwrite", error);
@@ -74,4 +105,4 @@ const fetchCampusFromAppwrite = async (user?: Models.User<Models.Preferences>) =
     }
 
     return null;
-}
+};

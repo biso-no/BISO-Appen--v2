@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link, Tabs } from 'expo-router';
+import { Link, Stack, Tabs } from 'expo-router';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
-import { H5, Avatar, H4, View as TView, XStack, Button } from 'tamagui';
-import { Home, UserRound, LogIn, MessageSquare, Bell } from '@tamagui/lucide-icons';
+import { H5, Avatar, H4, View as TView, XStack, Button, XGroup } from 'tamagui';
+import { Home, UserRound, LogIn, MessageSquare, LayoutList } from '@tamagui/lucide-icons';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/components/context/auth-provider';
 import { useClientOnlyValue } from '../useClientOnlyValue';
@@ -11,6 +11,7 @@ import { CampusProvider, useCampus } from '@/lib/hooks/useCampus';
 import CampusPopover from '../CampusPopover';
 import { useChat } from '@/lib/ChatContext';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
+import { ModalProvider } from '../context/membership-modal-provider';
 
 interface Props {
     profileIcon: (color: string) => JSX.Element
@@ -32,16 +33,26 @@ export default function AuthenticatedTabs({ profileIcon, bellIcon, backgroundCol
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
+
+  const chatIcon = () => {
+    return (
+      <MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} />
+    );
+  };
   
   return (
-
+    <ModalProvider>
       <Tabs
+      initialRouteName='index'
+      backBehavior='order'
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerShown: useClientOnlyValue(false, true),
+          tabBarStyle: { backgroundColor: backgroundColor, elevation: 0 },
+          headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
         }}
         sceneContainerStyle={{
-          backgroundColor: backgroundColor
+          backgroundColor: backgroundColor,
         }}
       >
         <Tabs.Screen
@@ -54,6 +65,8 @@ export default function AuthenticatedTabs({ profileIcon, bellIcon, backgroundCol
             ),
             tabBarIcon: ({ color }) => <Home color={color} />,
             headerRight: () => (
+              <XGroup space="$2" marginRight={10}>
+                <XGroup.Item>
               <Link href="/notifications" asChild>
                 <Pressable>
                   {({ pressed }) => (
@@ -62,14 +75,33 @@ export default function AuthenticatedTabs({ profileIcon, bellIcon, backgroundCol
                   )}
                 </Pressable>
               </Link>
+                </XGroup.Item>
+                  <XGroup.Item>
+                    <Link href="/explore/chat" asChild>
+                      <Pressable>
+                        {({ pressed }) => (
+                          {
+                            ...chatIcon(),}
+                        )}
+                      </Pressable>
+                    </Link>
+                  </XGroup.Item>
+              </XGroup>
             ),
           }}
         />
-        <Tabs.Screen
-          name="chat/index"
+        <Stack.Screen
+          name="explore/chat/index"
           options={{
             title: '',
-            tabBarIcon: ({ color }) => <MessageSquare color={color} />,
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="explore/index"
+          options={{
+            title: '',
+            tabBarIcon: ({ color }) => <LayoutList color={color} />,
           }}
         />
         <Tabs.Screen
@@ -88,50 +120,74 @@ export default function AuthenticatedTabs({ profileIcon, bellIcon, backgroundCol
             href: null,
           }}
         />
-        <Tabs.Screen
-          name="expenses/index"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="expenses/create/index"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="auth/verify-otp/[userId]/index"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-        name="units/index"
+      <Tabs.Screen
+        name="explore/expenses/index"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-      name="chat/[id]"
+        name="explore/expenses/create/index"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="auth/verify-otp/[userId]/index"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+      name="explore/units/index"
       options={{
-        title: capitalizeFirstLetter(currentChatGroupName ?? ''),
         href: null,
       }}
     />
-      <Tabs.Screen
-      name="chat/create"
+    <Tabs.Screen
+    name="explore/chat/[id]"
+    options={{
+      href: null,
+    }}
+  />
+  <Tabs.Screen
+    name="explore/chat/create"
+    options={{
+      href: null,
+    }}
+    />
+          <Tabs.Screen
+      name="explore/chat/invite"
+      options={{
+        href: null,
+      }}
+      />
+            <Tabs.Screen
+      name="explore/products/index"
       options={{
         href: null,
       }}
       />
       <Tabs.Screen
-      name="chat/invite"
-      options={{
-        href: null,
-      }}
+        name="explore/news/index"
+        options={{
+          href: null,
+        }}
       />
+      <Tabs.Screen
+          name="explore/products/[id]"
+          options={{
+            href: null,
+          }}
+       />
+             <Tabs.Screen
+          name="explore/elections/index"
+          options={{
+            href: null,
+          }}
+       />
       </Tabs>
+    </ModalProvider>
   );
 }
 

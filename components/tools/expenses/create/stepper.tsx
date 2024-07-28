@@ -35,13 +35,14 @@ export function MultiStepForm() {
     const { data, profile, isLoading } = useAuth(); 
     const [currentStep, setCurrentStep] = useState(1); 
     const [expenseId, setExpenseId] = useState<string | null>(null); 
+    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(null);
     const [forEvent, setForEvent] = useState(false);
     const [eventName, setEventName] = useState<string>("");
     const [debouncedEventName] = useDebounce(eventName, 500);
     const [showGenerateButton, setShowGenerateButton] = useState(false);
     const [formData, setFormData] = useState<FormData>({ 
         bank_account: profile?.bank_account || "", 
-        campus: data?.prefs.campus || "", 
+        campus: profile?.campus.id || "",
         department: {} as Models.Document,
         expenseAttachments: [],
         description: "", 
@@ -73,8 +74,10 @@ export function MultiStepForm() {
         })); 
     }; 
 
-    const handleCampusChange = (campus: string) => { 
-        handleInputChange('campus', campus);
+    const handleCampusChange = (campus?: Models.Document | null) => { 
+      console.log(campus);
+        setSelectedCampus(campus);
+        handleInputChange('campus', campus?.name ?? '');
         handleInputChange('department', ''); 
     }; 
 
@@ -205,15 +208,16 @@ export function MultiStepForm() {
                 <YGroup.Item>
                   <Label>Campus</Label>
                   <CampusSelector
-                    onSelect={(value) => handleCampusChange(value ?? 'national')}
+                    onSelect={(value) => handleCampusChange(value)}
                     campus={formData.campus}
+                    initialCampus={profile?.campus}
                   />
                 </YGroup.Item>
                 {formData.campus && (
                   <YGroup.Item>
                     <Label>Department</Label>
                     <DepartmentSelector
-                    campus={formData.campus}
+                    campus={selectedCampus}
                     onSelect={handleDepartmentChange}
                     selectedDepartments={formData.department ? [formData.department] : []}
                   />

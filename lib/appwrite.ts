@@ -173,6 +173,16 @@ export async function getDocuments(collectionId: string, filters?: Record<string
     }
   }
 
+  export async function listDocuments(collectionId: string, filters?: string[]) {
+      try {
+        const response = await databases.listDocuments('app', collectionId, filters);
+        return response;
+      } catch (error) {
+        console.error("Error fetching documents:", error);
+        throw error; // Re-throw the error to be handled by the caller
+      }
+  }
+
 export async function createDocument(collectionId: string, data?: any, id?: string) {
 
     const documentId = id ?? ID.unique();
@@ -325,8 +335,11 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
     return null;
   };
 
-export async function getDepartments() {
-    const departments = await databases.listDocuments('app', 'departments')
+export async function getDepartments(campusId?: string) {
+
+    const query = campusId ? [Query.equal('campus_id', campusId)] : undefined;
+
+    const departments = await databases.listDocuments('app', 'departments', query)
     return departments
 }
 
@@ -429,7 +442,9 @@ export async function getUsers() {
 }
 
 export async function fetchChatMessages(chatId: string) {
-    const messages = await databases.listDocuments('app', 'chat_messages')
+    const messages = await databases.listDocuments('app', 'chat_messages', [
+        Query.equal('chat_id', chatId)
+    ])
     return messages
 }
 
@@ -491,7 +506,7 @@ export async function createChatGroup({
     emails?: string[]
 }) {
     const execution = await triggerFunction({
-        functionId: 'create_chat_group',
+        functionId: 'create_group',
         async: false,
         data: JSON.stringify({
             name,
