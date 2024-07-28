@@ -6,12 +6,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'BISO',
   version: "0.9.95",
   orientation: 'portrait',
-  icon: './assets/images/icon.png',
+  icon: "./assets/images/icon-notrans.png",
   scheme: 'biso',
   userInterfaceStyle: 'automatic',
   backgroundColor: "#fff",
   splash: {
-    image: './assets/images/splash.png',
+    image: './assets/splash.png',
     resizeMode: 'contain',
     backgroundColor: '#ffffff',
   },
@@ -40,8 +40,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     versionCode: 31,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
-      foregroundImage: './assets/images/adaptive-icon.png',
-      backgroundColor: '#ffffff',
+      foregroundImage: "./assets/ic_foreground.png",
+      backgroundImage: "./assets/ic_background.png",
     },
   },
   web: {
