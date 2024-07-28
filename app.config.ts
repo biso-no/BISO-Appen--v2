@@ -4,9 +4,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
   name: 'BISO',
   slug: 'BISO',
-  version: "0.9.95",
+  version: "0.9.96",
   orientation: 'portrait',
-  icon: "./assets/images/icon-notrans.png",
+  icon: "./assets/icon-notrans.png",
   scheme: 'biso',
   userInterfaceStyle: 'automatic',
   backgroundColor: "#fff",
@@ -37,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.biso.no',
-    versionCode: 31,
+    versionCode: 36,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: "./assets/ic_foreground.png",
@@ -66,9 +66,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ios: { 
           useFrameworks: 'static',
           newArchEnabled: false,
+          deploymentTarget: "13.4"
         },
         android: {
-          newArchEnabled: false,
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          buildToolsVersion: "34.0.0"
         },
       }],
     ['expo-document-picker', { iCloudContainerEnvironment: 'Production' }],
