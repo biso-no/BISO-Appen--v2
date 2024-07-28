@@ -9,12 +9,14 @@ import { pickFiles } from "./file-utils";
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { formatDate } from "./format-time";
 import { File as FileIcon, Camera, Plus, FileCog } from "@tamagui/lucide-icons";
+import { DateTimePicker } from "@/components/ui/date-picker";
 
 interface Attachment {
     url: string;
     description: string;
-    date: string;
-    amount: string;
+    date: Date;
+    amount: number;
+    type: 'pdf' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'heic'
 }
 
 interface FileUploadProps {
@@ -84,38 +86,49 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
 
         for (const file of filesToProcess) {
             if (ocrResults.some(result => result.url === file.uri)) {
-                // Skip already processed files
                 continue;
             }
 
-            try {
-                const ocrResult = await MlkitOcr.detectFromUri(file.uri);
-                const extractedText = ocrResult.map(block => block.text).join(' ');
-                console.log('Extracted text:', extractedText);
+            if (file.type === 'application/pdf') {
+                const result: Attachment = {
+                    url: file.uri,
+                    description: '',
+                    date: new Date(),
+                    amount: 0,
+                    type: 'pdf',
+                };
+                newOcrResults.push(result);
+                ocrResultsCopy.push(result);
+            } else {
+                try {
+                    const ocrResult = await MlkitOcr.detectFromUri(file.uri);
+                    const extractedText = ocrResult.map(block => block.text).join(' ');
+                    const functionResults = await triggerFunction({
+                        functionId: 'process_receipts',
+                        data: extractedText,
+                        async: false,
+                    });
 
-                const functionResults = await triggerFunction({
-                    functionId: 'process_receipts',
-                    data: extractedText,
-                    async: false,
-                });
-
-                if (functionResults.responseBody) {
-                    const responseBody = JSON.parse(functionResults.responseBody);
-                    const result = {
-                        url: file.uri,
-                        description: responseBody.description,
-                        date: responseBody.date,
-                        amount: responseBody.amount
-                    };
-                    newOcrResults.push(result);
-                    ocrResultsCopy.push(result);
+                    if (functionResults.responseBody) {
+                        const responseBody = JSON.parse(functionResults.responseBody);
+                        const result: Attachment = {
+                            url: file.uri,
+                            description: responseBody.description,
+                            date: responseBody.date,
+                            amount: responseBody.amount,
+                            type: file.type.split('/')[1] as 'pdf' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'heic',
+                        };
+                        newOcrResults.push(result);
+                        ocrResultsCopy.push(result);
+                    }
+                } catch (error) {
+                    console.error(`Error processing file ${file.name}: `, error);
                 }
-            } catch (error) {
-                console.error(`Error processing file ${file.name}: `, error);
             }
         }
 
         setOcrResults(ocrResultsCopy);
+        setFilesToProcess([]);
         setIsProcessing(false);
     };
 
@@ -128,25 +141,45 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
         setBottomSheetOpen(false);
         setSelectedOcrResult(null);
     };
-
     const handleEditOcrResult = (key: keyof Attachment, value: string) => {
         if (selectedOcrResult) {
-            setSelectedOcrResult({ ...selectedOcrResult, [key]: value });
+            setSelectedOcrResult((prev) => {
+                if (!prev) return null;
+    
+                let updatedValue: any = value;
+                if (key === 'date') {
+                    updatedValue = new Date(value);
+                } else if (key === 'amount') {
+                    // Ensure the amount is a valid float
+                    updatedValue = parseFloat(value);
+                    if (isNaN(updatedValue)) {
+                        updatedValue = 0; // or handle it appropriately
+                    }
+                }
+    
+                return { ...prev, [key]: updatedValue };
+            });
         }
     };
+    
 
     const handleSaveOcrResult = () => {
         if (selectedOcrResult) {
-            setOcrResults(prevResults => prevResults.map(result =>
-                result.url === selectedOcrResult.url ? selectedOcrResult : result
+            setOcrResults((prevResults) => prevResults.map(result =>
+                result.url === selectedOcrResult.url ? {
+                    ...selectedOcrResult,
+                    date: new Date(selectedOcrResult.date)
+                } : result
             ));
             handleCloseBottomSheet();
         }
     };
 
+    
+
     const handleDeleteResult = () => {
         if (selectedOcrResult) {
-            setOcrResults(prevResults => prevResults.filter(result => result.url !== selectedOcrResult.url));
+            setOcrResults((prevResults) => prevResults.filter(result => result.url !== selectedOcrResult.url));
             handleCloseBottomSheet();
         }
     }
@@ -178,17 +211,15 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
             </Button>
 
             <ScrollView space="$4">
-                {Array.isArray(ocrResults) && ocrResults.length > 0 ? (
-                    ocrResults.map((result, index) => (
-                        <Card key={index} padding="$4" marginBottom="$4" onPress={() => handleOpenBottomSheet(result)}>
+                {ocrResults.length > 0 ? (
+                    ocrResults.map((result) => (
+                        <Card key={result.url} padding="$4" marginBottom="$4" onPress={() => handleOpenBottomSheet(result)}>
                             <XStack space="$4" alignItems="center" width="100%">
                                 <Image source={{ uri: result.url }} style={{ width: 100, height: 100, borderRadius: 8 }} />
                                 <YStack space="$2" flex={1}>
-                                    <>
-                                        <Text>Amount: {result.amount} kr</Text>
-                                        <Text>Date: {formatDate(new Date(result.date))}</Text>
-                                        <Text numberOfLines={2} ellipsizeMode="tail">Description: {result.description}</Text>
-                                    </>
+                                    <Text>Amount: {result.amount} kr</Text>
+                                    <Text>Date: {formatDate(new Date(result.date))}</Text>
+                                    <Text numberOfLines={2} ellipsizeMode="tail">Description: {result.description}</Text>
                                 </YStack>
                             </XStack>
                         </Card>
@@ -197,6 +228,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                     <Text>No results yet</Text>
                 )}
             </ScrollView>
+
             {selectedOcrResult && (
                 <EditAttachmentSheet
                     attachment={selectedOcrResult}
@@ -221,27 +253,28 @@ interface EditAttachmentProps {
 }
 
 function EditAttachmentSheet({ attachment, onOpenChange, open, handleEditOcrResult, handleSaveOcrResult, handleDeleteResult }: EditAttachmentProps) {
-
     return (
         <Sheet modal snapPoints={[85, 50, 25]} dismissOnSnapToBottom open={open} onOpenChange={onOpenChange}>
             <Sheet.Overlay />
             <Sheet.Handle />
             <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" space="$5">
-                <YGroup>
+                <YGroup width="$20">
                     <YGroup.Item>
                         <Label>Amount</Label>
                         <Input
-                            value={attachment.amount}
-                            onChangeText={(text) => handleEditOcrResult('amount', text)}
+                            value={attachment.amount.toString()}
+                            onChangeText={(text) => handleEditOcrResult('amount', text.toString())}
                             placeholder="Amount"
                         />
                     </YGroup.Item>
                     <YGroup.Item>
                         <Label>Date</Label>
-                        <Input
-                            value={attachment.date}
-                            onChangeText={(text) => handleEditOcrResult('date', text)}
-                            placeholder="Date"
+                        <DateTimePicker
+                            date={attachment.date || new Date()}
+                            type="date"
+                            onChange={(date) => handleEditOcrResult('date', date.toISOString())} // Only pass back the date in a single callback
+                            confirmText="Confirm"
+                            cancelText="Cancel"
                         />
                     </YGroup.Item>
                     <YGroup.Item>

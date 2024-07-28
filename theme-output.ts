@@ -47,7 +47,7 @@ function t(a: [number, number][]) {
   return res as Theme
 }
 const vs = [
-  'hsla(204, 100%, 59%, 1)',
+  'hsla(212, 100%, 48%, 1)',
   'hsla(0, 0%, 99%, 0)',
   'hsla(0, 0%, 99%, 0.25)',
   'hsla(0, 0%, 99%, 0.5)',
@@ -88,18 +88,17 @@ const vs = [
   'hsla(0, 15%, 95%, 0.25)',
   'hsla(0, 15%, 95%, 0.5)',
   'hsla(0, 15%, 95%, 0.75)',
-  'hsla(200, 100%, 56%, 0)',
-  'hsla(200, 100%, 56%, 0.25)',
-  'hsla(200, 100%, 56%, 0.5)',
-  'hsla(200, 100%, 56%, 0.75)',
-  'hsla(200, 100%, 56%, 1)',
-  'hsla(202, 100%, 57%, 1)',
-  'hsla(203, 100%, 58%, 1)',
-  'hsla(205, 100%, 60%, 1)',
-  'hsla(207, 100%, 61%, 1)',
-  'hsla(208, 100%, 62%, 1)',
-  'hsla(209, 100%, 63%, 1)',
-  'hsla(211, 100%, 64%, 1)',
+  'hsla(212, 100%, 40%, 0)',
+  'hsla(212, 100%, 40%, 0.25)',
+  'hsla(212, 100%, 40%, 0.5)',
+  'hsla(212, 100%, 40%, 0.75)',
+  'hsla(212, 100%, 40%, 1)',
+  'hsla(212, 100%, 43%, 1)',
+  'hsla(212, 100%, 46%, 1)',
+  'hsla(212, 100%, 51%, 1)',
+  'hsla(212, 100%, 57%, 1)',
+  'hsla(212, 100%, 59%, 1)',
+  'hsla(212, 100%, 62%, 1)',
   'hsla(212, 100%, 65%, 1)',
   'hsla(250, 50%, 95%, 1)',
   'hsla(249, 52%, 95%, 0)',
@@ -116,7 +115,6 @@ const vs = [
   'hsla(212, 100%, 26%, 1)',
   'hsla(212, 100%, 32%, 1)',
   'hsla(212, 100%, 38%, 1)',
-  'hsla(212, 100%, 43%, 1)',
   'hsla(212, 100%, 49%, 1)',
   'hsla(212, 100%, 60%, 1)',
   'hsla(250, 50%, 90%, 1)',
@@ -170,10 +168,10 @@ export const light = n1
 const n2 = t([[0, 21],[1, 21],[2, 22],[3, 23],[4, 24],[5, 25],[6, 26],[7, 27],[8, 28],[9, 29],[10, 30],[11, 31],[12, 32],[13, 33],[14, 34],[15, 14],[16, 35],[17, 36],[18, 37],[19, 38],[20, 39],[21, 40],[22, 26],[23, 27],[24, 25],[25, 25],[26, 29],[27, 30],[28, 28],[29, 29],[30, 36],[31, 35],[32, 36],[33, 35],[34, 37],[35, 34],[36, 38]])
 
 export const dark = n2
-const n3 = t([[0, 8],[1, 8],[2, 41],[3, 42],[4, 43],[5, 44],[6, 45],[7, 46],[8, 47],[9, 0],[10, 48],[11, 49],[12, 50],[13, 51],[14, 52],[15, 53],[16, 54],[17, 54],[18, 55],[19, 56],[20, 57],[21, 58],[22, 45],[23, 44],[24, 46],[25, 46],[26, 0],[27, 47],[28, 48],[29, 0],[30, 54],[31, 54],[32, 54],[33, 54],[34, 55],[35, 52],[36, 56]])
+const n3 = t([[0, 8],[1, 8],[2, 41],[3, 42],[4, 43],[5, 44],[6, 45],[7, 46],[8, 47],[9, 0],[10, 48],[11, 21],[12, 49],[13, 50],[14, 51],[15, 52],[16, 53],[17, 53],[18, 54],[19, 55],[20, 56],[21, 57],[22, 45],[23, 44],[24, 46],[25, 46],[26, 0],[27, 47],[28, 48],[29, 0],[30, 53],[31, 53],[32, 53],[33, 53],[34, 54],[35, 51],[36, 55]])
 
 export const light_accent = n3
-const n4 = t([[0, 34],[1, 34],[2, 59],[3, 60],[4, 61],[5, 62],[6, 63],[7, 64],[8, 65],[9, 66],[10, 67],[11, 68],[12, 69],[13, 70],[14, 21],[15, 71],[16, 72],[17, 54],[18, 55],[19, 56],[20, 57],[21, 58],[22, 63],[23, 64],[24, 62],[25, 62],[26, 66],[27, 67],[28, 65],[29, 66],[30, 54],[31, 72],[32, 54],[33, 72],[34, 55],[35, 21],[36, 56]])
+const n4 = t([[0, 34],[1, 34],[2, 58],[3, 59],[4, 60],[5, 61],[6, 62],[7, 63],[8, 64],[9, 65],[10, 66],[11, 67],[12, 46],[13, 68],[14, 21],[15, 69],[16, 70],[17, 53],[18, 54],[19, 55],[20, 56],[21, 57],[22, 62],[23, 63],[24, 61],[25, 61],[26, 65],[27, 66],[28, 64],[29, 65],[30, 53],[31, 70],[32, 53],[33, 70],[34, 54],[35, 21],[36, 55]])
 
 export const dark_accent = n4
 const n5 = t([[30, 15],[31, 14],[32, 15],[33, 14]])
@@ -242,19 +240,19 @@ export const dark_RadioGroupItem = n15
 const n16 = t([[22, 31],[23, 31],[24, 30],[25, 30],[26, 31],[27, 31],[29, 30],[28, 30]])
 
 export const dark_surface4 = n16
-const n17 = t([[30, 54],[31, 53],[32, 54],[33, 53]])
+const n17 = t([[30, 53],[31, 52],[32, 53],[33, 52]])
 
 export const light_accent_alt1 = n17
-const n18 = t([[30, 53],[31, 52],[32, 53],[33, 52]])
+const n18 = t([[30, 52],[31, 51],[32, 52],[33, 51]])
 
 export const light_accent_alt2 = n18
-const n19 = t([[22, 0],[23, 47],[24, 48],[25, 48],[26, 50],[27, 49],[29, 50],[28, 51]])
+const n19 = t([[22, 0],[23, 47],[24, 48],[25, 48],[26, 49],[27, 21],[29, 49],[28, 50]])
 
 export const light_accent_active = n19
 export const light_accent_surface3 = n19
 export const light_accent_Button = n19
 export const light_accent_SliderTrackActive = n19
-const n20 = t([[22, 46],[23, 45],[24, 47],[25, 47],[26, 48],[27, 0],[29, 48],[28, 49]])
+const n20 = t([[22, 46],[23, 45],[24, 47],[25, 47],[26, 48],[27, 0],[29, 48],[28, 21]])
 
 export const light_accent_surface1 = n20
 export const light_accent_ListItem = n20
@@ -265,29 +263,29 @@ export const light_accent_TooltipArrow = n20
 export const light_accent_SliderTrack = n20
 export const light_accent_Input = n20
 export const light_accent_TextArea = n20
-const n21 = t([[22, 47],[23, 46],[24, 0],[25, 0],[26, 49],[27, 48],[29, 49],[28, 50]])
+const n21 = t([[22, 47],[23, 46],[24, 0],[25, 0],[26, 21],[27, 48],[29, 21],[28, 49]])
 
 export const light_accent_surface2 = n21
 export const light_accent_Checkbox = n21
 export const light_accent_Switch = n21
 export const light_accent_TooltipContent = n21
 export const light_accent_RadioGroupItem = n21
-const n22 = t([[22, 49],[23, 49],[24, 50],[25, 50],[26, 49],[27, 49],[29, 50],[28, 50]])
+const n22 = t([[22, 21],[23, 21],[24, 49],[25, 49],[26, 21],[27, 21],[29, 49],[28, 49]])
 
 export const light_accent_surface4 = n22
-const n23 = t([[30, 72],[31, 71],[32, 72],[33, 71]])
+const n23 = t([[30, 70],[31, 69],[32, 70],[33, 69]])
 
 export const dark_accent_alt1 = n23
-const n24 = t([[30, 71],[31, 21],[32, 71],[33, 21]])
+const n24 = t([[30, 69],[31, 21],[32, 69],[33, 21]])
 
 export const dark_accent_alt2 = n24
-const n25 = t([[22, 66],[23, 67],[24, 65],[25, 65],[26, 69],[27, 70],[29, 69],[28, 68]])
+const n25 = t([[22, 65],[23, 66],[24, 64],[25, 64],[26, 46],[27, 68],[29, 46],[28, 67]])
 
 export const dark_accent_active = n25
 export const dark_accent_surface3 = n25
 export const dark_accent_Button = n25
 export const dark_accent_SliderTrackActive = n25
-const n26 = t([[22, 64],[23, 65],[24, 63],[25, 63],[26, 67],[27, 68],[29, 67],[28, 66]])
+const n26 = t([[22, 63],[23, 64],[24, 62],[25, 62],[26, 66],[27, 67],[29, 66],[28, 65]])
 
 export const dark_accent_surface1 = n26
 export const dark_accent_ListItem = n26
@@ -298,14 +296,14 @@ export const dark_accent_TooltipArrow = n26
 export const dark_accent_SliderTrack = n26
 export const dark_accent_Input = n26
 export const dark_accent_TextArea = n26
-const n27 = t([[22, 65],[23, 66],[24, 64],[25, 64],[26, 68],[27, 69],[29, 68],[28, 67]])
+const n27 = t([[22, 64],[23, 65],[24, 63],[25, 63],[26, 67],[27, 46],[29, 67],[28, 66]])
 
 export const dark_accent_surface2 = n27
 export const dark_accent_Checkbox = n27
 export const dark_accent_Switch = n27
 export const dark_accent_TooltipContent = n27
 export const dark_accent_RadioGroupItem = n27
-const n28 = t([[22, 68],[23, 68],[24, 67],[25, 67],[26, 68],[27, 68],[29, 67],[28, 67]])
+const n28 = t([[22, 67],[23, 67],[24, 66],[25, 66],[26, 67],[27, 67],[29, 66],[28, 66]])
 
 export const dark_accent_surface4 = n28
 const n29 = t([[30, 6],[31, 5],[32, 7],[33, 7],[22, 16],[23, 15],[24, 16],[25, 15],[26, 14],[27, 13],[29, 12],[28, 11]])
@@ -314,7 +312,7 @@ export const light_SwitchThumb = n29
 export const light_SliderThumb = n29
 export const light_Tooltip = n29
 export const light_ProgressIndicator = n29
-const n30 = t([[22, 73]])
+const n30 = t([[22, 71]])
 
 export const light_SheetOverlay = n30
 export const light_DialogOverlay = n30
@@ -328,7 +326,7 @@ export const dark_SwitchThumb = n31
 export const dark_SliderThumb = n31
 export const dark_Tooltip = n31
 export const dark_ProgressIndicator = n31
-const n32 = t([[22, 74]])
+const n32 = t([[22, 72]])
 
 export const dark_SheetOverlay = n32
 export const dark_DialogOverlay = n32
@@ -336,13 +334,13 @@ export const dark_ModalOverlay = n32
 export const dark_accent_SheetOverlay = n32
 export const dark_accent_DialogOverlay = n32
 export const dark_accent_ModalOverlay = n32
-const n33 = t([[30, 46],[31, 45],[32, 47],[33, 47],[22, 54],[23, 54],[24, 54],[25, 54],[26, 53],[27, 52],[29, 51],[28, 50]])
+const n33 = t([[30, 46],[31, 45],[32, 47],[33, 47],[22, 53],[23, 53],[24, 53],[25, 53],[26, 52],[27, 51],[29, 50],[28, 49]])
 
 export const light_accent_SwitchThumb = n33
 export const light_accent_SliderThumb = n33
 export const light_accent_Tooltip = n33
 export const light_accent_ProgressIndicator = n33
-const n34 = t([[30, 64],[31, 65],[32, 63],[33, 63],[22, 54],[23, 72],[24, 54],[25, 72],[26, 71],[27, 21],[29, 70],[28, 69]])
+const n34 = t([[30, 63],[31, 64],[32, 62],[33, 62],[22, 53],[23, 70],[24, 53],[25, 70],[26, 69],[27, 21],[29, 68],[28, 46]])
 
 export const dark_accent_SwitchThumb = n34
 export const dark_accent_SliderThumb = n34

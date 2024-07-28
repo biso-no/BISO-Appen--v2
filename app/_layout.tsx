@@ -89,8 +89,8 @@ useEffect(() => {
     <AuthProvider>
     <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Theme name={colorScheme === 'dark' ? 'dark_accent' : 'light_accent'}>
-      <Stack>
+      <Theme name={colorScheme === 'dark' ? 'dark_accent' : 'light'}>
+      <Stack initialRouteName='(tabs)'>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name="onboarding/index" options={{ presentation: 'modal', headerTitle: 'Welcome to BISO' }} />

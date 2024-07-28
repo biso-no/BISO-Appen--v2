@@ -1,14 +1,18 @@
-import { Card, Image, H6, Paragraph, YStack, XStack } from "tamagui";
+import { Card, Image, H6, Paragraph, YStack, XStack, Separator } from "tamagui";
 import { getNews } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import type { Models } from "react-native-appwrite";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
+import { RenderHTML } from 'react-native-render-html';
+import { useRouter } from "expo-router";
 
 export function News() {
 
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>({ documents: [], total: 0 });
+
+    const router = useRouter();
 
     useEffect(() => {
         async function fetchNews() {
@@ -31,10 +35,6 @@ export function News() {
         return str.charAt(0).toUpperCase() + str.slice(1);
       };
 
-      const useNewsImageUri = (imageId: string) => {
-        return `https://appwrite.biso.no/v1/storage/buckets/6633a94e0038cfed7b1d/files/${imageId}/view?project=biso`
-      }
-
       if (!news || news.total === 0) {
         return (
           <MyStack justifyContent="center" alignItems="center" space="$2">
@@ -47,15 +47,16 @@ export function News() {
     return (
         <YStack justifyContent="center" alignItems="center" space="$2">
             {news?.documents.map((news, index) => (
+                <>
                 <Card
                     key={index}
-                    bordered
+                    chromeless
                     width={400}
-                    onPress={() => window.open(news.url)}
+                    onPress={() => router.push(`/explore/news/${news.$id}`)}
                 >
                     <Card.Header>
                         <Image
-                            source={{ uri: useNewsImageUri(news.image) }}
+                            source={{ uri: news.image}}
                             alt="image"
                             height={200}
                             width="100%"
@@ -64,15 +65,16 @@ export function News() {
                     </Card.Header>
                     <Card.Footer>
                         <YStack space="$1">
-                            <XStack justifyContent="space-between">
-                            <Paragraph>{capitalizeFirstLetter(news.campus)}</Paragraph>
+                        <H6>{news.title}</H6>
+                            <XStack justifyContent="space-between"> 
+                            <Paragraph>{capitalizeFirstLetter(news.campus.name)}</Paragraph>
                             <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>
                             </XStack>
-                            <H6>{news.title}</H6>
-                            <Paragraph>{truncateDescription(news.content, 100)}</Paragraph>
                         </YStack>
                     </Card.Footer>
                 </Card>
+                <Separator key={'sep' + index} />
+                </>
             ))}
         </YStack>
     );

@@ -4,6 +4,8 @@ import { getDepartments } from "@/lib/appwrite";
 import { useState, useEffect } from 'react';
 import type { Models } from "react-native-appwrite";
 import { useCampus } from "@/lib/hooks/useCampus";
+import CampusPopover from "@/components/CampusPopover";
+import { Tabs } from "expo-router";
 
 export default function DepartmentsScreen() {
 
@@ -18,10 +20,11 @@ export default function DepartmentsScreen() {
             setDepartments(departments)
         }
         fetchDepartments()
-    }, [])
+    }, [campus])
 
 
     return (
+        <>
         <ScrollView>
         <MyStack>
             {departments?.documents.map(department => (
@@ -46,5 +49,6 @@ export default function DepartmentsScreen() {
             ))}
         </MyStack>
         </ScrollView>
+        </>
     )
 }

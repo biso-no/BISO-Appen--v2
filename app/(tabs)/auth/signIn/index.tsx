@@ -1,7 +1,5 @@
-import { OTPInput } from '@/components/ui/otp-input';
-import { AnimatedView } from '@tamagui/animations-react-native';
 import React, { RefObject, useRef, useState } from 'react';
-import { Button, Input, Text, YStack, AnimatePresence, XGroup } from 'tamagui';
+import { Button, Input, Text, YStack, XGroup } from 'tamagui';
 import { signIn, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { OTPInput as OTP } from '@/components/ui/otp';
@@ -17,7 +15,7 @@ export default function LoginScreen() {
   const [codes, setCodes] = useState<string[] | undefined>(Array(6).fill(""));
   const [errorMessages, setErrorMessages] = useState<string[]>();
 
-  const { refetchUser } = useAuth();
+  const { refetchUser, profile } = useAuth();
 
   const refs: RefObject<TextInput>[] = [
     useRef<TextInput>(null),
@@ -52,12 +50,14 @@ export default function LoginScreen() {
     }
     const response = await verifyOtp(userId, otp, refetchUser);
     if (response) {
-      if (response.hasProfile) {
-        push('/profile');
-
-      } else {
+      if (profile && profile.name) {
         push('/');
+      } else {
+        push('/onboarding/');
       }
+    } else {
+      setErrorMessages(["Invalid OTP."]);
+      return;
     }
   }
 
@@ -96,7 +96,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
               marginBottom="$4"
             />
-            <Button onPress={handleEmailSubmit}>Next</Button>
+            <Button onPress={handleEmailSubmit}>Send code</Button>
           </MotiView>
                   <MotiView
                   key="otp"

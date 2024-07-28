@@ -3,19 +3,16 @@ import { Platform, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { H5, Avatar } from 'tamagui';
-import { Bell, UserRound, LogIn } from '@tamagui/lucide-icons';
+import { H5, Avatar, XStack } from 'tamagui';
+import { Bell, UserRound, LogIn, Home, LayoutList } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { getNotificationCount } from '@/lib/appwrite';
 import { ChatProvider } from '@/lib/ChatContext';
-import AuthenticatedTabs from '@/components/tabs/authenticated-tabs';
-import UnauthenticatedTabs from '@/components/tabs/unauthenticated-tabs';
 import { View, Text } from 'tamagui';
-import { useNotificationObserver } from '@/lib/useNotifications';
-import { router } from 'expo-router';  // Import the router
+import { router } from 'expo-router';
 import {
   addNotificationReceivedListener,
   addNotificationResponseReceivedListener,
@@ -26,11 +23,16 @@ import {
   removeNotificationSubscription,
   setNotificationChannelAsync,
   Subscription,
-  useLastNotificationResponse,
 } from 'expo-notifications';
 import { defineTask } from 'expo-task-manager';
 import { AppState } from 'react-native';
 import { CampusProvider } from '@/lib/hooks/useCampus';
+import { useNavigationState } from '@react-navigation/native';
+import { Tabs } from 'expo-router';
+import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import CampusPopover from '@/components/CampusPopover';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -40,7 +42,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
 const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
 defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
   console.log(
@@ -49,7 +50,6 @@ defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
 
   if (error) {
     console.log(`${Platform.OS} BACKGROUND-NOTIFICATION-TASK: Error! ${JSON.stringify(error)}`);
-
     return;
   }
 
@@ -57,14 +57,11 @@ defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
     console.log(
       `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: App not in background state, skipping task.`,
     );
-
     return;
   }
 
   console.log(
-    `${
-      Platform.OS
-    } BACKGROUND-NOTIFICATION-TASK: Received a notification in the background! ${JSON.stringify(
+    `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: Received a notification in the background! ${JSON.stringify(
       data,
       null,
       2,
@@ -107,6 +104,7 @@ export default function TabLayout() {
   const responseListener = useRef<Subscription>();
 
   const theme = useTheme();
+  const navigationState = useNavigationState(state => state);
 
   if (!theme.background) return "#fff"
 
@@ -119,11 +117,9 @@ export default function TabLayout() {
         setPushToken(token);
       });
     }
-
   }, [data?.$id, isExpoGo, isLoading]);
 
   useEffect(() => {
-
     if (Platform.OS === 'android') {
       setNotificationChannelAsync('Miscellaneous', {
         name: 'Miscellaneous',
@@ -188,7 +184,6 @@ export default function TabLayout() {
       "User ID": data?.$id,
     });
     setIsAuthenticated(!!data?.$id);
-
   }, [data?.$id]);
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
@@ -207,7 +202,7 @@ export default function TabLayout() {
     }
   };
 
-  //Notification bell icon including notification count
+  // Notification bell icon including notification count
   const bellIcon = () => {
     return (
       <View style={{ marginRight: 15 }}>
@@ -220,28 +215,79 @@ export default function TabLayout() {
       </View>
     );
   };
+  
 
+
+  const tabNames = isAuthenticated
+    ? ['index', 'explore/index', 'profile/index']
+    : ['index', 'explore/index', 'auth/signIn/index'];
+
+
+  const generateScreens = () => {
+    // Find the tabs route in the navigation state
+    const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
+    if (!tabsRoute || !tabsRoute.state || !tabsRoute.state.routes) return null;
+
+    // Get all nested routes inside the tabs route
+    const nestedRoutes = tabsRoute.state.routes;
+
+    return nestedRoutes.map(route => {
+      const isTab = tabNames.includes(route.name);
+
+      const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
+      return (
+        <Tabs.Screen
+          key={route.key}
+          name={route.name}
+          options={{
+            title: '',
+            tabBarIcon: isTab ? ({ color }) => getIconForRoute(route.name, color) : undefined,
+            href: isTab ? undefined : null,
+            header: routesWithCampusPopover.includes(route.name) ? () => <CampusPopover /> : () =><XStack justifyContent='center' alignItems='center'><Text fontSize={18} fontWeight={"bold"}>{ capitalizeFirstLetter(route.name.split('/')[0])}</Text></XStack>,
+          }}
+        />
+      );
+    });
+  };
+
+  const getIconForRoute = (routeName: string, color: string) => {
+    switch (routeName) {
+      case 'index':
+        return <Home color={color} />;
+      case 'explore/index':
+        return <LayoutList color={color} />;
+      case 'profile/index':
+        return profileIcon(color);
+      case 'auth/signIn/index':
+        return <LogIn color={color} />;
+      default:
+        return null;
+    }
+  };
 
   if (isLoading) {
     return null;
   }
-	
+
   return (
     <ChatProvider data={data}>
-          <CampusProvider>
-      {isAuthenticated ? (
-        <AuthenticatedTabs
-          profileIcon={profileIcon}
-          bellIcon={bellIcon}
-          backgroundColor={backgroundColor}
-        />
-      ) : (
-        <UnauthenticatedTabs
-          profileIcon={profileIcon}
-          bellIcon={bellIcon}
-          backgroundColor={backgroundColor}
-        />
-      )}
+      <CampusProvider>
+        <SafeAreaView style={{ flex: 1, backgroundColor }}>
+          <Tabs
+            initialRouteName='index'
+            backBehavior='history'
+            screenOptions={{
+              tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+              headerShown: useClientOnlyValue(false, true),
+              tabBarStyle: { backgroundColor: backgroundColor, elevation: 0 },
+              headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
+              headerLeft: undefined,
+            }}
+            sceneContainerStyle={{ backgroundColor: backgroundColor }}
+          >
+            {generateScreens()}
+          </Tabs>
+        </SafeAreaView>
       </CampusProvider>
     </ChatProvider>
   );

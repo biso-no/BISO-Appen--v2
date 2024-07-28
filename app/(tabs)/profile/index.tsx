@@ -141,7 +141,7 @@ export default function ProfileScreen() {
                 <Button onPress={() => router.push("/explore/expenses/create")}>Create new expense</Button>
                 <Button onPress={() => router.push("/explore/expenses")} chromeless>View all</Button>
               </XGroup>
-              <ExpenseList withFilters={false} />
+              <ExpenseList withFilters={false} profileScreen />
             </MyStack>
           </TabsContent>
           <TabsContent value="tab3">
@@ -224,7 +224,7 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
 
   return (
     <ScrollView automaticallyAdjustsScrollIndicatorInsets width="100%" contentContainerStyle={{ flexGrow: 1 }}>
-      <MyStack space="$4" padding="$4" width="100%">
+      <MyStack space="$2" width="100%">
         <YGroup width="100%">
           <Label>Phone</Label>
           <Input
@@ -234,8 +234,7 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
             keyboardType='phone-pad'
             width="100%"
           />
-        </YGroup>
-        <YGroup width="100%">
+        <YGroup.Item>
           <Label>Address</Label>
           <Input
             placeholder="Address"
@@ -243,8 +242,8 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
             onChangeText={setAddress}
             width="100%"
           />
-        </YGroup>
-        <YGroup width="100%">
+        </YGroup.Item>
+        <YGroup.Item>
           <Label>City</Label>
           <Input
             placeholder="City"
@@ -252,8 +251,8 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
             onChangeText={setCity}
             width="100%"
           />
-        </YGroup>
-        <YGroup width="100%">
+        </YGroup.Item>
+        <YGroup.Item>
           <Label>Zip Code</Label>
           <Input
             placeholder="Zip Code"
@@ -262,8 +261,8 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
             keyboardType='number-pad'
             width="100%"
           />
-        </YGroup>
-        <YGroup width="100%">
+        </YGroup.Item>
+        <YGroup.Item>
           <Label>Bank Account</Label>
           <Input
             placeholder="Bank Account"
@@ -272,6 +271,7 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
             keyboardType='number-pad'
             width="100%"
           />
+        </YGroup.Item>
         </YGroup>
         <Button marginTop="$2" onPress={handleSubmit}>Submit</Button>
       </MyStack>
@@ -288,15 +288,19 @@ const ViewProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
   };
 
   return (
-    <MyStack alignItems='stretch' gap="$4">
+    <MyStack alignItems='stretch' space="$4">
       <XStack justifyContent="center" space="$4" marginTop="$4">
         <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
         <Button size="$4" variant="outlined" onPress={handleLogout}>Sign Out</Button>
       </XStack>
       <SizableText fontSize="$6">Phone: {profile?.phone}</SizableText>
+      <Separator />
       <SizableText fontSize="$6">Address: {profile?.address}</SizableText>
+      <Separator />
       <SizableText fontSize="$6">City: {profile?.city}</SizableText>
+      <Separator />
       <SizableText fontSize="$6">Zip Code: {profile?.zip}</SizableText>
+      <Separator />
       <SizableText fontSize="$6">Bank Account: {profile?.bank_account}</SizableText>
     </MyStack>
   );

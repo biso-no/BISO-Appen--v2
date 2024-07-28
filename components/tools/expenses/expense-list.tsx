@@ -1,4 +1,4 @@
-import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack, Image, Button } from "tamagui";
+import { Card, Paragraph, ScrollView, SizableText, Text, View, XGroup, XStack, YStack, Image, Button, Separator } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { ExpenseFilter } from "./filter";
 import { CustomSelect } from "@/components/ui/select";
@@ -28,12 +28,15 @@ function ExpenseCard({ expense }: { expense: Models.Document }) {
 
     const formattedDate = created_at ? getFormattedDateFromString(created_at) : 'Invalid date';
 
+    const router = useRouter();
+
     return (
         <Card 
             bordered
             borderWidth={3}
             width={"100%"}
             size="$6"
+            onPress={() => router.push(`/explore/expenses/${expense.$id}`)}
         >
             <YStack space="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
@@ -86,7 +89,7 @@ function NoExpensesPlaceholder() {
     );
 }
 
-export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
+export function ExpenseList({withFilters = true, profileScreen = false}: {withFilters?: boolean, profileScreen?: boolean}) {
     const [sortingOption, setSortingOption] = useState("date descending");
     const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();
     const [selectedStatus, setSelectedStatus] = useState("all");
@@ -114,7 +117,8 @@ export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
             options: [
               { name: "All", value: "all" },
               { name: "Pending", value: "pending" },
-              { name: "Paid", value: "paid" },
+              { name: "Success", value: "success" },
+              { name: "Submitted", value: "submitted" },
             ],
             label: 'Status',
             initialSelected: selectedStatus,
@@ -154,7 +158,7 @@ export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
 
     return (
         <ScrollView>
-            <YStack space="$5" alignItems="center" justifyContent="center">
+            <YStack space="$2" alignItems="center" justifyContent="center" padding="$2">
                 {withFilters && (
                 <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
                     <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
@@ -173,7 +177,14 @@ export function ExpenseList({withFilters = true}: {withFilters?: boolean}) {
                     </View>
                 </XGroup>
                 )}
-
+                {!profileScreen && (
+                    <YStack>
+                <Separator />
+                <Button margin="$4" alignSelf="center" onPress={() => router.push("/explore/expenses/create")}>
+                Create new expense
+            </Button>
+                    </YStack>
+                )}
                 {expenses?.documents?.length === 0 ? (
                     <NoExpensesPlaceholder />
                 ) : (

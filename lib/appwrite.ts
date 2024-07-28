@@ -1,6 +1,5 @@
 import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
-import * as WebBrowser from 'expo-web-browser';
 import { AuthContextType } from '@/components/context/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
 
@@ -14,7 +13,7 @@ client
 
 const account = new Account(client);
 
-const databases = new Databases(client);
+export const databases = new Databases(client);
 
 export const storage = new Storage(client);
 
@@ -51,36 +50,16 @@ export async function verifyOtp(userId: string, otp: string, refetchUser: AuthCo
         throw new Error("Missing User ID or OTP. Contact System Admin if the error persists.");
     }
 
-    let response;
-    let profileStatus = false;
-
-    try {
-        response = await account.createSession(userId, otp);
-    } catch (error) {
-        console.error("Error creating session:", error);
-        return {
-            user: null,
-            hasProfile: false
-        };
-    }
+    const response = await account.createSession(userId, otp);
 
     if (!response.$id) {
-        try {
-            const profile = await databases.getDocument('app', 'user', userId);
-            if (profile) {
-                profileStatus = true;
-            }
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-        }
+        throw new Error("Invalid OTP");
     }
 
     await refetchUser();
 
-    return {
-        user: response,
-        hasProfile: profileStatus
-    };
+    return response;
+
 }
 
 

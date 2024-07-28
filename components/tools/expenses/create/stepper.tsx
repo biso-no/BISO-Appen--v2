@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from 'react'; 
-import { Button, Text, YStack, Input, H6, YGroup, Label, Checkbox, XStack, ScrollView, Spinner } from 'tamagui'; 
+import { Button, Text, YStack, Input, H6, YGroup, Label, XStack, ScrollView, Spinner } from 'tamagui'; 
 import { FileUpload } from '@/lib/file-upload'; 
 import { useAuth } from '@/components/context/auth-provider'; 
-import { Check as CheckIcon } from '@tamagui/lucide-icons'; 
 import CampusSelector from '@/components/SelectCampus'; 
 import { MyStack } from '@/components/ui/MyStack'; 
 import DepartmentSelector from '@/components/SelectDepartments'; 
-import { createDocument, updateDocument, triggerFunction } from '@/lib/appwrite'; 
+import { updateDocument, triggerFunction, storage, databases } from '@/lib/appwrite'; 
 import { MotiView } from 'moti';
 import { useDebounce } from 'use-debounce';
 import OverviewScreen from './overview';
 import { Switch } from '@/components/ui/switch';
-import { Models } from 'react-native-appwrite';
+import { ID, Models } from 'react-native-appwrite';
+import { uriToBlob } from '@/lib/utils/uriToBlob';
+import { useRouter } from 'expo-router';
 
 export interface Attachment { 
     url: string; 
     description: string; 
-    date: string; 
-    amount: string; 
+    date: Date; 
+    amount: number; 
+    type: 'pdf' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'heic';
 }
 
 type FormData = {
   bank_account: string;
   campus: string;
-  department: Models.Document
+  department: string;
   expenseAttachments: Attachment[];
   description: string;
   prepayment_amount: number;
@@ -35,60 +37,53 @@ export function MultiStepForm() {
     const { data, profile, isLoading } = useAuth(); 
     const [currentStep, setCurrentStep] = useState(1); 
     const [expenseId, setExpenseId] = useState<string | null>(null); 
-    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(null);
+    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(profile?.campus);
+    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null | undefined>(profile?.departments[0]);
     const [forEvent, setForEvent] = useState(false);
     const [eventName, setEventName] = useState<string>("");
     const [debouncedEventName] = useDebounce(eventName, 500);
     const [showGenerateButton, setShowGenerateButton] = useState(false);
     const [formData, setFormData] = useState<FormData>({ 
         bank_account: profile?.bank_account || "", 
-        campus: profile?.campus.id || "",
-        department: {} as Models.Document,
+        campus: profile?.campus.name || "",
+        department: profile?.departments[0].name || "",
         expenseAttachments: [],
         description: "", 
         prepayment_amount: 0, 
         total: 0, 
-        status: "draft", 
+        status: "draft"
     }); 
-    const [receivedPrepayment, setReceivedPrepayment] = useState(formData.prepayment_amount > 0 ? true : false); 
+    const [receivedPrepayment, setReceivedPrepayment] = useState(formData.prepayment_amount > 0); 
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const router = useRouter();
  
-    const handleNextStep = () => { 
-        console.log('Current Step:', currentStep);
-        if (currentStep < 5) { 
-            setCurrentStep(prevStep => prevStep + 1); 
-        } 
-    }; 
+    const handleNextStep = () => setCurrentStep((prevStep) => Math.min(prevStep + 1, 5)); 
 
-    const handlePrevStep = () => { 
-        console.log('Current Step:', currentStep);
-        if (currentStep > 1) { 
-            setCurrentStep(prevStep => prevStep - 1); 
-        } 
-    }; 
+    const handlePrevStep = () => setCurrentStep((prevStep) => Math.max(prevStep - 1, 1)); 
 
-    const handleInputChange = (field: keyof FormData, value: string | number | Attachment[] | Models.Document) => { 
-        setFormData(prevData => ({ 
+    const handleInputChange = (field: keyof FormData, value: string | number | Models.Document) => { 
+        setFormData((prevData) => ({
             ...prevData, 
-            [field]: value, 
+            [field]: value
         })); 
     }; 
 
-    const handleCampusChange = (campus?: Models.Document | null) => { 
-      console.log(campus);
-        setSelectedCampus(campus);
-        handleInputChange('campus', campus?.name ?? '');
-        handleInputChange('department', ''); 
-    }; 
-
-    const handleDepartmentChange = (selectedDepartments: Models.Document) => {
-      handleInputChange('department', selectedDepartments || null);
+    const handleAttachmentsChange = (attachments: Attachment[]) => { 
+        setFormData((prevData) => ({
+            ...prevData, 
+            expenseAttachments: attachments
+        })); 
     };
 
+    const handleCampusChange = (campus?: Models.Document | null) => { 
+        setSelectedCampus(campus);
+        handleInputChange('campus', campus?.name ?? '');
+        handleInputChange('department', {} as Models.Document); 
+    }; 
+
     const handleSaveDraft = async () => { 
-        if (!profile) { 
-            return; 
-        } 
+        if (!profile) return; 
         const newExpense = await updateDocument('user', profile.$id, { 
             expenses: [{ 
                 ...formData, 
@@ -98,75 +93,99 @@ export function MultiStepForm() {
         setExpenseId(newExpense.$id); 
     }; 
 
-    const handleSubmit = async () => { 
-        if (!profile) { 
-            return; 
-        } 
-        const newExpense = await updateDocument('user', profile.$id, { 
-            expenses: [{ 
-                ...formData, 
-                status: 'pending', 
-            }], 
-        });
-        setExpenseId(newExpense.$id); 
+    const resetForm = () => { 
+        setFormData({ 
+            bank_account: profile?.bank_account || "", 
+            campus: profile?.campus.id || "",
+            department: profile?.departments[0].name || "",
+            expenseAttachments: [],
+            description: "", 
+            prepayment_amount: 0, 
+            total: 0, 
+            status: "draft"
+        }); 
     };
 
-    if (isLoading || !data || !profile) { 
-        return <Text>Loading...</Text>; 
-    } 
+    const handleSubmit = async () => { 
+        if (!profile) return; 
+
+        setIsProcessing(true);
+
+        const updatedAttachments = await Promise.all(formData.expenseAttachments.map(async (attachment) => {
+            const fileId = ID.unique();
+            const blob = await uriToBlob(attachment.url);
+
+            const customFile = {
+                name: attachment.description,
+                type: blob.type,
+                size: blob.size,
+                uri: attachment.url,
+            };
+
+            const uploadResult = await storage.createFile('expenses', fileId, customFile);
+            const downloadUrl = 'https://appwrite.biso.no/v1/storage/buckets/expenses/files/' + uploadResult.$id + '/view?project=biso';
+
+            return {
+                ...attachment,
+                url: downloadUrl,
+            };
+        }));
+
+        const updatedFormData = {
+            ...formData,
+            expenseAttachments: updatedAttachments,
+        };
+
+        const newExpense = await databases.createDocument('app', 'expense', ID.unique(),{ 
+                ...updatedFormData, 
+                status: 'pending', 
+                userId: data?.$id,
+                user: data?.$id
+        });
+        setExpenseId(newExpense.$id); 
+        setIsProcessing(false);
+        resetForm();
+        router.push('/explore/expenses');
+    };
 
     useEffect(() => {
-        if (debouncedEventName) {
-            setShowGenerateButton(true);
-        } else {
-            setShowGenerateButton(false);
-        }
+        setShowGenerateButton(!!debouncedEventName);
     }, [debouncedEventName]);
 
     const handleGenerateDescription = async () => {
         setIsProcessing(true);
         const descriptions = formData.expenseAttachments.map(attachment => attachment.description).join(', ');
         const event = eventName ? `for ${eventName}` : '';
+        const body = { descriptions, event };
 
-        const body = {
-            descriptions: descriptions,
-            event: event
-        }
         const overallDescription = await triggerFunction({
             functionId: 'generate_expense_description',
             async: false,
             data: JSON.stringify(body)
         });
-        if (!overallDescription) {
-            setIsProcessing(false);
-            return;
+
+        if (overallDescription) {
+            const responseBody = JSON.parse(overallDescription.responseBody);
+            handleInputChange('description', responseBody.description);
         }
-        const responseBody = JSON.parse(overallDescription.responseBody);
-        handleInputChange('description', responseBody.description);
         setIsProcessing(false);
     };
 
-    // Whenever an attachment is added or removed, update the total
     useEffect(() => {
-      if (formData.expenseAttachments.length === 0) {
-        handleInputChange('total', 0);
-        return;
-      }
-        const expenseAttachments = formData.expenseAttachments
-        const total = expenseAttachments.reduce((acc, attachment) => {
-            return acc + parseFloat(attachment.amount);
-        }, 0);
+        const total = formData.expenseAttachments.reduce((acc, attachment) => acc + attachment.amount, 0);
         handleInputChange('total', total);
     }, [formData.expenseAttachments]);
-    
-    // If on last step, and all fields are not populated, disable the submit button.
+
     const submitButtonDisabled = currentStep === 5 && (
       !formData.bank_account || 
       !formData.description || 
       !formData.total || 
       !formData.expenseAttachments.length
     );
-    
+
+    if (isLoading || !data || !profile) { 
+        return <Text>Loading...</Text>; 
+    } 
 
     return (
         <MyStack space="$4" padding="$4">
@@ -191,7 +210,7 @@ export function MultiStepForm() {
                   <Label>How much was prepaid?</Label>
                   <Input
                     placeholder="Prepayment Amount"
-                    onChangeText={(value) => handleInputChange('prepayment_amount', value)}
+                    onChangeText={(value) => handleInputChange('prepayment_amount', parseFloat(value))}
                     value={formData.prepayment_amount.toString()}
                   />
                 </YGroup.Item>
@@ -218,8 +237,11 @@ export function MultiStepForm() {
                     <Label>Department</Label>
                     <DepartmentSelector
                     campus={selectedCampus}
-                    onSelect={handleDepartmentChange}
-                    selectedDepartments={formData.department ? [formData.department] : []}
+                    onSelect={(value) => (
+                      handleInputChange('department', value.Name),
+                      setSelectedDepartment(value)
+                    )}
+                    selectedDepartments={selectedDepartment ? [selectedDepartment] : []}
                   />
                   </YGroup.Item>
                 )}
@@ -228,16 +250,25 @@ export function MultiStepForm() {
             </ScrollView>
           )}
     
-          {currentStep === 3 && (
+    
+    {currentStep === 3 && (
             <YStack>
-            <FileUpload
+              <FileUpload
                 ocrResults={formData.expenseAttachments}
-                setOcrResults={(attachments) => setFormData(prevData => ({
-                    ...prevData,
-                    expenseAttachments: attachments as Attachment[]
-                }))}
-            />
-
+                setOcrResults={(attachments: Attachment[] | ((prevAttachments: Attachment[]) => Attachment[])) => {
+                  if (Array.isArray(attachments)) {
+                    setFormData(prevData => ({
+                      ...prevData,
+                      expenseAttachments: attachments,
+                    }));
+                  } else {
+                    setFormData(prevData => ({
+                      ...prevData,
+                      expenseAttachments: attachments(prevData.expenseAttachments),
+                    }));
+                  }
+                }}
+              />
             </YStack>
           )}
     
@@ -261,9 +292,13 @@ export function MultiStepForm() {
                 )}
                 {(!forEvent || showGenerateButton) && (
                   <Button
-                    onPress={handleGenerateDescription}
-                    disabled={isProcessing}
-                  >
+                      onPress={handleGenerateDescription}
+                      disabled={
+                        isProcessing || 
+                        formData.expenseAttachments.length === 0 || 
+                        formData.expenseAttachments.some((attachment) => !attachment.description)
+                      }
+                    >
                     <XStack alignItems='center'>
                         <Text>{isProcessing ? 'Generating...' : 'Generate Description'}</Text>
                         {isProcessing && <Spinner size='small' color='white' />}

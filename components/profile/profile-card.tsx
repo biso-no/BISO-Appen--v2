@@ -15,7 +15,7 @@ export function ProfileCard() {
     const isDarkMode = colorScheme === 'dark';
 
     return (
-        <Card theme="accent">
+        <Card theme="accent" themeInverse>
             <Card.Header height="$13">
                 <ZStack maxWidth={"100%"} maxHeight={85} width={"100%"} flex={1}>
                     <YStack marginTop="$3">
@@ -30,7 +30,7 @@ export function ProfileCard() {
                     </YStack>
                     <Image
                         source={{
-                            uri: isDarkMode ? require('@/assets/logo-dark.png') : require('@/assets/logo-light.png'),
+                            uri: require('@/assets/logo-dark.png'),
                             width: 80,
                             height: 80,
                         }}
@@ -42,7 +42,7 @@ export function ProfileCard() {
                     />
                     <Image
                         source={{
-                            uri: isDarkMode ? require('@/assets/logo-dark.png') : require('@/assets/logo-light.png'),
+                            uri: require('@/assets/logo-dark.png'),
                             width: 80,
                             height: 80,
                         }}
@@ -54,7 +54,7 @@ export function ProfileCard() {
                     />
                     <Image
                         source={{
-                            uri: isDarkMode ? require('@/assets/logo-dark.png') : require('@/assets/logo-light.png'),
+                            uri: require('@/assets/logo-dark.png'),
                             width: 80,
                             height: 80,
                         }}

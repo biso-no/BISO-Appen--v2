@@ -22,7 +22,12 @@ export const pickFile = async (): Promise<File | undefined> => {
 };
 
 export const pickFiles = async (): Promise<File[]> => {
-    const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: true });
+    const result = await DocumentPicker.getDocumentAsync({ 
+        type: 'application/pdf,image/*', // Allows PDFs and all image types
+        copyToCacheDirectory: true, 
+        multiple: true 
+    });
+    
     if (!result.canceled && result.assets[0].name && result.assets[0].uri) {
         return result.assets.map((asset) => ({
             name: asset.name,

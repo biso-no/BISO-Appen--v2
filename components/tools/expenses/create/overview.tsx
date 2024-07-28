@@ -10,7 +10,7 @@ interface OverviewScreenProps {
   formData: {
     bank_account: string;
     campus: string;
-    department: Models.Document;
+    department: string;
     expenseAttachments: Attachment[];
     description: string;
     prepayment_amount: number;
@@ -60,7 +60,7 @@ const OverviewScreen: React.FC<OverviewScreenProps> = ({ formData }) => {
                     <YGroup.Item>
                 <XStack space="$4" alignItems="center">
                   <Text>Amount: {attachment.amount} kr</Text>
-                  <Separator />
+                  <Separator vertical themeInverse />
                   <Text>Date: {formatDate(new Date(attachment.date))}</Text>
                 </XStack>
                 </YGroup.Item>
