@@ -2,19 +2,21 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Button, Card, View, Image, H6, Paragraph, YStack, XStack, Text } from "tamagui";
 import { MotiView } from 'moti';
-import { getDocument, getNews } from "@/lib/appwrite";
+import { databases, getDocument, getNews } from "@/lib/appwrite";
 import { useRouter } from "expo-router";
 import { capitalizeFirstLetter, truncateString } from "@/lib/utils/helpers";
 import { getFormattedDateFromString } from "@/lib/format-time";
-import { Models } from "react-native-appwrite";
+import { Models, Query } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
 import { RenderHTML } from 'react-native-render-html';
 import { useWindowDimensions } from "react-native";
+import { useCampus } from "@/lib/hooks/useCampus";
 
 export default function NewsScreen() {
     const params = useLocalSearchParams();
 
     const { id } = params;
+    const { campus, availableCampuses } = useCampus();
 
     const [post, setPost] = useState<Models.Document>();
     const router = useRouter();
@@ -22,7 +24,9 @@ export default function NewsScreen() {
     const { width } = useWindowDimensions();
 
     useEffect(() => {
-        getDocument('news', id as string).then(
+        databases.getDocument('app', 'news', id as string, [
+            Query.select(['title', 'content', 'image', 'campus_id', 'department_id', '$createdAt', '$id']),
+        ]).then(
             (data) => setPost(data),
             (error) => console.log(error)
         );
@@ -41,6 +45,12 @@ export default function NewsScreen() {
             </View> 
         )
     }
+    
+
+    const getCampusName = (campusId: string) => {
+        const campus = availableCampuses.find(campus => campus.id === campusId);
+        return campus ? campus.name : 'Unknown Campus';
+    };
 
   const style = { 
     body: { 
@@ -74,7 +84,7 @@ export default function NewsScreen() {
                         <YStack space="$1">
                         <H6>{post.title}</H6>
                             <XStack justifyContent="space-between"> 
-                            <Paragraph>{capitalizeFirstLetter(post.campus.name)}</Paragraph>
+                            <Paragraph>{capitalizeFirstLetter(getCampusName(post.campus_id))}</Paragraph>
                             <Paragraph>{getFormattedDateFromString(post.$createdAt)}</Paragraph>
                             </XStack>
                             <RenderHTML 

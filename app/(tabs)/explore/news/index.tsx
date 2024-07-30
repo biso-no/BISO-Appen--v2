@@ -7,17 +7,30 @@ import { useRouter } from "expo-router";
 import { capitalizeFirstLetter, truncateString } from "@/lib/utils/helpers";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
+import { MyStack } from "@/components/ui/MyStack";
+import { Frown } from "@tamagui/lucide-icons";
+import { useCampus } from "@/lib/hooks/useCampus";
 
 export default function NewsScreen() {
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>();
     const router = useRouter();
+    const { campus } = useCampus();
 
     useEffect(() => {
-        getNews().then(
+        getNews(campus?.$id).then(
             (data) => setNews(data),
             (error) => console.log(error)
         );
     }, []);
+
+    if (!news || news.total === 0) {
+        return (
+            <MyStack justifyContent="center" alignItems="center" space="$2">
+                <Frown size={48} />
+                <H6>No news available</H6>
+            </MyStack>
+        );
+    }
 
     return (
         <ScrollView space="$4" padding="$3">
@@ -40,7 +53,7 @@ export default function NewsScreen() {
                         <Card.Footer>
                             <YStack space="$1">
                                 <XStack justifyContent="space-between">
-                                    <Paragraph>{capitalizeFirstLetter(news.campus)}</Paragraph>
+                                    <Paragraph>{capitalizeFirstLetter(news.campus.name)}</Paragraph>
                                     <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>
                                 </XStack>
                                 <H6>{news.title}</H6>

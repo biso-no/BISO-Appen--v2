@@ -20,7 +20,7 @@ export default function DepartmentsScreen() {
             setDepartments(departments)
         }
         fetchDepartments()
-    }, [campus])
+    }, [campus?.$id])
 
 
     return (

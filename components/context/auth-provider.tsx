@@ -1,8 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument } from '@/lib/appwrite';
+import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 
-// Define the shape of your context state and functions
+
+interface Profile extends Models.Document {
+  name?: string;
+  studentId?: string;
+  address?: string;
+  city?: string;
+  zip?: string;
+  bank_account?: string;
+  campus?: string;
+  campus_id?: string;
+  departments?: string[];
+  departments_id?: string[];
+}
+
 export interface AuthContextType {
   data: Models.User<Models.Preferences> | null;
   profile: Models.Document | null;
@@ -17,8 +30,9 @@ export interface AuthContextType {
   setIsBisoMember: (isBisoMember: boolean) => void;
   studentId: string | null;
   addStudentId: (studentId: string) => Promise<void>;
-}
+  updateProfile: (profile: Partial<Profile>) => Promise<void>;
 
+}
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -70,6 +84,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     }
   }, [data]);
+
+  const updateProfile = async ({
+    name,
+    studentId,
+    address,
+    city,
+    zip,
+    bank_account,
+    campus,
+    campus_id,
+    departments,
+    departments_ids,
+  }: Partial<Profile>) => {
+
+    if (!data?.$id) {
+      return;
+    }
+
+    try {
+      const response = await databases.updateDocument('app', 'user', data.$id, {
+        name,
+        studentId,
+        address,
+        city,
+        zip,
+        bank_account,
+        campus,
+        campus_id,
+        departments,
+        departments_ids,
+      });
+      setProfile(response);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -158,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refetchUser = fetchAccount;
 
   return (
-    <AuthContext.Provider value={{ data, profile, isLoading, error, updateName, updateUserPrefs, refetchUser, membershipExpiry, isBisoMember, setMembershipExpiry, setIsBisoMember, studentId, addStudentId }}>
+    <AuthContext.Provider value={{ data, profile, isLoading, error, updateName, updateUserPrefs, refetchUser, membershipExpiry, isBisoMember, setMembershipExpiry, setIsBisoMember, studentId, addStudentId, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

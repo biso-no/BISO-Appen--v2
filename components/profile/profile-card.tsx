@@ -5,14 +5,18 @@ import { useEffect, useState } from "react";
 import { ImagePopover } from "@/components/image-popover";
 import { BILoginButton } from "@/components/bi-login-button";
 import { useColorScheme } from "react-native";
+import { useModal } from "../context/membership-modal-provider";
 
 export function ProfileCard() {
     const { data, profile: initialProfile, isLoading, updateUserPrefs, isBisoMember, studentId} = useAuth();
     const [profile, setProfile] = useState(initialProfile);
+    
 
     const colorScheme = useColorScheme();
 
     const isDarkMode = colorScheme === 'dark';
+
+    const { openModal } = useModal();
 
     return (
         <Card theme="accent" themeInverse>
@@ -73,7 +77,7 @@ export function ProfileCard() {
                     isBisoMember ? (
                         <Text theme="alt2">You are a BISO member</Text>
                     ) : (
-                        <Button variant="outlined">Buy BISO membership</Button>
+                        <Button onPress={openModal} variant="outlined">Buy BISO membership</Button>
                     )
                 )}
                 </Card.Footer>  

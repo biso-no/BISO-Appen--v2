@@ -9,15 +9,15 @@ export default function ExploreScreen() {
 
 
     return (
-        <ScrollView space="$4" padding="$3">
-            <YGroup space="$4">
+        <ScrollView space="$4">
+            <YGroup space="$4" padding="$3">
                 <YGroup.Item>
                     <XStack space="$4" alignItems="center" justifyContent="center">
-                        <Button size="$5" width="$13" icon={<Newspaper size={20} />}>
+                        <Button size="$4" width="$12" icon={<Newspaper size={20} />}>
                             <Text fontSize="$4">News</Text>
                             
                         </Button>
-                        <Button size="$5" width="$13" icon={<Calendar size={20} />}>
+                        <Button size="$4" width="$12" icon={<Calendar size={20} />}>
                             <Text fontSize="$4">Events</Text>
                         </Button>
                     </XStack>

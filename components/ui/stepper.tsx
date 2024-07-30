@@ -4,6 +4,7 @@ import { View, Button, YStack, XStack } from 'tamagui';
 interface StepProps {
   children: ReactNode;
   onNext?: () => void | Promise<void>;
+  stepIndex?: number; // Make stepIndex optional
 }
 
 interface StepsContextProps {
@@ -16,7 +17,6 @@ interface StepsContextProps {
 const StepsContext = createContext<StepsContextProps | undefined>(undefined);
 
 export function Steps({ children }: { children: ReactNode }) {
-    
   const [currentStep, setCurrentStep] = useState(0);
 
   const next = () => setCurrentStep((prev) => prev + 1);
@@ -25,13 +25,17 @@ export function Steps({ children }: { children: ReactNode }) {
   return (
     <StepsContext.Provider value={{ currentStep, next, back, setCurrentStep }}>
       <YStack flex={1} justifyContent="center" alignItems="center">
-        {children}
+        {React.Children.map(children, (child, index) =>
+          React.isValidElement<StepProps>(child)
+            ? React.cloneElement(child, { stepIndex: index })
+            : child
+        )}
       </YStack>
     </StepsContext.Provider>
   );
 };
 
-const Step = ({ children, onNext }: StepProps) => {
+const StepComponent: React.FC<StepProps> = ({ children, onNext, stepIndex }) => {
   const context = useContext(StepsContext);
 
   if (!context) {
@@ -40,20 +44,21 @@ const Step = ({ children, onNext }: StepProps) => {
 
   const { currentStep, next, back } = context;
 
-  const stepIndex = React.Children.toArray(children).findIndex(
-    (child: any) => child.type === Step
-  );
-
   return (
     <View style={{ display: currentStep === stepIndex ? 'flex' : 'none' }}>
       {children}
       <XStack position="absolute" bottom={0} left={0} right={0} justifyContent="space-between" padding="$4">
         {currentStep > 0 && <Button onPress={back}>Back</Button>}
-        <Button onPress={onNext ? onNext : next}>{currentStep === React.Children.count(children) - 1 ? 'Submit' : 'Next'}</Button>
+        <Button onPress={onNext ? onNext : next}>{currentStep === stepIndex ? 'Submit' : 'Next'}</Button>
       </XStack>
     </View>
   );
 };
 
-Steps.Step = Step;
+export const Step: React.FC<Omit<StepProps, 'stepIndex'>> = ({ children, onNext }) => (
+  <StepComponent onNext={onNext}>
+    {children}
+  </StepComponent>
+);
 
+Steps.Step = Step;

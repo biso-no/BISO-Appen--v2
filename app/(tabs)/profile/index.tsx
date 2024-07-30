@@ -25,8 +25,7 @@ type Notifications = {
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
-  const { data, profile: initialProfile, isLoading, updateUserPrefs } = useAuth();
-  const [profile, setProfile] = useState(initialProfile);
+  const { data, profile, isLoading, updateUserPrefs, updateProfile } = useAuth();
   const [notifications, setNotifications] = useState<Notifications>({
     newEvents: false,
     newPosts: false,
@@ -34,12 +33,12 @@ export default function ProfileScreen() {
     expenses: false,
   });
 
-  const initialDepartments = initialProfile?.departments ?? [];
+  const initialDepartments = profile?.department_ids ?? [];
   const [departments, setDepartments] = useState<Models.Document[]>(initialDepartments);
+  const [hasProfile, setHasProfile] = useState(false);
 
-  const updateProfile = (newProfile: any) => {
-    setProfile((prevProfile) => ({ ...prevProfile, ...newProfile }));
-  };
+
+
 
   const addDepartment = async (selectedDepartment: Models.Document) => {
     if (!profile) {
@@ -76,6 +75,12 @@ export default function ProfileScreen() {
     }
   };
 
+  useEffect(() => {
+    if (profile) {
+      setHasProfile(true);
+    }
+  }, [profile]);
+
   if (!data) {
     return null;
   }
@@ -95,8 +100,12 @@ export default function ProfileScreen() {
   };
 
   useEffect(() => {
-    console.log('Campus: ', profile?.campus?.departments);
+    console.log('Profile: ', profile);
   }, [profile]);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <ScrollView>
@@ -129,7 +138,7 @@ export default function ProfileScreen() {
           </Tabs.List>
           <Separator />
           <TabsContent value="tab1">
-            {profile?.name ? (
+            {!isLoading && profile?.name ? (
               <Profile />
             ) : (
               <NoProfile />
@@ -157,7 +166,7 @@ export default function ProfileScreen() {
               <H3>Departments</H3>
               <YStack space="$2" width="100%">
                 <DepartmentSelector
-                  campus={profile?.campus}
+                  campus={profile?.campus_id}
                   onSelect={handleUpdateDepartment}
                   selectedDepartments={departments}
                   multiSelect
@@ -279,29 +288,56 @@ const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) =
   );
 };
 
+interface ProfileDetails {
+  phone: string;
+  address: string;
+  city: string;
+  zip: string;
+  bank_account: string;
+}
+
 const ViewProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
   const { refetchUser, profile } = useAuth();
+
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails>({
+    phone: profile?.phone ?? '',
+    address: profile?.address ?? '',
+    city: profile?.city ?? '',
+    zip: profile?.zip ?? '',
+    bank_account: profile?.bank_account ?? '',
+  });
 
   const handleLogout = async () => {
     await signOut(refetchUser);
     router.replace('/');
   };
 
+  useEffect(() => {
+    if (profile) {
+      setProfileDetails({
+        phone: profile?.phone ?? '',
+        address: profile?.address ?? '',
+        city: profile?.city ?? '',
+        zip: profile?.zip ?? '',
+        bank_account: profile?.bank_account ?? '',
+      });
+    }
+  }, [profile]);
   return (
     <MyStack alignItems='stretch' space="$4">
       <XStack justifyContent="center" space="$4" marginTop="$4">
         <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
         <Button size="$4" variant="outlined" onPress={handleLogout}>Sign Out</Button>
       </XStack>
-      <SizableText fontSize="$6">Phone: {profile?.phone}</SizableText>
+      <SizableText fontSize="$6">Phone: {profileDetails?.phone}</SizableText>
       <Separator />
-      <SizableText fontSize="$6">Address: {profile?.address}</SizableText>
+      <SizableText fontSize="$6">Address: {profileDetails?.address}</SizableText>
       <Separator />
-      <SizableText fontSize="$6">City: {profile?.city}</SizableText>
+      <SizableText fontSize="$6">City: {profileDetails?.city}</SizableText>
       <Separator />
-      <SizableText fontSize="$6">Zip Code: {profile?.zip}</SizableText>
+      <SizableText fontSize="$6">Zip Code: {profileDetails?.zip}</SizableText>
       <Separator />
-      <SizableText fontSize="$6">Bank Account: {profile?.bank_account}</SizableText>
+      <SizableText fontSize="$6">Bank Account: {profileDetails?.bank_account}</SizableText>
     </MyStack>
   );
 };
@@ -332,12 +368,8 @@ function NoProfile() {
         It looks like you haven't set up your profile yet. Click the button below to start the onboarding process and set up your profile.
       </SizableText>
       <Button onPress={() => {
-        if (data?.name) {
-          router.navigate('/onboarding/?initialStep=2');
-        } else {
-          router.navigate('/onboarding/');
-        }
-      }}>Go to Onboarding</Button>
+          router.navigate('/onboarding');
+        }}>Go to Onboarding</Button>
     </MyStack>
   );
 };

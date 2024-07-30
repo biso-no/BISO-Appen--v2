@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { H5, Avatar, XStack } from 'tamagui';
-import { Bell, UserRound, LogIn, Home, LayoutList } from '@tamagui/lucide-icons';
+import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
@@ -12,7 +12,7 @@ import * as Notifications from 'expo-notifications';
 import { getNotificationCount } from '@/lib/appwrite';
 import { ChatProvider } from '@/lib/ChatContext';
 import { View, Text } from 'tamagui';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import {
   addNotificationReceivedListener,
   addNotificationResponseReceivedListener,
@@ -86,7 +86,7 @@ function handleRegistrationError(errorMessage: string) {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { data, profile, isLoading } = useAuth();
+  const { data, profile, isLoading, } = useAuth();
   const avatarId = profile?.avatar;
   const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -201,7 +201,15 @@ export default function TabLayout() {
       );
     }
   };
-
+  const chatIcon = () => {
+    return (
+      <Pressable>
+        {({ pressed}) => (
+          <MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} onPress={() => router.push('/explore/chat/create')} />
+        )}
+      </Pressable>
+    );
+  };
   // Notification bell icon including notification count
   const bellIcon = () => {
     return (
@@ -223,32 +231,72 @@ export default function TabLayout() {
     : ['index', 'explore/index', 'auth/signIn/index'];
 
 
-  const generateScreens = () => {
-    // Find the tabs route in the navigation state
-    const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
-    if (!tabsRoute || !tabsRoute.state || !tabsRoute.state.routes) return null;
+    const generateScreens = () => {
+      // Find the tabs route in the navigation state
+      const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
+      if (!tabsRoute || !tabsRoute.state || !tabsRoute.state.routes) return null;
+    
+      // Get all nested routes inside the tabs route
+      const nestedRoutes = tabsRoute.state.routes;
+    
+      return nestedRoutes.map(route => {
+        const isTab = tabNames.includes(route.name);
+    
+        const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
 
-    // Get all nested routes inside the tabs route
-    const nestedRoutes = tabsRoute.state.routes;
+        //A header component. 
+        //If the route is not in routeswithcampuspoover, we display the title of the route in the middle of the header.
+        //If the route is in routeswithcampuspoover, we display CampusPopover component in the middle of the header, and a chat icon in the right side of the header.
+        const HeaderComponent = () => {
+          if (routesWithCampusPopover.includes(route.name)) {
+            return (
+              <XStack justifyContent="space-between" alignItems="center" width="100%">
+                <XStack flex={1} justifyContent="center" alignItems="center">
+                  <CampusPopover />
+                </XStack>
+                {isTab && chatIcon()}
+              </XStack>
+            );
+          }
+        
+          return (
+            <XStack justifyContent="space-between" alignItems="center" width="100%">
+              <XStack flex={1} justifyContent="center" alignItems="center">
+                <Text key={route.key} fontSize={18} fontWeight={"bold"}>
+                  {capitalizeFirstLetter(route.name.split('/')[0])}
+                </Text>
+              </XStack>
+              {isTab && chatIcon()}
+            </XStack>
+          );
+        };
 
-    return nestedRoutes.map(route => {
-      const isTab = tabNames.includes(route.name);
-
-      const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
-      return (
-        <Tabs.Screen
-          key={route.key}
+        return (
+          <Tabs.Screen
+          key={route.key} // key prop is correctly placed here
           name={route.name}
           options={{
             title: '',
-            tabBarIcon: isTab ? ({ color }) => getIconForRoute(route.name, color) : undefined,
+            tabBarIcon: isTab ? ({ color }: { color: string }) => getIconForRoute(route.name, color) : undefined,
             href: isTab ? undefined : null,
-            header: routesWithCampusPopover.includes(route.name) ? () => <CampusPopover /> : () =><XStack justifyContent='center' alignItems='center'><Text fontSize={18} fontWeight={"bold"}>{ capitalizeFirstLetter(route.name.split('/')[0])}</Text></XStack>,
+            // Render the header component
+            header: () => (
+              <XStack
+                justifyContent="center"
+                alignItems="center"
+                paddingHorizontal={10}
+                paddingVertical={5}
+                width="100%"
+              >
+                <HeaderComponent />
+              </XStack>
+            )
           }}
         />
-      );
-    });
-  };
+        );
+      });
+    };
+    
 
   const getIconForRoute = (routeName: string, color: string) => {
     switch (routeName) {
@@ -269,28 +317,26 @@ export default function TabLayout() {
     return null;
   }
 
-  return (
-    <ChatProvider data={data}>
-      <CampusProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor }}>
-          <Tabs
-            initialRouteName='index'
-            backBehavior='history'
-            screenOptions={{
-              tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-              headerShown: useClientOnlyValue(false, true),
-              tabBarStyle: { backgroundColor: backgroundColor, elevation: 0 },
-              headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
-              headerLeft: undefined,
-            }}
-            sceneContainerStyle={{ backgroundColor: backgroundColor }}
-          >
-            {generateScreens()}
-          </Tabs>
-        </SafeAreaView>
-      </CampusProvider>
-    </ChatProvider>
-  );
+return (
+  <ChatProvider data={data}>
+      <SafeAreaView key="safe-area-view" style={{ flex: 1, backgroundColor }}>
+        <Tabs
+          initialRouteName='index'
+          backBehavior='history'
+          screenOptions={{
+            tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+            headerShown: useClientOnlyValue(false, true),
+            tabBarStyle: { backgroundColor: backgroundColor, elevation: 0 },
+            headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
+            headerLeft: undefined,
+          }}
+          sceneContainerStyle={{ backgroundColor: backgroundColor }}
+        >
+          {generateScreens()}
+        </Tabs>
+      </SafeAreaView>
+  </ChatProvider>
+);
 }
 
 const styles = StyleSheet.create({

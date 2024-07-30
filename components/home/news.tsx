@@ -1,26 +1,41 @@
 import { Card, Image, H6, Paragraph, YStack, XStack, Separator } from "tamagui";
-import { getNews } from "@/lib/appwrite";
+import { databases, getNews } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
-import type { Models } from "react-native-appwrite";
+import { Query, type Models } from "react-native-appwrite";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
 import { RenderHTML } from 'react-native-render-html';
 import { useRouter } from "expo-router";
+import { useCampus } from "@/lib/hooks/useCampus";
+import { View } from "react-native";
 
 export function News() {
 
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>({ documents: [], total: 0 });
-
+    const [loading, setLoading] = useState(true);
+    const { campus } = useCampus();
     const router = useRouter();
 
     useEffect(() => {
         async function fetchNews() {
-            const fetchedNews = await getNews();
+
+            let query = [
+                //Select only the values used in the UI
+                Query.select(['title', 'content', 'image', 'campus_id', 'department_id', '$createdAt', '$id']),
+            ];
+
+            if (campus?.$id) {
+                query.push(Query.equal('campus_id', campus.$id));
+            }
+
+            const fetchedNews = await databases.listDocuments('app', 'news', query);
+
             setNews(fetchedNews);
-            console.log(fetchedNews);
+            console.log("Fetched news: ", fetchedNews);
         }
         fetchNews();
+        setLoading(false);
     }, []);
 
     const truncateDescription = (description: string | undefined, maxLength: number) => {
@@ -35,7 +50,7 @@ export function News() {
         return str.charAt(0).toUpperCase() + str.slice(1);
       };
 
-      if (!news || news.total === 0) {
+      if (!news || news.total === 0 || loading) {
         return (
           <MyStack justifyContent="center" alignItems="center" space="$2">
             <Frown size={48} />
@@ -47,7 +62,7 @@ export function News() {
     return (
         <YStack justifyContent="center" alignItems="center" space="$2">
             {news?.documents.map((news, index) => (
-                <>
+                <View key={index}>
                 <Card
                     key={index}
                     chromeless
@@ -67,14 +82,14 @@ export function News() {
                         <YStack space="$1">
                         <H6>{news.title}</H6>
                             <XStack justifyContent="space-between"> 
-                            <Paragraph>{capitalizeFirstLetter(news.campus.name)}</Paragraph>
+                            
                             <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>
                             </XStack>
                         </YStack>
                     </Card.Footer>
                 </Card>
                 <Separator key={'sep' + index} />
-                </>
+                </View>
             ))}
         </YStack>
     );

@@ -9,9 +9,15 @@ type PartialCampus = {
     name: string;
 };
 
+type Campus = {
+    id: string;
+    name: string;
+};
+
 const CampusContext = createContext<{
     campus: Models.Document | null,
     setCampus: React.Dispatch<React.SetStateAction<Models.Document | null>>
+    availableCampuses: Campus[]
 } | undefined>(undefined);
 
 export const useCampus = () => {
@@ -19,7 +25,7 @@ export const useCampus = () => {
     if (context === undefined) {
         throw new Error('useCampus must be used within a CampusProvider');
     }
-    const { campus, setCampus } = context;
+    const { campus, setCampus, availableCampuses } = context;
 
     const onChange = async (newCampus: Models.Document) => {
         setCampus(newCampus);
@@ -35,11 +41,18 @@ export const useCampus = () => {
         }
     };
 
-    return { campus, onChange };
+    return { campus, onChange, availableCampuses };
 };
 
 export const CampusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [campus, setCampus] = useState<Models.Document | null>(null);
+    const availableCampuses = [
+        { id: "1", name: 'Oslo' },
+        { id: "2", name: 'Bergen' },
+        { id: "3", name: 'Trondheim' },
+        { id: "4", name: 'Stavanger' },
+        { id: "5", name: 'National' },
+    ]
     const [loading, setLoading] = useState(true);
     const { profile } = useAuth();
 
@@ -65,7 +78,7 @@ export const CampusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     return (
-        <CampusContext.Provider value={{ campus, setCampus }}>
+        <CampusContext.Provider value={{ campus, setCampus, availableCampuses }}>
             {children}
         </CampusContext.Provider>
     );

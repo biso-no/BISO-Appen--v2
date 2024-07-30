@@ -3,8 +3,8 @@ import { useCampus } from "@/lib/hooks/useCampus";
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
 import { useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
-import { getDocuments } from "@/lib/appwrite";
-import { Models } from "react-native-appwrite";
+import { databases, getDocuments } from "@/lib/appwrite";
+import { Models, Query } from "react-native-appwrite";
 
 export default function CampusPopover() {
     const { campus, onChange } = useCampus();
@@ -17,7 +17,12 @@ export default function CampusPopover() {
     };
 
     useEffect(() => {
-        getDocuments('campus').then(setCampuses);
+        databases.listDocuments('app', 'campus', [
+            Query.select(['name', '$id']),
+        ]).then((data) => {
+            console.log(data);
+            setCampuses(data);
+        });
     }, []);
 
     return (

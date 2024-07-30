@@ -15,6 +15,8 @@ import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
 import 'react-native-gesture-handler';
 import { useLocalSearchParams } from 'expo-router';
+import { CampusProvider } from '@/lib/hooks/useCampus';
+import { ModalProvider } from '@/components/context/membership-modal-provider';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -86,18 +88,25 @@ useEffect(() => {
 
 
   return (
-    <AuthProvider>
+
+
     <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <AuthProvider>
+    <CampusProvider>
       <Theme name={colorScheme === 'dark' ? 'dark_accent' : 'light'}>
+      <ModalProvider>
       <Stack initialRouteName='(tabs)'>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="onboarding/index" options={{ presentation: 'modal', headerTitle: 'Welcome to BISO' }} />
+        <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
       </Stack>
+      </ModalProvider>
       </Theme>
+      </CampusProvider>
+      </AuthProvider>
     </ThemeProvider>
     </TamaguiProvider>
-    </AuthProvider>
+
   );
 }

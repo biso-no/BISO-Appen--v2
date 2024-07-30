@@ -18,15 +18,15 @@ export function UsefulLinks() {
             content: (
                 <YStack space="$4">
                     <XStack space="$4">
-                        <Button size="$6" width="$13" onPress={() => push("/explore/units")}>
+                        <Button size="$6" width="$12" onPress={() => push("/explore/units")}>
                             <Text fontSize="$4">Units</Text>
                         </Button>
                     </XStack>
                     <XStack space="$4">
-                        <Button size="$6" width="$13" onPress={() => push("https://biso.no")}>
+                        <Button size="$6" width="$12" onPress={() => push("https://biso.no")}>
                             <Text fontSize="$4">BISO.no</Text>
                         </Button>
-                        <Button size="$6" width="$13" onPress={() => push("https://biso.no/varsling")}>
+                        <Button size="$6" width="$12" onPress={() => push("https://biso.no/varsling")}>
                             <Text fontSize="$4">Reach out</Text>
                         </Button>
                     </XStack>

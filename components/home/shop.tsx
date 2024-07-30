@@ -15,27 +15,34 @@ export function HomeProducts() {
 
     const [products, setProducts] = useState<Models.Document[]>([]);
 
-    const { campus } = useCampus();
+    const { campus, availableCampuses } = useCampus();
 
-    useEffect(() => {
-        async function fetchProducts() {
+useEffect(() => {
+    async function fetchProducts() {
+        let query = [
+            //Select only the values used in the UI
+            Query.select(['name', 'images', 'campus_id', 'department_id', 'images', '$createdAt', '$id']),
+        ];
 
-            let query;
-            if (campus?.name) {
-            query = [
-                Query.equal('campus_id', campus.$id),
-            ]
+        if (campus?.$id) {
+            query.push(Query.equal('campus_id', campus.$id));
         }
 
-            const fetchedProducts = await listDocuments('products', campus?.name ? query : undefined);
-            setProducts(fetchedProducts.documents);
-            console.log(fetchedProducts);
-        }
-        fetchProducts();
-    }, []);
+        const fetchedProducts = await listDocuments('products', query);
+        setProducts(fetchedProducts.documents);
+        console.log(fetchedProducts);
+    }
+    
+    fetchProducts();
+}, [campus]);
 
     const capitalizeFirstLetter = (str: string) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    };
+
+    const getCampusName = (campusId: string) => {
+        const campus = availableCampuses.find(campus => campus.id === campusId);
+        return campus ? campus.name : 'Unknown Campus';
     };
 
     if (!products || products.length === 0) {
@@ -46,6 +53,8 @@ export function HomeProducts() {
             </MyStack>
           );
         }
+
+
 
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
@@ -72,8 +81,8 @@ export function HomeProducts() {
                         <Card.Footer>
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
-                            <Paragraph>{capitalizeFirstLetter(product.campus.name)}</Paragraph>
-
+                            <Paragraph>{capitalizeFirstLetter(getCampusName(product.campus_id))}</Paragraph>
+                            <Paragraph>{capitalizeFirstLetter(product.department_id)}</Paragraph>
                             </XStack>
                             <H6>{product.name}</H6>
                             <XStack space="$2" alignItems="center" justifyContent="space-between">

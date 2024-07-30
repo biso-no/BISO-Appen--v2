@@ -1,6 +1,6 @@
 import React, { RefObject, useRef, useState } from 'react';
 import { Button, Input, Text, YStack, XGroup } from 'tamagui';
-import { signIn, verifyOtp } from '@/lib/appwrite';
+import { signIn, triggerFunction, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { OTPInput as OTP } from '@/components/ui/otp';
 import { TextInput } from 'react-native';
@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const [codes, setCodes] = useState<string[] | undefined>(Array(6).fill(""));
   const [errorMessages, setErrorMessages] = useState<string[]>();
 
-  const { refetchUser, profile } = useAuth();
+  const { refetchUser, profile, data } = useAuth();
 
   const refs: RefObject<TextInput>[] = [
     useRef<TextInput>(null),
@@ -42,24 +42,44 @@ export default function LoginScreen() {
   }
 
   const handleOtpSubmit = async () => {
-    // Handle OTP submission
     const otp = codes?.join("");
     if (!otp) {
       setErrorMessages(["Please enter a valid OTP."]);
       return;
     }
-    const response = await verifyOtp(userId, otp, refetchUser);
-    if (response) {
-      if (profile && profile.name) {
-        push('/');
-      } else {
-        push('/onboarding/');
+  
+    try {
+      const response = await verifyOtp(userId, otp);
+      if (response.$id) {
+        const execution = await triggerFunction({
+          functionId: 'create_user_doc',
+          data: JSON.stringify({
+            email: email
+          }),
+          async: false,
+        });
+  
+        const responseBody = execution.responseBody
+        const bodyToJson = JSON.parse(responseBody)
+  
+        if (bodyToJson.status === "ok") {
+          if (bodyToJson.exists === true) {
+            console.log("Routing to /");
+            push('/');
+          } else {
+            console.log("Routing to /onboarding");
+            push('/onboarding');
+          }
+        } else {
+          setErrorMessages(["An error occurred. Please try again."]);
+        }
       }
-    } else {
-      setErrorMessages(["Invalid OTP."]);
-      return;
+    } catch (error) {
+      console.error("Error during OTP submission: ", error);
+      setErrorMessages(["An unexpected error occurred. Please try again."]);
     }
-  }
+  };
+
 
   const onChangeCode = (text: string, index: number) => {
     if (text.length > 1) {

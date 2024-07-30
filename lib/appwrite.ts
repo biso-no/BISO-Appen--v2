@@ -2,6 +2,7 @@ import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod } from 'rea
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
 import { AuthContextType } from '@/components/context/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
+import { AnimatableStringValue } from 'react-native';
 
 export const client = new Client();
 
@@ -44,7 +45,7 @@ export async function getUserPreferences() {
     return response;
 }
 
-export async function verifyOtp(userId: string, otp: string, refetchUser: AuthContextType['refetchUser']) {
+export async function verifyOtp(userId: string, otp: string) {
     
     if (!userId || !otp) {
         throw new Error("Missing User ID or OTP. Contact System Admin if the error persists.");
@@ -55,8 +56,6 @@ export async function verifyOtp(userId: string, otp: string, refetchUser: AuthCo
     if (!response.$id) {
         throw new Error("Invalid OTP");
     }
-
-    await refetchUser();
 
     return response;
 
@@ -109,13 +108,16 @@ export async function updateUserPreferences(preferences: Models.Preferences) {
     return response;
 }
 
-export async function getNews() {
-    const response = await databases.listDocuments('app', 'news');
+export async function getNews(campus_id?: string) {
+
+    const query = campus_id ? [Query.equal('campus_id', campus_id)] : undefined;
+
+    const response = await databases.listDocuments('app', 'news', query);
     return response;
 }
 
 export async function getEvents() {
-    const response = await databases.listDocuments('app', 'event');
+    const response = await databases.listDocuments('app', 'campus');
     return response;
 }
 
@@ -316,7 +318,14 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
 
 export async function getDepartments(campusId?: string) {
 
-    const query = campusId ? [Query.equal('campus_id', campusId)] : undefined;
+    let query = [
+        //Select only the values used in the UI
+        Query.select(['Name', 'description', '$id', 'logo']),
+    ];
+
+    if (campusId) {
+        query.push(Query.equal('campus_id', campusId));
+    }
 
     const departments = await databases.listDocuments('app', 'departments', query)
     return departments
@@ -361,6 +370,8 @@ export function subScribeToChat(callback: (response: any) => void) {
   
     return unsubscribe;
   }
+
+  
 
 export async function sendChatMessage(recipient: string, message: string, sender: string) {
     const response = await databases.createDocument('app', 'chat_messages', ID.unique(), {

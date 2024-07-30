@@ -1,4 +1,4 @@
-import { View } from 'tamagui';
+import { ScrollView, View, YStack } from 'tamagui';
 import React, { useState } from 'react';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { MotiView } from 'moti';
@@ -10,20 +10,26 @@ interface Step3Props {
 }
 
 export function Step3({ campus, onNext }: Step3Props) {
-    
   const [departments, setDepartments] = useState<Models.Document[]>([]);
 
   const handleDepartmentChange = (newDepartment: Models.Document) => {
-    setDepartments(prevDepartments => [...prevDepartments, newDepartment]);
+    setDepartments(prevDepartments => {
+      const isAlreadySelected = prevDepartments.some(dept => dept.$id === newDepartment.$id);
+      if (isAlreadySelected) {
+        return prevDepartments.filter(dept => dept.$id !== newDepartment.$id);
+      }
+      return [...prevDepartments, newDepartment];
+    });
     if (onNext) {
       onNext();
     }
   };
 
   return (
-    <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <View>{campus && <DepartmentSelector campus={campus} onSelect={handleDepartmentChange} selectedDepartments={departments} multiSelect />}</View>
+    <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}>
+        <YStack>{campus && <DepartmentSelector campus={campus} onSelect={handleDepartmentChange} selectedDepartments={departments} multiSelect />}</YStack>
+      </ScrollView>
     </MotiView>
   );
-};
-
+}
