@@ -43,6 +43,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [snapPointsMode, setSnapPointsMode] = useState<SnapPointsMode>('percent');
   const [isLoading, setIsLoading] = useState(false);
   const snapPoints = snapPointsMode === 'percent' ? [85, 50, 25] : ['80%', 256, 190];
+  const timeoutDuration = 15000; // 1 minute
 
   const pathName = usePathname();
   const { data } = useAuth(); // Get the authenticated user's data
@@ -128,6 +129,17 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     };
     fetchMemberships();
   }, []);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isLoading) {
+      timeout = setTimeout(() => {
+        setIsLoading(false);
+        alert("The payment process is taking longer than expected. Please check your email for confirmation or try again later.");
+      }, timeoutDuration);
+    }
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
 
   if (!membershipOptions) {
     return <Text>Loading...</Text>;

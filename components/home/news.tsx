@@ -66,7 +66,7 @@ export function News() {
                 <Card
                     key={index}
                     chromeless
-                    width={400}
+                    width={380}
                     onPress={() => router.push(`/explore/news/${news.$id}`)}
                 >
                     <Card.Header>

@@ -213,7 +213,7 @@ export async function uploadFile(bucketId: string, file: File, refCollection: st
 export function getUserAvatar(fileId: string) {
 
     const result = avatars.getImage(
-        'https://appwrite.biso.no/v1/storage/buckets/avatars/files/' + fileId + '/view?project=665313680028cb624457',
+        'https://appwrite.biso.no/v1/storage/buckets/avatars/files/' + fileId + '/view?project=biso',
         100,
         100
     )

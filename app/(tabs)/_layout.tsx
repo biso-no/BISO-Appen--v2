@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { H5, Avatar, XStack } from 'tamagui';
-import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare } from '@tamagui/lucide-icons';
+import { H5, Avatar, XStack, Text, Button } from 'tamagui';
+import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare, ChevronLeft } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { getNotificationCount } from '@/lib/appwrite';
 import { ChatProvider } from '@/lib/ChatContext';
-import { View, Text } from 'tamagui';
 import { Link, router } from 'expo-router';
 import {
   addNotificationReceivedListener,
@@ -250,8 +249,9 @@ export default function TabLayout() {
         const HeaderComponent = () => {
           if (routesWithCampusPopover.includes(route.name)) {
             return (
-              <XStack justifyContent="space-between" alignItems="center" width="100%">
+              <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$6">
                 <XStack flex={1} justifyContent="center" alignItems="center">
+
                   <CampusPopover />
                 </XStack>
                 {isTab && chatIcon()}
@@ -260,8 +260,13 @@ export default function TabLayout() {
           }
         
           return (
-            <XStack justifyContent="space-between" alignItems="center" width="100%">
+            <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$8">
               <XStack flex={1} justifyContent="center" alignItems="center">
+              <Button position='absolute' chromeless left={10} onPress={() => {
+                    router.back();
+                  }}>
+                    <ChevronLeft size={25} color={Colors[colorScheme ?? 'light'].text} />
+                  </Button>
                 <Text key={route.key} fontSize={18} fontWeight={"bold"}>
                   {capitalizeFirstLetter(route.name.split('/')[0])}
                 </Text>
@@ -319,14 +324,16 @@ export default function TabLayout() {
 
 return (
   <ChatProvider data={data}>
-      <SafeAreaView key="safe-area-view" style={{ flex: 1, backgroundColor }}>
         <Tabs
           initialRouteName='index'
           backBehavior='history'
           screenOptions={{
             tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
             headerShown: useClientOnlyValue(false, true),
-            tabBarStyle: { backgroundColor: backgroundColor, elevation: 0 },
+            tabBarStyle: {
+              backgroundColor: backgroundColor,
+              elevation: 0,
+            },
             headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
             headerLeft: undefined,
           }}
@@ -334,7 +341,6 @@ return (
         >
           {generateScreens()}
         </Tabs>
-      </SafeAreaView>
   </ChatProvider>
 );
 }

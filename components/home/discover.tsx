@@ -31,7 +31,7 @@ export function Discover() {
 
     const [selectedCategory, setSelectedCategory] = useState<Category>(categories[0]);
     return (
-        <MyStack width="90%" justifyContent="center" alignItems="center" space="$4">
+        <MyStack justifyContent="center" alignItems="center" space="$4" padding="$4">
             <XStack space="$4">
             <Categories
                 categories={categories}

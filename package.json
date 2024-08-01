@@ -68,10 +68,10 @@
     "react-native-svg": "15.2.0",
     "react-native-url-polyfill": "2.0.0",
     "react-native-web": "~0.19.6",
+    "react-native-webview": "13.8.6",
     "tamagui": "^1.98.4",
     "typescript": "~5.3.3",
-    "use-debounce": "^10.0.1",
-    "react-native-webview": "13.8.6"
+    "use-debounce": "^10.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
