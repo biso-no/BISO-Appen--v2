@@ -59,7 +59,7 @@ useEffect(() => {
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
-            <Button onPress={() => router.push("/products")}>See all</Button>
+            <Button onPress={() => router.push("/explore/products")}>See all</Button>
             </XStack>
             <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {products.map((product) => (
@@ -68,7 +68,7 @@ useEffect(() => {
                         backgroundColor="$backgroundHover"
                         bordered
                         width={380}
-                        onPress={() => router.push(`/products/${product.$id}`)}
+                        onPress={() => router.push(`/explore/products/${product.$id}`)}
                     >
                         <Card.Header>
                             <Image

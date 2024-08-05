@@ -1,29 +1,35 @@
-import { client } from './appwrite';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/components/context/auth-provider';
+import { Models, RealtimeResponseEvent } from 'react-native-appwrite';
+import { client } from './appwrite';
 
-export const useSubscription = (topic: string, callback: (response: any) => void) => {
-    const [isSubscribed, setIsSubscribed] = useState(false);
-    const { data } = useAuth();
+export const useSubscription = (
+    channel: string,
+    collectionId: string | null,
+    documentId: string | undefined,
+    callback: (response: RealtimeResponseEvent<unknown>) => void
+) => {
+    const [payload, setPayload] = useState<unknown | null>(null);
 
     useEffect(() => {
-        if (data?.$id) {
-            const unsubscribe = client.subscribe(
-                [`databases.app.collections.user.documents.${data.$id}`],
-                (response) => {
-                    console.log(response);
-                    callback(response);
-                }
-            );
+        let subscriptionChannel = channel;
 
-            setIsSubscribed(true);
-
-            return () => {
-                unsubscribe();
-                setIsSubscribed(false);
-            };
+        if (collectionId) {
+            subscriptionChannel = `${subscriptionChannel}.collections.${collectionId}`;
+            if (documentId) {
+                subscriptionChannel = `${subscriptionChannel}.documents.${documentId}`;
+            }
         }
-    }, [data?.$id, callback]);
 
-    return isSubscribed;
+        const unsubscribe = client.subscribe(subscriptionChannel, response => {
+            setPayload(response.payload); // Update the state with the payload
+            callback(response);
+        });
+
+        // Cleanup subscription on unmount
+        return () => {
+            unsubscribe();
+        };
+    }, [channel, collectionId, documentId, callback]);
+
+    return payload;
 };

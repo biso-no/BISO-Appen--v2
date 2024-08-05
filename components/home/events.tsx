@@ -1,8 +1,8 @@
 import { Card, Image, H6, Paragraph, YStack, XStack, View, SizableText, Button } from "tamagui";
-import { getEvents } from "@/lib/appwrite";
+import { databases, getEvents } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
-import type { Models } from "react-native-appwrite";
-import { getFormattedDateFromString } from "@/lib/format-time";
+import { Query, type Models } from "react-native-appwrite";
+import { formatDate, getFormattedDateFromString } from "@/lib/format-time";
 import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
 import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
@@ -10,15 +10,25 @@ import { useCampus } from "@/lib/hooks/useCampus";
 
 export function Events() {
 
-    const [events, setEvents] = useState<Event[]>();
+    const [events, setEvents] = useState<Models.Document[]>();
 
     const { campus } = useCampus();
 
     useEffect(() => {
         async function fetchEvents() {
 
-            const fetchedEvents = await getWebsiteEvents(campus?.name);
-            setEvents(fetchedEvents);
+            let query = [
+                //Select only the values used in the UI
+                Query.select(['title', 'image', '$createdAt', '$id']),
+                Query.limit(25),
+            ];
+
+            if (campus?.$id) {
+                query.push(Query.equal('campus_id', campus.$id));
+            }
+
+            const fetchedEvents = await databases.listDocuments('app', 'event', query);
+            setEvents(fetchedEvents.documents);
             console.log(fetchedEvents);
         }
         fetchEvents();
@@ -55,22 +65,23 @@ export function Events() {
                         width={380}
                     >
                         <Card.Header>
+                            {event.image && (
                             <Image
                                 source={{ uri: useEventImageUri(event.image) }}
                                 alt="image"
                                 height={120}
                                 borderRadius="$2"
                             />
+                            )}
                         </Card.Header>
                         <Card.Footer>
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
-                            <Paragraph>{capitalizeFirstLetter(event.organizer[0].organizer)}</Paragraph>
+                            <Paragraph>{capitalizeFirstLetter(event.campus_id)}</Paragraph>
 
                             </XStack>
                             <H6>{event.title}</H6>
                             <XStack space="$2" alignItems="center" justifyContent="space-between">
-                            <Paragraph>{getFormattedDateFromString(event.start_date)}</Paragraph>
                             </XStack>
                         </YStack>
                         </Card.Footer>

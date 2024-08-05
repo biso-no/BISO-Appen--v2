@@ -1,4 +1,4 @@
-import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod } from 'react-native-appwrite';
+import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod, RealtimeResponseEvent } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
 import { AuthContextType } from '@/components/context/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
@@ -364,6 +364,33 @@ export async function getChats() {
 export function subScribeToChat(callback: (response: any) => void) {
 
     const unsubscribe = client.subscribe(['databases.app.collections.chats.documents', 'databases.app.collections.chat_messages.documents'], (response) => {
+      console.log(response);
+      callback(response);
+    });
+  
+    return unsubscribe;
+  }
+
+  export function subScribeToProfile({
+    profileId,
+    studentId,
+    callback,
+  }: {
+    profileId: string,
+    studentId?: string,
+    callback: (response: RealtimeResponseEvent<Models.Document>) => void,
+  }) {
+
+    const profileSubscription = `databases.app.collections.user.documents.${profileId}`;
+
+    const studentSubscription = studentId ? `databases.app.collections.student_id.documents.${studentId}` : undefined;
+
+    const subscriptionsArray = [profileSubscription];
+    if (studentSubscription) {
+        subscriptionsArray.push(studentSubscription);
+    }
+
+    const unsubscribe = client.subscribe(subscriptionsArray, (response: RealtimeResponseEvent<Models.Document>) => {
       console.log(response);
       callback(response);
     });

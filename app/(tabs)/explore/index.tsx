@@ -4,20 +4,22 @@ import { MemberAccess } from "@/components/explore/member-access";
 import { Newspaper, Calendar } from "@tamagui/lucide-icons";
 import { UsefulLinks } from "@/components/explore/links";
 import { useModal } from "@/components/context/membership-modal-provider";
+import { useRouter } from "expo-router";
 
 export default function ExploreScreen() {
 
+    const { push } = useRouter();
 
     return (
         <ScrollView space="$4">
             <YGroup space="$4" padding="$3">
                 <YGroup.Item>
                     <XStack space="$4" alignItems="center" justifyContent="center">
-                        <Button size="$4" width="$12" icon={<Newspaper size={20} />}>
+                        <Button onPress={() => push("/explore/news")} size="$4" width="$12" icon={<Newspaper size={20} />}>
                             <Text fontSize="$4">News</Text>
                             
                         </Button>
-                        <Button size="$4" width="$12" icon={<Calendar size={20} />}>
+                        <Button onPress={() => push("/explore/events")} size="$4" width="$12" icon={<Calendar size={20} />}>
                             <Text fontSize="$4">Events</Text>
                         </Button>
                     </XStack>

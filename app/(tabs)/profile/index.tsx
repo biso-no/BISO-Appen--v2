@@ -16,6 +16,8 @@ import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { ProfileCard } from '@/components/profile/profile-card';
 
+WebBrowser.maybeCompleteAuthSession();
+
 type Notifications = {
   newEvents: boolean;
   newPosts: boolean;
@@ -25,7 +27,7 @@ type Notifications = {
 
 export default function ProfileScreen() {
   const isMobile = useMedia().xs;
-  const { data, profile, isLoading, updateUserPrefs, updateProfile } = useAuth();
+  const { data, profile, isLoading, updateUserPrefs, updateProfile, isBisoMember } = useAuth();
   const [notifications, setNotifications] = useState<Notifications>({
     newEvents: false,
     newPosts: false,
@@ -145,6 +147,7 @@ export default function ProfileScreen() {
             )}
           </TabsContent>
           <TabsContent value="tab2">
+            {isBisoMember ? (
             <MyStack space="$4" padding="$4">
               <XGroup space="$4" alignItems="center" justifyContent="center" width="100%">
                 <Button onPress={() => router.push("/explore/expenses/create")}>Create new expense</Button>
@@ -152,6 +155,11 @@ export default function ProfileScreen() {
               </XGroup>
               <ExpenseList withFilters={false} profileScreen />
             </MyStack>
+            ) : (
+              <MyStack space="$4" padding="$4">
+                <H3>You must be a BISO member to submit expenses</H3>
+              </MyStack>
+            )}
           </TabsContent>
           <TabsContent value="tab3">
             <MyStack space="$4" padding="$4" alignItems="center">

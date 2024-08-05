@@ -1,16 +1,12 @@
+import { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { databases, triggerFunction } from '@/lib/appwrite';
-import { ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
-import { Sheet, SheetProps } from '@tamagui/sheet';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { Pressable } from 'react-native';
-import { Models, Query } from 'react-native-appwrite';
+import { Sheet } from '@tamagui/sheet';
+import { Models, Query, RealtimeResponseEvent } from 'react-native-appwrite';
 import { Button, H2, XStack, YStack, Input, Label, RadioGroup, Image, Text } from 'tamagui';
-import { Link, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useSubscription } from '@/lib/subscription'; // Import the useSubscription hook
-import { useAuth } from '@/components/context/auth-provider'; // Import the auth context
-
-WebBrowser.maybeCompleteAuthSession();
+import { useSubscription } from '@/lib/subscription';
+import { useAuth } from '@/components/context/auth-provider';
 
 const paymentMethods = [
   { label: 'Credit Card', value: 'CARD', size: '$5' },
@@ -42,11 +38,19 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [membershipOptions, setMembershipOptions] = useState<Models.DocumentList<Models.Document>>();
   const [snapPointsMode, setSnapPointsMode] = useState<SnapPointsMode>('percent');
   const [isLoading, setIsLoading] = useState(false);
+  const [shouldSubscribe, setShouldSubscribe] = useState(false);
   const snapPoints = snapPointsMode === 'percent' ? [85, 50, 25] : ['80%', 256, 190];
   const timeoutDuration = 15000; // 1 minute
+  const [buttonTitle, setButtonTitle] = useState('Buy BISO membership');
 
   const pathName = usePathname();
-  const { data } = useAuth(); // Get the authenticated user's data
+  const { data, profile, isBisoMember } = useAuth();
+
+  useEffect(() => {
+    if (isBisoMember === true) {
+      setOpen(false);
+    }
+  }, [isBisoMember]);
 
   const initiatePurchase = async () => {
     setIsLoading(true);
@@ -83,39 +87,22 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         const responseBody = JSON.parse(execution.responseBody) as ApiResponse;
         console.log("Response Body:", responseBody.checkout.data);
         const url = responseBody.checkout.data.redirectUrl;
-        let result = await WebBrowser.openBrowserAsync(url);
+        let result = await WebBrowser.openAuthSessionAsync(url, '/profile');
         console.log("Result:", result);
 
-        // Do not set isLoading to false here; wait for the profile update
+        if (result.type === 'success') {
+          console.log("Successfully opened the URL");
+        } else if (result.type === 'dismiss') {
+          console.log("User dismissed the URL");
+          setIsLoading(false);
+          setShouldSubscribe(true); // Start listening for changes after dismissal
+        }
       }
     } catch (error) {
       console.error("Error during purchase initiation", error);
       setIsLoading(false);
     }
   };
-
-  const handleProfileUpdate = async (response: any) => {
-    console.log(response);
-    if (response.events.includes('databases.app.collections.user.documents.update')) {
-      console.log("Profile updated", response.payload);
-
-      try {
-        const updatedProfile = response.payload; // Assuming the updated profile is in the payload
-        const studentIdDoc = await databases.getDocument('app', 'student_ids', updatedProfile.$id);
-
-        if (studentIdDoc && studentIdDoc.isMember) {
-          console.log("User is now a member.");
-          setIsLoading(false);
-          // Additional logic to update the UI can be added here
-        }
-      } catch (error) {
-        console.error("Error checking membership status", error);
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const isSubscribed = useSubscription('databases.app.collections.user.documents', handleProfileUpdate);
 
   useEffect(() => {
     const fetchMemberships = async () => {
@@ -130,20 +117,16 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     fetchMemberships();
   }, []);
 
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (isLoading) {
-      timeout = setTimeout(() => {
-        setIsLoading(false);
-        alert("The payment process is taking longer than expected. Please check your email for confirmation or try again later.");
-      }, timeoutDuration);
-    }
-    return () => clearTimeout(timeout);
-  }, [isLoading]);
-
   if (!membershipOptions) {
     return <Text>Loading...</Text>;
   }
+
+  if (!profile) {
+    return null;
+  }
+
+
+  
 
   return (
     <Sheet

@@ -4,10 +4,11 @@ import { MotiView } from 'moti';
 import { getDocument } from "@/lib/appwrite";
 import { YStack, H6, Paragraph, XStack, Card, Separator, Button, Text, View, Image, ScrollView } from "tamagui";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
-import { getFormattedDateFromString } from "@/lib/format-time";
+import { getFormattedDate, getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
 import { Frown } from "@tamagui/lucide-icons";
+import RenderHTML from "react-native-render-html";
 
 
 
@@ -67,17 +68,20 @@ export default function EventsScreen() {
                         <YStack space="$1">
                             <H6>{event.title}</H6>
                             <XStack justifyContent="space-between"> 
-                                <Paragraph>{capitalizeFirstLetter(event.campus.name)}</Paragraph>
-                                <Paragraph>{getFormattedDateFromString(event.start_date)}</Paragraph>
+                                <Paragraph>{capitalizeFirstLetter(event.campus.name)} </Paragraph>
+                                <Paragraph>{getFormattedDate(event.event_date)}</Paragraph>
                             </XStack>
                         </YStack>
                     </Card.Footer>
                 </Card>
                 {event.description && (
-                    <YStack space="$3">
+                    <MyStack space="$3">
                         <H6>Description</H6>
-                        <Paragraph>{event.description}</Paragraph>
-                    </YStack>
+                        <RenderHTML
+                            source={{ html: event.description }}
+                            contentWidth={400}
+                        />
+                    </MyStack>
                 )}
             </MotiView>
         </ScrollView>
