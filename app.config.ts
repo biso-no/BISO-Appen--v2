@@ -61,6 +61,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       }
     ],
     [
+      "@sentry/react-native/expo",
+      {
+        "organization": "BISO",
+        "project": "BISO Appen",
+        "url": "https://bugs.biso.no"
+      }
+    ],
+    [
       'expo-build-properties',
        { 
         ios: { 

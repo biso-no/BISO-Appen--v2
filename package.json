@@ -72,7 +72,8 @@
     "react-native-webview": "13.8.6",
     "tamagui": "^1.98.4",
     "typescript": "~5.3.3",
-    "use-debounce": "^10.0.1"
+    "use-debounce": "^10.0.1",
+    "@sentry/react-native": "~5.22.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
