@@ -1,12 +1,14 @@
-import { Popover, Image, Avatar, Text, YGroup, styled } from "tamagui";
+import { Popover, Image, Avatar, Text, YGroup, styled, Button } from "tamagui";
 import { MyImagePicker } from "./image-picker";
 import { MyCamera } from "./camera";
-import { useState } from "react";
-import { Models } from "react-native-appwrite";
+import { useEffect, useState } from "react";
+import { ID, Models } from "react-native-appwrite";
 import { Camera } from "@tamagui/lucide-icons";
-import { getUserAvatar, uploadFile } from "@/lib/appwrite";
+import { getUserAvatar, storage, updateDocument, uploadFile, avatars } from "@/lib/appwrite";
 import { uriToBlob } from "@/lib/utils/uriToBlob";
 import { useAuth } from "./context/auth-provider";
+import { launchCameraAsync } from "expo-image-picker";
+import { File } from "@/lib/file-utils";
 
 const CameraIcon = styled(Image, {
     position: 'absolute',
@@ -33,15 +35,13 @@ const HighlightedAvatar = styled(Avatar, {
 });
 
 export function ImagePopover() {
-    const [image, setImage] = useState('');
+
     const [isPressed, setIsPressed] = useState(false);
+    const [capturing, setCapturing] = useState(false);
 
     const { data, profile, isLoading } = useAuth();
+    const [image, setImage] = useState(profile?.avatar || '');
 
-    const avatarId = profile?.avatar_id;
-    const initialAvatar = getUserAvatar(avatarId);
-
-    const avatar = image ? image : initialAvatar;
     const useInitials = (name: string) => {
         return name
           .split(' ')
@@ -50,30 +50,55 @@ export function ImagePopover() {
     };
 
     const handleImageUpload = async (imageUri: string) => {
-
         if (!data) {
             return;
         }
         try {
             const blob = await uriToBlob(imageUri); // Convert URI to Blob
-    
             // Create a custom file object that matches the interface expected by uploadFile
             const customFile = {
-                name: 'profile-image.png', // Set the file name
+                name: data.$id + '-profile-image.png', // Set the file name
                 type: blob.type,           // Use the MIME type from the blob
                 size: blob.size,           // Use the size property from the blob
                 uri: imageUri              // Include the original URI
             };
-    
-            const result = await uploadFile('avatars', customFile, 'user', data.$id, 'avatar_id'); // Upload the file
-            console.log('File uploaded successfully', result);
+
+            const result = await storage.createFile('avatars', ID.unique(), customFile);
+            if (result?.$id) {
+                const imageUrl = storage.getFileView('avatars', result.$id);
+                setImage(imageUrl.href); // Ensure you set the image URL after getting the correct URL
+                await updateDocument('user', data.$id, { avatar: imageUrl });
+                console.log('File uploaded successfully', result);
+            }
         } catch (error) {
             console.error('Error uploading file:', error);
         }
     };
-    
-    
-    
+
+    const handleCaptureImage = async () => {
+        setCapturing(true);
+        try {
+            const result = await launchCameraAsync({
+                allowsEditing: true,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets[0].uri) {
+                const newUrl = result.assets[0].uri;
+                const blob = await uriToBlob(newUrl);
+                const file: File = {
+                    name: newUrl.split('/').pop() || 'captured_image',
+                    type: 'image/jpeg',
+                    size: blob.size,
+                    uri: newUrl,
+                };
+                setImage(file.uri);
+                handleImageUpload(file.uri);
+            }
+        } finally {
+            setCapturing(false);
+        }
+    };
 
     const handleImageChange = (imageUri: string) => {
         setImage(imageUri);
@@ -84,17 +109,23 @@ export function ImagePopover() {
         return null;
     }
 
+    useEffect(() => {
+        if (image) {
+            console.log('Image URL:', image);
+        }
+    }, [image]);
+
     return (
         <Popover size="$5">
             <Popover.Trigger asChild zIndex={100}>
                 <HighlightedAvatar
                     circular
-                    size={50}
+                    size={80}
                     highlighted={isPressed}
                     onPressIn={() => setIsPressed(true)}
                     onPressOut={() => setIsPressed(false)}
                 >
-                    <Avatar.Image src={avatar?.toString()} />
+                    <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
                     <Avatar.Fallback backgroundColor="gray" alignItems='center' justifyContent='center' borderColor="white" borderWidth={2} borderRadius={50}>
                         <Text fontSize={25}>{useInitials(data.name)}</Text>
                     </Avatar.Fallback>
@@ -116,7 +147,9 @@ export function ImagePopover() {
                 ]}
             >
                 <YGroup space="$4">
-                    <MyCamera />
+                    <Button onPress={handleCaptureImage} disabled={capturing}>
+                        <Text>Capture Image</Text>
+                    </Button>
                     <MyImagePicker image={image} setImage={setImage} handleImageChange={handleImageChange} />
                 </YGroup>
             </Popover.Content>

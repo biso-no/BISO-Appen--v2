@@ -25,7 +25,6 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
-    const { files, uploading, error, success } = useFileHandler('expense_attachments');
     const [capturing, setCapturing] = useState(false);
     const [picking, setPicking] = useState(false);
     const [filesToProcess, setFilesToProcess] = useState<File[]>([]);

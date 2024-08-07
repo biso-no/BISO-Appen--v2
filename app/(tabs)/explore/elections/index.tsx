@@ -6,7 +6,7 @@ export default function ElectionsScreen() {
             <YStack space="$4" alignItems="center" justifyContent="center">
                 <H3>Elections</H3>
                 <Card>
-                <H3>No elections found</H3>
+                <H3>Coming soon</H3>
             </Card>
             </YStack>
     );

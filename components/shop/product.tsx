@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Models } from "react-native-appwrite";
 import { getDocument } from "@/lib/appwrite";
 import { useWindowDimensions } from 'react-native';
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import RenderHtml from 'react-native-render-html';
 
 
 export function ProductDetails({productId}: {productId: string}) {
     const [product, setProduct] = useState<Models.Document>();
+    const router = useRouter();
     const { width } = useWindowDimensions();
     useEffect(() => {
         console.log(productId);
@@ -54,7 +55,7 @@ export function ProductDetails({productId}: {productId: string}) {
                         </XStack>
                         </ScrollView>
                     )}
-                <XStack>
+                <XStack justifyContent="space-between">
                     <Text fontSize={30} fontWeight={"bold"}>{product.name}</Text>
                     <YGroup space="$2">
                     <Text fontSize={20}>{product.price !== product.regular_price ? product.price + " kr" : product.regular_price + " kr"}</Text>
@@ -65,7 +66,7 @@ export function ProductDetails({productId}: {productId: string}) {
             )}
                 <YStack space="$4" padding="$4">
                     <XStack space="$4" alignItems="center" justifyContent="center">
-                        <Button onPress={() => window.open(product?.url)}>View on BISO.no</Button>
+                        <Button onPress={() => router.push(product?.url)}>View on BISO.no</Button>
                     </XStack>
                     <Separator />
                     <Text fontSize={20} fontWeight={"bold"}>Description</Text>

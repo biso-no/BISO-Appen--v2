@@ -1,4 +1,5 @@
-import { Card, H3, Paragraph, XStack, YStack, ZStack, SizableText, Button, H5, Box, XGroup, Image, Text } from "tamagui";
+import { Card, H3, Paragraph, XStack, YStack, ZStack, SizableText, Button, H5, Box, XGroup, Image, Text, Square, useControllableState } from "tamagui";
+import { LinearGradient } from 'tamagui/linear-gradient'
 import { useAuth } from "@/components/context/auth-provider";
 import { getUserAvatar, updateDocument, signOut, signInWithBI, updateUserPreferences } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
@@ -10,7 +11,13 @@ import { useModal } from "../context/membership-modal-provider";
 export function ProfileCard() {
     const { data, profile: initialProfile, isLoading, updateUserPrefs, isBisoMember, studentId} = useAuth();
     const [profile, setProfile] = useState(initialProfile);
-    
+    const [animate, setAnimate] = useState(false);
+
+
+    const handleAnimate = () => {
+        console.log("Animating");
+        setAnimate(!animate);
+    }
 
     const colorScheme = useColorScheme();
 
@@ -19,6 +26,7 @@ export function ProfileCard() {
     const { openModal } = useModal();
 
     return (
+
         <Card theme="accent" themeInverse>
             <Card.Header height="$13">
                 <ZStack maxWidth={"100%"} maxHeight={85} width={"100%"} flex={1}>
@@ -32,42 +40,7 @@ export function ProfileCard() {
                         </XStack>
                         <H5 size="$6">Student ID: {profile?.studentId?.student_id}</H5>
                     </YStack>
-                    <Image
-                        source={{
-                            uri: require('@/assets/logo-dark.png'),
-                            width: 80,
-                            height: 80,
-                        }}
-                        opacity={0.5}
-                        rotate="10deg"
-                        position="absolute"
-                        top={10}
-                        right={10}
-                    />
-                    <Image
-                        source={{
-                            uri: require('@/assets/logo-dark.png'),
-                            width: 80,
-                            height: 80,
-                        }}
-                        opacity={0.5}
-                        position="absolute"
-                        rotate="-10deg"
-                        top={50}
-                        left={30}
-                    />
-                    <Image
-                        source={{
-                            uri: require('@/assets/logo-dark.png'),
-                            width: 80,
-                            height: 80,
-                        }}
-                        opacity={0.5}
-                        position="absolute"
-                        rotate="20deg"
-                        bottom={10}
-                        left={150}
-                    />
+
                 </ZStack>
             </Card.Header>
             <Card.Footer padding="$3">
@@ -75,11 +48,32 @@ export function ProfileCard() {
                     <BILoginButton />
                 ) : (
                     isBisoMember ? (
+                        <>
                         <Text theme="alt2">You are a BISO member</Text>
+                        <Square
+                        animation={animate ? 'bouncy' : 'none'}
+                        animateOnly={['transform']}
+                        onPress={handleAnimate}
+                        >
+                            <Image
+                                source={{
+                                    uri: require('@/assets/logo-dark.png'),
+                                    width: 100,
+                                    height: 100,
+                                }}
+                                opacity={0.7}
+                                position="absolute"
+                                bottom="$1"
+                                left="$12"
+                                
+                            />
+                            </Square>
+                        </>
                     ) : (
                         <Button onPress={openModal} variant="outlined">Buy BISO membership</Button>
                     )
                 )}
+
                 </Card.Footer>  
             </Card>
         )

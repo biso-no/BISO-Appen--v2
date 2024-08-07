@@ -26,8 +26,8 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 //Sentry SDK is compatbible with GlitchTip, which is currently the bug & error tracking software used by BISO.
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  sampleRate: 1,
-  debug: true, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  sampleRate: 0.3,
+  debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
   integrations: [
     new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
@@ -133,6 +133,7 @@ useEffect(() => {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+        <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
       </Stack>
       </ModalProvider>
       </Theme>

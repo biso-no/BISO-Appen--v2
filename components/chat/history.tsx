@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ListItem, Text, YStack, XStack, YGroup, View, Button, Spacer, Avatar, Separator } from "tamagui";
+import { ListItem, Text, YStack, XStack, YGroup, View, Button, Spacer, Avatar, Separator, ScrollView } from "tamagui";
 import { getChats } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "../ui/MyStack";
@@ -54,9 +54,9 @@ export function ChatHistory() {
 
     return (
         <>
-
         <View flex={1} padding={16}>
             <YStack>
+                <ScrollView>
                 <YGroup alignSelf="center" overflow="hidden">
                     {sortedChats.map((chat) => {
                         const chatGroupId = chat.$id;
@@ -70,7 +70,6 @@ export function ChatHistory() {
                                 <ListItem
                                     hoverTheme
                                     pressTheme
-                                    theme="accent"
                                     chromeless
                                     icon={<Avatar circular size="$10">
                                         <Avatar.Image source={chat.image} />
@@ -93,6 +92,7 @@ export function ChatHistory() {
                         );
                     })}
                 </YGroup>
+                </ScrollView>
             </YStack>
             <Button
                 onPress={() => router.push('/explore/chat/create')}

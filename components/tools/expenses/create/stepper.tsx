@@ -34,19 +34,19 @@ type FormData = {
 };
 
 export function MultiStepForm() { 
-    const { data, profile, isLoading } = useAuth(); 
+    const { data, profile, isLoading, userCampus, userDepartment } = useAuth(); 
     const [currentStep, setCurrentStep] = useState(1); 
     const [expenseId, setExpenseId] = useState<string | null>(null); 
-    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(profile?.campus);
-    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null | undefined>(profile?.departments[0]);
+    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(userCampus);
+    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null | undefined>(userDepartment);
     const [forEvent, setForEvent] = useState(false);
     const [eventName, setEventName] = useState<string>("");
     const [debouncedEventName] = useDebounce(eventName, 500);
     const [showGenerateButton, setShowGenerateButton] = useState(false);
     const [formData, setFormData] = useState<FormData>({ 
         bank_account: profile?.bank_account || "", 
-        campus: profile?.campus.name || "",
-        department: profile?.departments[0].name || "",
+        campus: userCampus?.name || "",
+        department: userDepartment?.name || "",
         expenseAttachments: [],
         description: "", 
         prepayment_amount: 0, 
@@ -96,8 +96,8 @@ export function MultiStepForm() {
     const resetForm = () => { 
         setFormData({ 
             bank_account: profile?.bank_account || "", 
-            campus: profile?.campus.id || "",
-            department: profile?.departments[0].name || "",
+            campus: userCampus?.id || "",
+            department: userDepartment?.name || "",
             expenseAttachments: [],
             description: "", 
             prepayment_amount: 0, 
@@ -229,14 +229,14 @@ export function MultiStepForm() {
                   <CampusSelector
                     onSelect={(value) => handleCampusChange(value)}
                     campus={formData.campus}
-                    initialCampus={profile?.campus}
+                    initialCampus={userCampus || undefined}
                   />
                 </YGroup.Item>
                 {formData.campus && (
                   <YGroup.Item>
                     <Label>Department</Label>
                     <DepartmentSelector
-                    campus={selectedCampus}
+                    campus={selectedCampus?.$id}
                     onSelect={(value) => (
                       handleInputChange('department', value.Name),
                       setSelectedDepartment(value)

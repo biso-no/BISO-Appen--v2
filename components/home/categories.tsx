@@ -1,5 +1,6 @@
-import { Card, H5, SizableText, YStack, XStack } from "tamagui";
+import { Card, H5, SizableText, YStack, XStack, Separator } from "tamagui";
 import React from "react";
+import { useState } from "react";
 
 
 interface Category {
@@ -14,24 +15,28 @@ export interface CategoryProps {
 }
 
 export function Categories({ categories, selectedCategory, setSelectedCategory }: CategoryProps) {
+
+    const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
+
+    const handleCategoryClick = (index: number) => {
+        setSelectedCategoryIndex(index);
+        setSelectedCategory(categories[index]);
+    };
+
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
         <H5>Discover</H5>
         <XStack space="$3">
-            {categories.map((category) => (
+            {categories.map((category, index) => (
+                <XStack key={category.title} space="$2" alignItems="center" justifyContent="center">
                 <Card
                     key={category.title}
-                    backgroundColor={
-                        selectedCategory.title === category.title
-                            ? "$backgroundHover"
-                            : "$background"
-                    }
-                    bordered
+                    chromeless={selectedCategoryIndex === index ? false : true}
                     width={70}
                     height={70}
                     justifyContent={"center"}
                     alignItems={"center"}
-                    onPress={() => setSelectedCategory(category)}
+                    onPress={() => handleCategoryClick(index)}
                 >
                     <Card.Header>
                     <category.icon />
@@ -41,6 +46,8 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
                     <SizableText>{category.title}</SizableText>
                     </Card.Footer>
                 </Card>
+                <Separator key={'sep' + category.title} vertical  />
+                </XStack>
             ))}
         </XStack>
     </YStack>

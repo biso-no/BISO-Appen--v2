@@ -4,7 +4,7 @@ import { Text, YStack, XStack, ScrollView, Input, Button } from "tamagui";
 import { useChat } from "@/lib/ChatContext";
 import { useRouter } from "expo-router";
 import { sendChatMessage } from "@/lib/appwrite";
-import { Equal } from "@tamagui/lucide-icons";
+import { Equal, Send } from "@tamagui/lucide-icons";
 import { useAuth } from "../context/auth-provider";
 import { Models } from 'react-native-appwrite';
 import { getFormattedDateFromString } from "@/lib/format-time";
@@ -70,7 +70,7 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
           );
         })}
       </ScrollView>
-      <XStack alignItems="center" paddingTop={16}>
+      <XStack alignItems="center" paddingTop={16} space="$2">
         <Input
           flex={1}
           value={newMessage}
@@ -80,8 +80,8 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
           paddingHorizontal={16}
           paddingVertical={12}
         />
-        <Button onPress={handleSendMessage} backgroundColor="#0b93f6" borderRadius={16}>
-          Send
+        <Button onPress={handleSendMessage} borderRadius={16} theme="accent" themeInverse>
+          <Send size={20} />
         </Button>
       </XStack>
     </YStack>

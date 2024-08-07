@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { XStack, YStack, Card, Avatar, SizableText, Text, Separator, View, ScrollView, Input, Button } from 'tamagui';
+import { XStack, YStack, Card, Avatar, SizableText, Text, Separator, View, ScrollView, Input, Button, Label, YGroup } from 'tamagui';
 import { CheckCircle, X } from '@tamagui/lucide-icons';
 import { MotiView } from 'moti';
 import { searchUsers, createChatGroup } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 import { useDebounce } from 'use-debounce';
 import { TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export function CreateChatGroup() {
   const [contacts, setContacts] = useState<Models.DocumentList<Models.Document>>();
@@ -17,6 +18,9 @@ export function CreateChatGroup() {
   const [groupName, setGroupName] = useState('');
   const [searching, setSearching] = useState(false);
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const addToGroup = (contact: Models.Document) => {
     setGroupMembers(prev => {
@@ -76,6 +80,10 @@ export function CreateChatGroup() {
       name: groupName,
       emails: groupMembers.documents.map(member => member.email),
     });
+
+    if (group) {
+      router.push('/explore/chat/' + group.$id);
+    }
   };
 
   useEffect(() => {
@@ -87,7 +95,12 @@ export function CreateChatGroup() {
   return (
     <ScrollView style={{ flex: 1 }}>
       <YStack space="$4" padding="$4">
-        <Input value={groupName} onChangeText={setGroupName} placeholder="Group Name" backgroundColor="$backgroundContrast" />
+        <YGroup>
+          <YGroup.Item>
+        <Label>Group Name</Label>
+        <Input value={groupName} onChangeText={setGroupName} placeholder="Group Name" backgroundColor="transparent" marginBottom="$2" />
+        </YGroup.Item>
+          <YGroup.Item>
         {groupMembers && groupMembers.total > 0 && (
           <XStack flexWrap="wrap" gap="$2" marginTop="$2">
             {groupMembers.documents.map(member => (
@@ -111,7 +124,10 @@ export function CreateChatGroup() {
             <Separator />
           </XStack>
         )}
-        <Input onChangeText={setSearchQuery} placeholder="Search" backgroundColor="$backgroundContrast" />
+        </YGroup.Item>
+          <YGroup.Item>
+            <Label>Search</Label>
+        <Input onChangeText={setSearchQuery} placeholder="Search" backgroundColor="transparent" />
         {searching && <Text>Searching...</Text>}
         {contacts?.documents.map(contact => (
           <MotiView key={contact.$id} from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -136,6 +152,8 @@ export function CreateChatGroup() {
             </Card>
           </MotiView>
         ))}
+        </YGroup.Item>
+        </YGroup>
         <Button onPress={handleCreateGroup} backgroundColor="$blue8" color="white">
           <Text>Create Group</Text>
         </Button>

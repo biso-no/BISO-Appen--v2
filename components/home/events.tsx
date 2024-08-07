@@ -7,10 +7,13 @@ import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
 import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
 import { useCampus } from "@/lib/hooks/useCampus";
+import { useRouter } from "expo-router";
 
 export function Events() {
 
     const [events, setEvents] = useState<Models.Document[]>();
+
+    const router = useRouter();
 
     const { campus } = useCampus();
 
@@ -19,7 +22,7 @@ export function Events() {
 
             let query = [
                 //Select only the values used in the UI
-                Query.select(['title', 'image', '$createdAt', '$id']),
+                Query.select(['title', 'short_description', 'image', '$createdAt', '$id', 'department_id', 'campus_id']),
                 Query.limit(25),
             ];
 
@@ -32,7 +35,8 @@ export function Events() {
             console.log(fetchedEvents);
         }
         fetchEvents();
-    }, []);
+    }, [campus]);
+
 
     const capitalizeFirstLetter = (str: string) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
@@ -63,15 +67,23 @@ export function Events() {
                         backgroundColor="$backgroundHover"
                         bordered
                         width={380}
+                        onPress={() => router.push(`/explore/events/${event.$id}`)}
                     >
                         <Card.Header>
-                            {event.image && (
+                            {event.image ? (
                             <Image
-                                source={{ uri: useEventImageUri(event.image) }}
+                                source={{ uri: event.image }}
                                 alt="image"
                                 height={120}
                                 borderRadius="$2"
                             />
+                            ) : (
+                                <Image
+                                    source={{ uri: require('@/assets/images/placeholder.png') }}
+                                    alt="image"
+                                    height={120}
+                                    borderRadius="$2"
+                                />
                             )}
                         </Card.Header>
                         <Card.Footer>

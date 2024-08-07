@@ -153,13 +153,14 @@ const { push } = useRouter();
       onDateChanged={handleDateChanged}
       onMonthChange={onMonthChange}
       showTodayButton
-      theme={primaryColor}
+      theme={{
+        selectedDayTextColor: "green",
+      }}
     >
       {weekView ? (
         <WeekCalendar firstDay={1} markedDates={markedDates} />
       ) : (
         <ExpandableCalendar
-          theme={primaryColor}
           firstDay={1}
           markedDates={markedDates}
           leftArrowImageSource={leftArrowIcon}

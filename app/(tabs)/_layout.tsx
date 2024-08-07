@@ -98,6 +98,7 @@ export default function TabLayout() {
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(
     undefined
   );
+  const [image, setImage] = useState(profile?.avatar || '');
 
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
@@ -187,15 +188,14 @@ export default function TabLayout() {
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (isLoading || !data?.$id) {
-      return <LogIn size={25} color={color} />;
+      return <LogIn size={25} color={color} marginTop="$2" />;
     } else if (!avatarId) {
-      return <UserRound size={25} color={color} />;
+      return <UserRound size={25} color={color} marginTop="$2" />;
     } else {
       const avatarUrl = `https://appwrite.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
-        <Avatar circular size={25}>
-          <Avatar.Image src={avatarUrl} />
-          <Avatar.Fallback backgroundColor="$blue10" />
+        <Avatar circular size={30} bordered marginTop="$2">
+          <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
         </Avatar>
       );
     }
@@ -204,7 +204,7 @@ export default function TabLayout() {
     return (
       <Pressable>
         {({ pressed}) => (
-          <MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} onPress={() => router.push('/explore/chat/create')} />
+          <MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} onPress={() => router.push('/explore/chat')} />
         )}
       </Pressable>
     );
@@ -306,13 +306,13 @@ export default function TabLayout() {
   const getIconForRoute = (routeName: string, color: string) => {
     switch (routeName) {
       case 'index':
-        return <Home color={color} />;
+        return <Home color={color} marginTop="$2" />;
       case 'explore/index':
-        return <LayoutList color={color} />;
+        return <LayoutList color={color} marginTop="$2" />;
       case 'profile/index':
         return profileIcon(color);
       case 'auth/signIn/index':
-        return <LogIn color={color} />;
+        return <LogIn color={color} marginTop="$2" />;
       default:
         return null;
     }

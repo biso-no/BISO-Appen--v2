@@ -1,5 +1,5 @@
 //A list of news, instagram style
-import { Card, Image, H6, Paragraph, YStack, XStack, ScrollView, YGroup, Button, H5, Text } from "tamagui";
+import { Card, Image, H6, Paragraph, YStack, XStack, ScrollView, YGroup, Button, H5, Text, H3, Separator } from "tamagui";
 import { useState } from "react";
 import { useEffect } from "react";
 import { getNews } from "@/lib/appwrite";
@@ -10,6 +10,7 @@ import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
 import { Frown } from "@tamagui/lucide-icons";
 import { useCampus } from "@/lib/hooks/useCampus";
+import RenderHTML from "react-native-render-html";
 
 export default function NewsScreen() {
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>();
@@ -32,14 +33,19 @@ export default function NewsScreen() {
         );
     }
 
+    //A variable that will be used to ensure the separator is not displayed on the last item
+    const hasSeparator = news?.documents.length > 1;
+
     return (
         <ScrollView space="$4" padding="$3">
             <YGroup space="$4">
                 {news?.documents.map((news, index) => (
+                    <YStack key={index} space="$4">
                     <Card
                         key={index}
+                        chromeless
                         bordered
-                        width={400}
+
                         onPress={() => window.open(news.url)}
                     >
                         <Card.Header>
@@ -56,11 +62,12 @@ export default function NewsScreen() {
                                     <Paragraph>{capitalizeFirstLetter(news.campus.name)}</Paragraph>
                                     <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>
                                 </XStack>
-                                <H6>{news.title}</H6>
-                                <Paragraph>{truncateString(news.content, 100)}</Paragraph>
+                                <H3>{news.title}</H3>
                             </YStack>
                         </Card.Footer>
                     </Card>
+                    {hasSeparator && <Separator />}
+                    </YStack>
                 ))}
             </YGroup>
         </ScrollView>

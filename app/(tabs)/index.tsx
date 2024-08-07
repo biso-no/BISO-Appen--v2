@@ -1,7 +1,6 @@
 import { Pressable } from 'react-native';
 
 import { H3, Text, View, YStack, Input } from 'tamagui';
-import { Featured } from '@/components/home/featured';
 import { Discover } from '@/components/home/discover';
 import { ScrollView } from 'tamagui';
 import { useEffect, useState } from 'react';
@@ -9,6 +8,7 @@ import { Search } from '@/components/home/search';
 import { Search as SearchIcon } from '@tamagui/lucide-icons';
 import { MyStack } from '@/components/ui/MyStack';
 import { useAuth } from '@/components/context/auth-provider';
+import { FeaturedPostsCarousel } from '@/components/explore/featured';
 
 export default function HomeScreen() {
 
@@ -40,6 +40,7 @@ const { profile } = useAuth();
           </View>
         </Pressable>
 <Featured /> */}
+      <FeaturedPostsCarousel />
       <Discover />
       <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
     </MyStack>

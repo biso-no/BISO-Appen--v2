@@ -18,7 +18,7 @@ export const databases = new Databases(client);
 
 export const storage = new Storage(client);
 
-const avatars = new Avatars(client);
+export const avatars = new Avatars(client);
 
 const messaging = new Messaging(client);
 

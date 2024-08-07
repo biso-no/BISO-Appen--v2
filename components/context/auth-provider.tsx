@@ -14,6 +14,7 @@ interface Profile extends Models.Document {
   campus_id?: string;
   departments?: string[];
   departments_id?: string[];
+  avatar?: string;
 }
 
 export interface AuthContextType {
@@ -31,6 +32,8 @@ export interface AuthContextType {
   studentId: string | null;
   addStudentId: (studentId: string) => Promise<void>;
   updateProfile: (profile: Partial<Profile>) => Promise<void>;
+  userCampus: Models.Document | null;
+  userDepartment: Models.Document | null;
 }
 
 // Create the context
@@ -45,6 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isBisoMember, setIsBisoMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [userCampus, setUserCampus] = useState<Models.Document | null>(null);
+  const [userDepartment, setUserDepartment] = useState<Models.Document | null>(null);
 
   const fetchAccount = useCallback(async () => {
     setIsLoading(true);
@@ -74,9 +79,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [data]);
 
+  const fetchCampus = useCallback(async () => {
+    if (profile?.$id && profile.campus_id) {
+      try {
+        const response = await getDocument('campus', profile.campus_id);
+        setUserCampus(response);
+        setError(null);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setUserCampus(null);
+      }
+    }
+  }, [data]);
+
+  const fetchDepartment = useCallback(async () => {
+    if (profile?.$id && profile.departments_id) {
+      try {
+        const response = await getDocument('department', profile.departments_id[0]);
+        setUserDepartment(response);
+        setError(null);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setUserDepartment(null);
+      }
+    }
+  }, [data]);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    fetchCampus();
+  }, [fetchCampus]);
+
+  useEffect(() => {
+    fetchDepartment();
+  }, [fetchDepartment]);
 
   const updateProfile = async (profileData: Partial<Profile>) => {
     if (!data?.$id) return;
@@ -173,7 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsBisoMember,
       studentId,
       addStudentId,
-      updateProfile
+      updateProfile,
+      userCampus,
+      userDepartment
     }}>
       {children}
     </AuthContext.Provider>

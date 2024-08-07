@@ -11,7 +11,7 @@ export default function DepartmentsScreen() {
         <ScrollView>
         <MyStack>
             <YStack space="$4" alignItems="center" justifyContent="center">
-                <H3>No benefits found</H3>
+                <H3>Coming soon</H3>
             </YStack>
         </MyStack>
         </ScrollView>
