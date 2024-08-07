@@ -5,14 +5,14 @@ import { useState, useEffect } from 'react';
 import type { Models } from "react-native-appwrite";
 import { useCampus } from "@/lib/hooks/useCampus";
 import CampusPopover from "@/components/CampusPopover";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 
 export default function DepartmentsScreen() {
 
     const [departments, setDepartments] = useState<Models.DocumentList<Models.Document>>();
 
     const { campus } = useCampus();
-
+    const router = useRouter();
     useEffect(() => {
         async function fetchDepartments() {
             const departments = await getDepartments(campus?.$id)
@@ -28,7 +28,7 @@ export default function DepartmentsScreen() {
         <ScrollView>
         <MyStack>
             {departments?.documents.map(department => (
-                <Card key={department.$id} width="100%" padding="$3" backgroundColor="$background" borderRadius="$3" bordered>
+                <Card key={department.$id} width="100%" padding="$3" backgroundColor="$background" borderRadius="$3" bordered onPress={() => router.push(`/explore/units/${department.$id}`)}>
                     <Card.Header>
                         <YStack>
                             <XGroup marginRight={10}>

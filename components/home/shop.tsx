@@ -8,8 +8,11 @@ import { MyStack } from "../ui/MyStack";
 import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { useRouter } from "expo-router";
+import { useWindowDimensions } from "react-native";
 
 export function HomeProducts() {
+
+    const { width } = useWindowDimensions();
 
     const router = useRouter();
 
@@ -59,15 +62,14 @@ useEffect(() => {
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
-            <Button onPress={() => router.push("/explore/products")}>See all</Button>
+            <Button bordered transparent onPress={() => router.push("/explore/products")}>See all</Button>
             </XStack>
             <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {products.map((product) => (
-                    <Card
+                        <Card
                         key={product.$id}
-                        backgroundColor="$backgroundHover"
-                        bordered
-                        width={380}
+                        chromeless
+                        width={width < 375 ? 300 : 380}
                         onPress={() => router.push(`/explore/products/${product.$id}`)}
                     >
                         <Card.Header>

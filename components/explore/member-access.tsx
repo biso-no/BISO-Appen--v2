@@ -4,6 +4,7 @@ import { Lock } from "@tamagui/lucide-icons";
 import { Accordion } from "../ui/accordion";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { Vote, WalletCards, Gift } from "@tamagui/lucide-icons";
 
 export function MemberAccess() {
     const { data, isBisoMember, isLoading } = useAuth();
@@ -48,17 +49,17 @@ export function MemberAccess() {
             content: (
                 <YStack space="$4">
                     <XStack space="$4">
-                        <Button size="$6" width="$12" onPress={() => navigate("/explore/expenses")}>
+                        <Button height={"$5"} onPress={() => navigate("/explore/expenses")} icon={<WalletCards size={20} />}>
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Expenses</Text>
                         </Button>
-                        <Button size="$6" width="$12" onPress={() => push("/explore/elections")}>
+                        <Button height={"$5"} onPress={() => push("/explore/elections")} icon={<Vote size={20} />}>
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Elections</Text>
                         </Button>
                     </XStack>
                     <XStack space="$4">
-                        <Button size="$6" width="$12" onPress={() => push("/explore/benefits")}>
+                        <Button height={"$5"} onPress={() => push("/explore/benefits")} icon={<Gift size={20} />}>
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Benefits</Text>
                         </Button>

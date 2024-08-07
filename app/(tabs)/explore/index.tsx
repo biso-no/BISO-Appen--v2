@@ -19,11 +19,11 @@ export default function ExploreScreen() {
             <YGroup space="$4" padding="$3">
                 <YGroup.Item>
                     <XStack space="$4" alignItems="center" justifyContent="center">
-                        <Button themeInverse theme="accent" onPress={() => push("/explore/news")} size="$4" width="$12" icon={<Newspaper size={20} />}>
+                        <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/news")} size="$4" width="$12" icon={<Newspaper size={20} />}>
                             <Text fontSize="$4">News</Text>
                             
                         </Button>
-                        <Button themeInverse theme="accent" onPress={() => push("/explore/events")} size="$4" width="$12" icon={<Calendar size={20} />}>
+                        <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/events")} size="$4" width="$12" icon={<Calendar size={20} />}>
                             <Text fontSize="$4">Events</Text>
                         </Button>
                     </XStack>

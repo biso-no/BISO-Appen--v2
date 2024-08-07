@@ -36,6 +36,7 @@ export function OTPInput({
         key={index}
           autoComplete="one-time-code"
           enterKeyHint="next"
+          backgroundColor={"transparent"}
           inputMode="numeric"
           onChangeText={(text) => onChangeCode(text, index)}
           value={code}

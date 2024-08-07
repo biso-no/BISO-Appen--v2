@@ -130,7 +130,7 @@ useEffect(() => {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
     <AuthProvider>
     <CampusProvider>
-      <Theme name={colorScheme === 'dark' ? 'dark_accent' : 'light'}>
+      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
       <ModalProvider>
       <Stack initialRouteName='(tabs)'>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

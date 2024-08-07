@@ -110,6 +110,7 @@ export default function LoginScreen() {
             <Text fontSize="$4" marginBottom="$2">Enter your email address</Text>
             <Input
               placeholder="Email"
+              backgroundColor={"transparent"}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"

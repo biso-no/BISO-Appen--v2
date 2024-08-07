@@ -1,4 +1,4 @@
-import { Card, Image, H6, Paragraph, YStack, XStack, Separator } from "tamagui";
+import { Card, Image, H6, Paragraph, YStack, XStack, Separator, Button } from "tamagui";
 import { databases, getNews } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import { Query, type Models } from "react-native-appwrite";
@@ -9,8 +9,10 @@ import { RenderHTML } from 'react-native-render-html';
 import { useRouter } from "expo-router";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { View } from "react-native";
-
+import { useWindowDimensions } from "react-native";
 export function News() {
+
+    const { width } = useWindowDimensions();
 
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>({ documents: [], total: 0 });
     const [loading, setLoading] = useState(true);
@@ -36,7 +38,7 @@ export function News() {
         }
         fetchNews();
         setLoading(false);
-    }, []);
+    }, [campus]);
 
     const truncateDescription = (description: string | undefined, maxLength: number) => {
         if (description && description.length > maxLength) {
@@ -61,12 +63,13 @@ export function News() {
 
     return (
         <YStack justifyContent="center" alignItems="center" space="$2">
+            <Button bordered transparent onPress={() => router.push("/explore/news")}>See all</Button>
             {news?.documents.map((news, index) => (
                 <View key={index}>
                 <Card
                     key={index}
                     chromeless
-                    width={380}
+                    width={width < 375 ? 300 : 380}
                     onPress={() => router.push(`/explore/news/${news.$id}`)}
                 >
                     <Card.Header>

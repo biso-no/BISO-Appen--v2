@@ -5,6 +5,7 @@ import { Button, Image, Text, XStack, YStack, styled } from 'tamagui';
 import { Models, Query } from 'react-native-appwrite';
 import { databases } from '@/lib/appwrite';
 import { useCampus } from '@/lib/hooks/useCampus';
+import { useRouter } from 'expo-router';
 
 const GalleryItem = styled(YStack, {
   zIndex: 1,
@@ -40,6 +41,8 @@ export function FeaturedPostsCarousel() {
   const [[page, going], setPage] = React.useState([0, 0]);
   const { campus } = useCampus();
   const [featuredPosts, setFeaturedPosts] = useState<Models.DocumentList<Models.Document>>();
+
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -94,7 +97,7 @@ export function FeaturedPostsCarousel() {
       alignItems="center"
     >
       <AnimatePresence initial={false} custom={{ going }}>
-        <GalleryItem key={page} animation="slow" going={going}>
+        <GalleryItem key={page} animation="slow" going={going} onPress={() => router.push(`/explore/news/${currentPost.$id}`)}>
           <Image source={{ uri: currentPost.image, width: 820, height: 200 }} />
           <Text color="#fff" fontSize={18} fontWeight="bold">
             {currentPost.title}

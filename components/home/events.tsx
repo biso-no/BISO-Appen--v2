@@ -8,8 +8,9 @@ import { MyStack } from "../ui/MyStack";
 import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { useRouter } from "expo-router";
-
+import { useWindowDimensions } from "react-native";
 export function Events() {
+    const { width } = useWindowDimensions();
 
     const [events, setEvents] = useState<Models.Document[]>();
 
@@ -62,11 +63,10 @@ export function Events() {
             </XStack>
             <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {events.map((event) => (
-                    <Card
-                        key={event.id}
-                        backgroundColor="$backgroundHover"
-                        bordered
-                        width={380}
+                <Card
+                key={event.id}
+                chromeless
+                width={width < 375 ? 300 : 380}
                         onPress={() => router.push(`/explore/events/${event.$id}`)}
                     >
                         <Card.Header>

@@ -254,7 +254,7 @@ export default function TabLayout() {
 
                   <CampusPopover />
                 </XStack>
-                {isTab && chatIcon()}
+                {isTab && data?.$id && chatIcon()}
               </XStack>
             );
           }
@@ -271,7 +271,7 @@ export default function TabLayout() {
                   {capitalizeFirstLetter(route.name.split('/')[0])}
                 </Text>
               </XStack>
-              {isTab && chatIcon()}
+              {isTab && data?.$id && chatIcon()}
             </XStack>
           );
         };
