@@ -29,7 +29,7 @@ async function fetchUserEmail(accessToken: string) {
 }
 
 export function BILoginButton() {
-    const discovery = useAutoDiscovery('https://login.microsoftonline.com/74a117b9-9343-4c86-b44d-398c88ba1ed8/v2.0');
+    const discovery = useAutoDiscovery('https://login.microsoftonline.com/adee44b2-91fc-40f1-abdd-9cc29351b5fd/v2.0');
 
     const redirectUri = makeRedirectUri({
         scheme: 'biso',
@@ -38,7 +38,7 @@ export function BILoginButton() {
 
     const { profile, addStudentId } = useAuth();
 
-    const clientId = '170c512f-d560-4afb-99cb-8ef98c6b2a42';
+    const clientId = '09d8bb72-2cef-4b98-a1d3-2414a7a40873';
     const [token, setToken] = useState<string | null>(null);
     const [email, setEmail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
