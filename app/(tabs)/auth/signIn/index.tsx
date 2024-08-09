@@ -8,24 +8,20 @@ import { MyStack } from '@/components/ui/MyStack';
 import { MotiView } from 'moti';
 import { useAuth } from '@/components/context/auth-provider';
 
+// Define at the top of your file
+const OTP_LENGTH = 6;
+
+
 export default function LoginScreen() {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
   const [userId, setUserId] = useState('');
-  const [codes, setCodes] = useState<string[] | undefined>(Array(6).fill(""));
+  const [codes, setCodes] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [errorMessages, setErrorMessages] = useState<string[]>();
 
   const { refetchUser, profile, data } = useAuth();
 
-  const refs: RefObject<TextInput>[] = [
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-  ];
-
+  const refs: RefObject<TextInput>[] = Array.from({ length: OTP_LENGTH }, () => useRef<TextInput>(null));
   const { push } = useRouter();
 
   const handleEmailSubmit = async () => {
@@ -83,20 +79,22 @@ export default function LoginScreen() {
 
   const onChangeCode = (text: string, index: number) => {
     if (text.length > 1) {
-      setErrorMessages(undefined);
-      const newCodes = text.split("");
+      // If user pastes the OTP
+      const newCodes = text.split("").slice(0, OTP_LENGTH);
       setCodes(newCodes);
-      refs[5]!.current?.focus();
+      refs[OTP_LENGTH - 1]?.current?.focus();
       return;
     }
-    setErrorMessages(undefined);
-    const newCodes = [...codes!];
+  
+    const newCodes = [...codes];
     newCodes[index] = text;
     setCodes(newCodes);
-    if (text !== "" && index < 5) {
-      refs[index + 1]!.current?.focus();
+  
+    if (text !== "" && index < OTP_LENGTH - 1) {
+      refs[index + 1]?.current?.focus();
     }
   };
+  
 
   return (
     <MyStack flex={1} justifyContent="center" alignItems="center" padding="$4">

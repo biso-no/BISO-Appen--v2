@@ -90,7 +90,6 @@ export default function TabLayout() {
   const isExpoGo = Constants.appOwnership === 'expo';
 
   const [notificationCount, setNotificationCount] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(!!data?.$id);
 
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
   const [pushToken, setPushToken] = useState<string | null>(null);
@@ -178,13 +177,6 @@ export default function TabLayout() {
     });
   }, []);
 
-  useEffect(() => {
-    console.log({
-      "Status": isAuthenticated,
-      "User ID": data?.$id,
-    });
-    setIsAuthenticated(!!data?.$id);
-  }, [data?.$id]);
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (isLoading || !data?.$id) {
@@ -225,7 +217,7 @@ export default function TabLayout() {
   
 
 
-  const tabNames = isAuthenticated
+  const tabNames = data?.$id
     ? ['index', 'explore/index', 'profile/index']
     : ['index', 'explore/index', 'auth/signIn/index'];
 
