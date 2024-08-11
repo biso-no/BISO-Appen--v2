@@ -1,10 +1,15 @@
 import { Popover, Button, Text, YGroup, XStack, Separator, H4 } from "tamagui";
+import { LinearGradient } from "tamagui/linear-gradient";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
 import { useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { databases, getDocuments } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
+import { Text as RNText } from "react-native";
+import { useFonts } from 'expo-font';
+import * as Expo from 'expo';
+import MaskedView from '@react-native-masked-view/masked-view';
 
 export default function CampusPopover() {
     const { campus, onChange } = useCampus();
@@ -29,8 +34,32 @@ export default function CampusPopover() {
         <Popover size="$4" open={open}>
             <Popover.Trigger asChild>
                 <Button chromeless onPress={() => setOpen(!open)}>
-                    <H4 fontSize={18}>BISO {capitalizeFirstLetter(campus?.name || "Select Campus")}</H4>
-                    {open ? <ChevronUp /> : <ChevronDown />}
+                    <XStack alignItems="center">
+                        <MaskedView maskElement={<H4>BISO</H4>} style={{ width: 50, height: 30 }}>
+                            <LinearGradient
+                                start={[0, 0]}
+                                end={[0, 1]}
+                                themeInverse
+                                theme="accent"
+                                colors={['$color', '$color2']}
+                                style={{ width: 50, height: 30 }}
+                            />
+                        </MaskedView>
+                        
+                        <H4 color="$color2" themeInverse theme="accent" fontSize={18}>
+                            {` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}
+                        </H4>
+                        <MaskedView maskElement={open ? <ChevronUp /> : <ChevronDown />} style={{ width: 20, height: 20 }}>
+                            <LinearGradient
+                                start={[0, 0]}
+                                end={[0, 1]}
+                                themeInverse
+                                theme="accent"
+                                colors={['$color', '$color2']}
+                                style={{ width: 20, height: 20 }}
+                            />
+                        </MaskedView>
+                    </XStack>
                 </Button>
             </Popover.Trigger>
             <Popover.Content

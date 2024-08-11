@@ -46,29 +46,11 @@ export default function LoginScreen() {
   
     try {
       const response = await verifyOtp(userId, otp);
-      if (response.$id) {
-        const execution = await triggerFunction({
-          functionId: 'create_user_doc',
-          data: JSON.stringify({
-            email: email
-          }),
-          async: false,
-        });
-  
-        const responseBody = execution.responseBody
-        const bodyToJson = JSON.parse(responseBody)
-  
-        if (bodyToJson.status === "ok") {
-          if (bodyToJson.exists === true) {
-            console.log("Routing to /");
-            push('/');
-          } else {
-            console.log("Routing to /onboarding");
-            push('/onboarding');
-          }
-        } else {
-          setErrorMessages(["An error occurred. Please try again."]);
-        }
+      if (response) {
+        console.log("User successfully verified");
+        push('/')
+      } else {
+        console.log("User not verified");
       }
     } catch (error) {
       console.error("Error during OTP submission: ", error);

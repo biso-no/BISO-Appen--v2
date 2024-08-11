@@ -9,6 +9,7 @@ import { Search as SearchIcon } from '@tamagui/lucide-icons';
 import { MyStack } from '@/components/ui/MyStack';
 import { useAuth } from '@/components/context/auth-provider';
 import { FeaturedPostsCarousel } from '@/components/explore/featured';
+import { PromptOnboarding } from '@/components/prompt-onboarding';
 
 export default function HomeScreen() {
 
@@ -40,6 +41,7 @@ const { profile } = useAuth();
           </View>
         </Pressable>
 <Featured /> */}
+      <PromptOnboarding />
       <FeaturedPostsCarousel />
       <Discover />
       <Search modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />

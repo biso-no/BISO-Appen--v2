@@ -415,6 +415,22 @@ export async function sendChatMessage(recipient: string, message: string, sender
     return response
 }
 
+export function useProfileSubscription({
+    userId,
+    callback,
+}: {
+    userId: string,
+    callback: (response: RealtimeResponseEvent<unknown>) => void,
+}) {
+    const profileSubscription = `databases.app.collections.user.documents.${userId}`;
+
+    const unsubscribe = client.subscribe(profileSubscription, response => {
+        callback(response);
+    });
+
+    return unsubscribe;
+}
+
 /*
 export async function createChat(name: string, existingUsers: Models.User<Models.Preferences>[], inviteUsers: string[] = []) {
 

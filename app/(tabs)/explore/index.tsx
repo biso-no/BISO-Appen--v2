@@ -12,6 +12,7 @@ export default function ExploreScreen() {
     const { push } = useRouter();
 
     const { height, width } = useWindowDimensions();
+    const { openModal } = useModal();
 
     return (
         <YStack minHeight={height - 100} justifyContent="center" alignItems="center">
@@ -26,6 +27,7 @@ export default function ExploreScreen() {
                         <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/events")} size="$4" width="$12" icon={<Calendar size={20} />}>
                             <Text fontSize="$4">Events</Text>
                         </Button>
+                        
                     </XStack>
                 </YGroup.Item>
                 </YGroup>

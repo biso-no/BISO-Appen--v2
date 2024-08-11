@@ -37,9 +37,6 @@ export function MemberAccess() {
                     {!isBisoMember && (
                         <>
                             <Lock size={20} color="gray" />
-                            <Paragraph fontSize="$2" numberOfLines={2} color="gray">
-                                Only available to members
-                            </Paragraph>
                         </>
                     )}
                 </XStack>

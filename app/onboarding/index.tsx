@@ -71,12 +71,6 @@ export default function Onboarding() {
 
   const steps = [
     {
-      label: 'Welcome',
-      content: (
-        <H1>{name ? `Hi, ${name.split(' ')[0]}!` : 'Welcome!'}</H1>
-      )
-    },
-    {
       label: 'What is your name?',
       content: (
         <Step1 name={name} setName={setName} />

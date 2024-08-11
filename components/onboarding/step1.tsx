@@ -24,6 +24,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
           id="name"
           placeholder="Enter your name"
           value={name}
+          backgroundColor={"transparent"}
           onChangeText={handleNameChange}
           size="4"
           width="$18"

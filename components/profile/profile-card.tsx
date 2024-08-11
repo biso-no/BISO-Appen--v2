@@ -27,6 +27,7 @@ export function ProfileCard() {
 
     const isSmallScreen = width < 375;
 
+
     return (
         <Card theme="accent" themeInverse padding={isSmallScreen ? "$2" : "$4"}>
             <Card.Header height="$13" padding={isSmallScreen ? "$2" : "$4"}>
@@ -63,7 +64,7 @@ export function ProfileCard() {
                                 />
                         </>
                     ) : (
-                        <Button onPress={openModal} variant="outlined">Buy BISO membership</Button>
+                        <Button onPress={() => openModal()} variant="outlined">Buy BISO membership</Button>
                     )
                 )}
             </Card.Footer>

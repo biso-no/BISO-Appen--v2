@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases, subScribeToProfile } from '@/lib/appwrite';
 import { Models, RealtimeResponseEvent } from 'react-native-appwrite';
+import { useProfileSubscription } from '@/lib/appwrite';
 
 interface Profile extends Models.Document {
   name?: string;
@@ -51,6 +52,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userCampus, setUserCampus] = useState<Models.Document | null>(null);
   const [userDepartment, setUserDepartment] = useState<Models.Document | null>(null);
 
+  const profileSubscription = useProfileSubscription({
+    userId: data?.$id || '',
+    callback: (response: RealtimeResponseEvent<unknown>) => {
+      const payload = response.payload as { $collectionId: string; $id: string };
+      if (payload.$collectionId === 'user' && payload.$id === data?.$id) {
+        fetchProfile();
+      }
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      profileSubscription();
+    };
+  }, []);
+
   const fetchAccount = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -67,16 +84,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = useCallback(async () => {
     if (data?.$id) {
+      setIsLoading(true);
       try {
         const response = await getDocument('user', data.$id);
         setProfile(response as Profile);
         setStudentId(response.student_id);
         setError(null);
+        setIsLoading(false);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setProfile(null);
+        setIsLoading(false);
       }
     }
+    
   }, [data]);
 
   const fetchCampus = useCallback(async () => {

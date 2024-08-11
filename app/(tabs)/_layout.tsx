@@ -32,6 +32,8 @@ import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import CampusPopover from '@/components/CampusPopover';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
+import { PromptOnboarding } from '@/components/prompt-onboarding';
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -104,6 +106,7 @@ export default function TabLayout() {
 
   const theme = useTheme();
   const navigationState = useNavigationState(state => state);
+  
 
   if (!theme.background) return "#fff"
 
@@ -179,7 +182,7 @@ export default function TabLayout() {
 
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
-    if (isLoading || !data?.$id) {
+    if (!data?.$id) {
       return <LogIn size={25} color={color} marginTop="$2" />;
     } else if (!avatarId) {
       return <UserRound size={25} color={color} marginTop="$2" />;

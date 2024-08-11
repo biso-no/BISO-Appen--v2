@@ -1,0 +1,15 @@
+output_docs_folder_name: "docs"
+ignore_folders:
+  - "venv"
+  - ".expo"
+  - ".vscode"
+  - "node_modules"
+file_types:
+  - ".ts"
+  - ".tsx"
+  - ".js"
+  - ".jsx"
+  - ".scss"
+  - ".json"
+skip_existing: False
+gpt_model: "gpt-3.5-turbo"
