@@ -72,6 +72,44 @@ import {
     return [k, sizeToSpace(v)]
   })
   
+  /**
+   * Converts a given numeric value to a corresponding space value.
+   * This function is designed to maintain backward compatibility for specific values
+   * while providing a calculated space for other values.
+   *
+   * @param {number} v - The numeric value to be converted. 
+   *                     It should be a non-negative number.
+   *                     Special cases include:
+   *                     - 0 returns 0
+   *                     - 2 returns 0.5
+   *                     - 4 returns 1
+   *                     - 8 returns 1.5
+   *                     - Values between 0 and 16 are calculated as v * 0.333 rounded.
+   *                     - Values greater than 16 are calculated as Math.floor(v * 0.7 - 12).
+   *
+   * @returns {number} The calculated space value based on the input.
+   *
+   * @throws {RangeError} Throws an error if the input value is negative.
+   *
+   * @example
+   * // Returns 0
+   * sizeToSpace(0);
+   *
+   * // Returns 0.5
+   * sizeToSpace(2);
+   *
+   * // Returns 1
+   * sizeToSpace(4);
+   *
+   * // Returns 1.5
+   * sizeToSpace(8);
+   *
+   * // Returns 5 (for example, if v is 16)
+   * sizeToSpace(16);
+   *
+   * // Returns a calculated value for larger numbers
+   * sizeToSpace(20); // Returns 4
+   */
   // a bit odd but keeping backward compat for values >8 while fixing below
   function sizeToSpace(v: number) {
     if (v === 0) return 0
@@ -154,6 +192,28 @@ import {
     ...postfixObjKeys(darkColors, 'Dark'),
   }
   
+  /**
+   * Appends a specified postfix to each key of the given object while preserving its values.
+   *
+   * This function takes an object with string keys and values that can either be strings or instances of the `Variable<string>` type.
+   * It returns a new object where each key is modified by appending the provided postfix.
+   *
+   * @template A - The type of the input object, which must have string keys and values of type `Variable<string>` or `string`.
+   * @template B - The type of the postfix, which must be a string.
+   *
+   * @param {A} obj - The object whose keys will be modified.
+   * @param {B} postfix - The string to append to each key of the object.
+   * 
+   * @returns {{ [Key in `${keyof A extends string ? keyof A : never}${B}`]: Variable<string> | string }} 
+   * - A new object with keys modified by appending the postfix and values preserved from the original object.
+   *
+   * @example
+   * const original = { key1: 'value1', key2: new Variable('value2') };
+   * const result = postfixObjKeys(original, '_postfix');
+   * // result will be { key1_postfix: 'value1', key2_postfix: Variable('value2') }
+   *
+   * @throws {TypeError} Throws an error if the input object is not of the expected shape.
+   */
   function postfixObjKeys<
     A extends { [key: string]: Variable<string> | string },
     B extends string

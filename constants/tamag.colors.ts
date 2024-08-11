@@ -165,6 +165,22 @@ import {
     const isLight = name === 'light'
     const inverseName = isLight ? 'dark' : 'light'
     const inverseTheme = baseThemes[inverseName]
+    /**
+     * Converts an HSL color string to an HSLA color string by adding an opacity value.
+     *
+     * This function takes a string representing an HSL color and an optional opacity value,
+     * and returns the corresponding HSLA color string with the specified opacity.
+     *
+     * @param {string} hsl - The HSL color string to be converted. It should be in the format "hsl(hue, saturation%, lightness%)".
+     * @param {number} [opacity=0] - The opacity value to be applied to the HSLA color. Defaults to 0 if not provided.
+     * @returns {string} The converted HSLA color string with the specified opacity.
+     *
+     * @example
+     * // Returns "hsla(120, 100%, 50%, 0.5)"
+     * transparent("hsl(120, 100%, 50%)", 0.5);
+     *
+     * @throws {Error} Throws an error if the input HSL string is not in the correct format.
+     */
     const transparent = (hsl: string, opacity = 0) =>
       hsl.replace(`%)`, `%, ${opacity})`).replace(`hsl(`, `hsla(`)
   
@@ -232,6 +248,25 @@ import {
       ...allColorThemes,
     }
   
+    /**
+     * Generates alternative themes based on the provided theme and inverse theme.
+     *
+     * This function applies a series of masks to the given theme to create two alternative themes,
+     * as well as an active theme. If an active theme is not provided, it defaults to applying a stronger
+     * mask to the original theme.
+     *
+     * @param {SubTheme} theme - The primary theme to be altered.
+     * @param {SubTheme} inverse - The theme that serves as the inverse counterpart.
+     * @param {SubTheme} [activeTheme] - An optional active theme. If not provided, a default active theme is generated.
+     * 
+     * @returns {Object} An object containing the generated alternative themes and the active theme.
+     * 
+     * @throws {Error} Throws an error if the theme or inverse parameters are invalid.
+     *
+     * @example
+     * const themes = getAltThemes(primaryTheme, secondaryTheme);
+     * console.log(themes);
+     */
     function getAltThemes(theme: SubTheme, inverse: SubTheme, activeTheme?: SubTheme) {
       const maskOptionsAlt = {
         ...maskOptions,
@@ -250,6 +285,24 @@ import {
       })
     }
   
+    /**
+     * Generates a set of component themes based on the provided theme and inverse theme.
+     *
+     * This function applies various masks to the input themes to create a collection of themed components,
+     * including Card, Button, Checkbox, and others. The resulting themes are tailored based on whether the 
+     * original theme is light or dark.
+     *
+     * @param {SubTheme} theme - The primary theme to be used for generating component themes.
+     * @param {SubTheme} inverse - The inverse theme that will be used for certain components.
+     * 
+     * @returns {Object} An object containing themed components with their respective styles.
+     * 
+     * @throws {Error} Throws an error if the provided themes are invalid or if masking fails.
+     *
+     * @example
+     * const themes = getComponentThemes(lightTheme, darkTheme);
+     * console.log(themes.Button); // Outputs the themed styles for the Button component.
+     */
     function getComponentThemes(theme: SubTheme, inverse: SubTheme) {
       const weaker1 = applyMask(theme, masks.weaker, maskOptions)
       const weaker2 = applyMask(weaker1, masks.weaker, maskOptions)
