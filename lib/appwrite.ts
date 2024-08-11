@@ -415,6 +415,38 @@ export async function sendChatMessage(recipient: string, message: string, sender
     return response
 }
 
+/**
+ * Subscribes to a user's profile updates in real-time.
+ *
+ * This function establishes a subscription to the specified user's profile 
+ * in the database, allowing the caller to receive updates whenever the 
+ * profile changes. The provided callback function will be invoked with the 
+ * response data whenever an update occurs.
+ *
+ * @param {Object} params - The parameters for the subscription.
+ * @param {string} params.userId - The unique identifier of the user whose 
+ * profile is being subscribed to.
+ * @param {function(RealtimeResponseEvent<unknown>): void} params.callback - 
+ * A callback function that will be called with the response data whenever 
+ * there is an update to the user's profile.
+ *
+ * @returns {function} A function that can be called to unsubscribe from the 
+ * profile updates.
+ *
+ * @throws {Error} Throws an error if the subscription fails or if invalid 
+ * parameters are provided.
+ *
+ * @example
+ * const unsubscribe = useProfileSubscription({
+ *   userId: '12345',
+ *   callback: (response) => {
+ *     console.log('Profile updated:', response);
+ *   },
+ * });
+ *
+ * // To stop receiving updates, call the unsubscribe function:
+ * unsubscribe();
+ */
 export function useProfileSubscription({
     userId,
     callback,
@@ -431,6 +463,24 @@ export function useProfileSubscription({
     return unsubscribe;
 }
 
+/**
+ * Creates a new chat team with specified users.
+ *
+ * This function initializes a chat team with a given name and adds existing users and invited users to the team.
+ * Existing users are those already present in the system, while invited users are those who will be invited via email.
+ *
+ * @param {string} name - The name of the chat team to be created.
+ * @param {Models.User<Models.Preferences>[]} existingUsers - An array of existing users who will be added to the team.
+ * @param {string[]} [inviteUsers=[]] - An optional array of email addresses for users to be invited to the team.
+ * 
+ * @returns {Promise<any>} A promise that resolves to the response from the database after creating the chat document.
+ * 
+ * @throws {Error} Throws an error if the team creation or membership addition fails.
+ *
+ * @example
+ * const response = await createChat('My Team', existingUserArray, ['invitee@example.com']);
+ * console.log(response);
+ */
 /*
 export async function createChat(name: string, existingUsers: Models.User<Models.Preferences>[], inviteUsers: string[] = []) {
 
