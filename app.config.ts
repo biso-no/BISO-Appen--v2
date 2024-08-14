@@ -4,7 +4,7 @@ import { withSentry } from "@sentry/react-native/expo";
 const config: ExpoConfig = {
   name: 'BISO',
   slug: 'BISO',
-  version: "0.91.2",
+  version: "0.91.3",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
   scheme: 'biso',
@@ -37,7 +37,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.biso.no',
-    versionCode: 42,
+    versionCode: 43,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: "./assets/ic_foreground.png",

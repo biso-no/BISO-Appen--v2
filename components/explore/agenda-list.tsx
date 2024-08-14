@@ -155,6 +155,10 @@ const { push } = useRouter();
       showTodayButton
       theme={{
         selectedDayTextColor: "green",
+        backgroundColor: backgroundColor,
+      }}
+      style={{
+        backgroundColor: backgroundColor,
       }}
     >
       {weekView ? (
@@ -163,10 +167,25 @@ const { push } = useRouter();
         <ExpandableCalendar
           firstDay={1}
           markedDates={markedDates}
+          
           leftArrowImageSource={leftArrowIcon}
           rightArrowImageSource={rightArrowIcon}
-          calendarStyle={calendarStyle}
-          headerStyle={headerStyle}
+
+          theme={{
+            backgroundColor: backgroundColor,
+            calendarBackground: backgroundColor,
+          }}
+          style={{
+            backgroundColor: backgroundColor,
+            
+          }}
+          calendarStyle={{
+            backgroundColor: backgroundColor,
+            
+          }}
+          headerStyle={{
+            backgroundColor: backgroundColor
+          }}
           renderArrow={(direction) => direction === 'right' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         />
       )}
@@ -175,7 +194,7 @@ const { push } = useRouter();
           sections={sections}
           renderItem={renderItem}
           scrollToNextEvent={scrollToNextEvent}
-          sectionStyle={{ backgroundColor: backgroundColor, textTransform: 'capitalize' }}
+          sectionStyle={{ backgroundColor: backgroundColor }}
           dayFormat={dayFormat}
           ItemSeparatorComponent={Separator}
           refreshing={false}

@@ -8,15 +8,15 @@ export function PromptOnboarding() {
 
     const [open, setOpen] = useState(false);
 
-    const { data, profile, isLoading } = useAuth();
+    const { data, profile, isLoading, updateUserPrefs } = useAuth();
 
     const { push } = useRouter();
 
     useEffect(() => {
-        if (data?.$id && !profile?.name) {
+        if (data?.$id && !profile?.name && !isLoading) {
             async function getPromptOnboarding() {
                 //If there is a value in Async storage, or it is set to true, then we dont need to prompt the user as they have already been asked. 
-                const promptOnboarding = await AsyncStorage.default.getItem('promptOnboarding');
+                const promptOnboarding = data?.prefs.promptOnboarding;
                 console.log("Prompt onboarding: ", promptOnboarding);
                 if (promptOnboarding === null || promptOnboarding === 'true' || promptOnboarding === undefined) {
                     setOpen(true);
@@ -30,14 +30,14 @@ export function PromptOnboarding() {
 
     const onCancel = () => {
         async function setShouldNotPromptOnboarding() {
-            await AsyncStorage.default.setItem('promptOnboarding', 'false');
+            await updateUserPrefs('promptOnboarding', false);
         }
         setOpen(false);
         setShouldNotPromptOnboarding();
     }
 
     const onAccept = async () => {
-        await AsyncStorage.default.setItem('promptOnboarding', 'false');
+        await updateUserPrefs('promptOnboarding', false);
         setOpen(false);
         push('/onboarding');
     }

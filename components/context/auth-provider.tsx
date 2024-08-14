@@ -13,7 +13,7 @@ interface Profile extends Models.Document {
   bank_account?: string;
   campus?: string;
   campus_id?: string;
-  departments?: string[];
+  departments?: Models.Document[];
   departments_id?: string[];
   avatar?: string;
 }

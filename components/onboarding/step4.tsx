@@ -2,7 +2,7 @@ import { Button, View, YStack } from 'tamagui';
 import React, { useState } from 'react';
 import { Input } from '@/components/auth/input';
 import { MotiView } from 'moti';
-import { databases } from '@/lib/appwrite';
+import { databases, updateDocument } from '@/lib/appwrite';
 import { useAuth } from '../context/auth-provider';
 
 interface Step4Props {
@@ -19,7 +19,22 @@ interface Step4Props {
 export function Step4({ phone, address, city, zipCode, setPhone, setAddress, setCity, setZipCode }: Step4Props) {
 
   const { data, profile } = useAuth();
-    
+
+  const updateProfile = async (profileData: { phone?: string, address?: string, city?: string, zip?: string }) => {
+    if (!profile) return;
+
+    const updatedProfile = {
+      ...profile,
+      ...profileData,
+    };
+
+    try {
+      await updateDocument('user', profile.$id, updatedProfile);
+      console.log("Profile updated successfully");
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
 
   return (
     <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

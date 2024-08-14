@@ -33,6 +33,8 @@ import CampusPopover from '@/components/CampusPopover';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import { PromptOnboarding } from '@/components/prompt-onboarding';
+import MaskedView from '@react-native-masked-view/masked-view';
+import { LinearGradient } from 'tamagui/linear-gradient';
 
 
 Notifications.setNotificationHandler({
@@ -198,8 +200,18 @@ export default function TabLayout() {
   const chatIcon = () => {
     return (
       <Pressable>
+
         {({ pressed}) => (
-          <MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} onPress={() => router.push('/explore/chat')} />
+                  <MaskedView maskElement={<MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} />} style={{ width: 25, height: 25 }}>
+                    <LinearGradient
+                        start={[0, 0]}
+                        end={[0, 1]}
+                        themeInverse
+                        theme="accent"
+                        colors={['$color', '$color2']}
+                        style={{ width: 25, height: 25 }}
+                    />
+                  </MaskedView>
         )}
       </Pressable>
     );

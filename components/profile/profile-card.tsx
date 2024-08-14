@@ -29,7 +29,7 @@ export function ProfileCard() {
 
 
     return (
-        <Card theme="accent" themeInverse padding={isSmallScreen ? "$2" : "$4"}>
+        <Card theme="accent" themeInverse={colorScheme === 'dark' ? true : false} padding={isSmallScreen ? "$2" : "$4"}>
             <Card.Header height="$13" padding={isSmallScreen ? "$2" : "$4"}>
                 <ZStack maxWidth={"100%"} maxHeight={85} width={"100%"} flex={1}>
                     <YStack marginTop="$3">
@@ -38,9 +38,10 @@ export function ProfileCard() {
                             <YStack space="$1">
                                 <H3 size={isSmallScreen ? "$4" : "$6"}>{data?.name}</H3>
                                 <Paragraph size={isSmallScreen ? "$3" : "$5"}>{data?.email}</Paragraph>
+                                <H5 size={isSmallScreen ? "$4" : "$6"}>Student ID: {profile?.studentId?.student_id}</H5>
                             </YStack>
                         </XStack>
-                        <H5 size={isSmallScreen ? "$4" : "$6"}>Student ID: {profile?.studentId?.student_id}</H5>
+
                     </YStack>
                 </ZStack>
             </Card.Header>

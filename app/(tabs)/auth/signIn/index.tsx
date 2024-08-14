@@ -49,6 +49,7 @@ export default function LoginScreen() {
       if (response) {
         console.log("User successfully verified");
         push('/')
+        refetchUser();
       } else {
         console.log("User not verified");
       }

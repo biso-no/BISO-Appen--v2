@@ -46,9 +46,16 @@ export default function CampusPopover() {
                             />
                         </MaskedView>
                         
-                        <H4 color="$color2" themeInverse theme="accent" fontSize={18}>
-                            {` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}
-                        </H4>
+                        <MaskedView maskElement={<H4 color="$color2" themeInverse theme="accent" fontSize={18}>{` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}</H4>} style={{ width: 80, height: 30 }}>
+                            <LinearGradient
+                                start={[0, 0]}
+                                end={[0, 1]}
+                                themeInverse
+                                theme="accent"
+                                colors={['$color', '$color2']}
+                                style={{ width: 80, height: 30 }}
+                            />
+                        </MaskedView>
                         <MaskedView maskElement={open ? <ChevronUp /> : <ChevronDown />} style={{ width: 20, height: 20 }}>
                             <LinearGradient
                                 start={[0, 0]}

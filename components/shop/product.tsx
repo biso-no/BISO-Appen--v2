@@ -59,7 +59,7 @@ export function ProductDetails({productId}: {productId: string}) {
                     <Text fontSize={30} fontWeight={"bold"}>{product.name}</Text>
                     <YGroup space="$2">
                     <Text fontSize={20}>{product.price !== product.regular_price ? product.price + " kr" : product.regular_price + " kr"}</Text>
-                    {product.regular_price && product.price !== product.regular_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.regular_price + " kr"}</Text>}
+                    {product.regular_price && product.price !== product.regular_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.regular_price !== null ? product.regular_price + " kr" : "Free"}</Text>}
                     </YGroup>
                 </XStack>
                 </YStack>

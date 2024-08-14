@@ -71,7 +71,7 @@ export function FeaturedPostsCarousel() {
 
   if (featuredPosts.total === 0) {
     console.log('No posts found');
-    return <Text>No posts found</Text>;
+    return null;
   }
 
   const postIndex = wrap(0, featuredPosts.total, page);
@@ -119,7 +119,7 @@ export function FeaturedPostsCarousel() {
         circular
         elevate
         onPress={() => paginate(-1)}
-        zi={100}
+        zIndex={100}
       />
       <Button
         accessibilityLabel="Carousel right"
@@ -130,7 +130,7 @@ export function FeaturedPostsCarousel() {
         circular
         elevate
         onPress={() => paginate(1)}
-        zi={100}
+        zIndex={100}
       />
     </XStack>
   );
