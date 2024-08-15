@@ -174,14 +174,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!data?.$id) throw new Error('User not found');
 
     try {
-      console.log('Adding student ID to user profile:', studentId);
-      const response = await updateDocument('student_id', studentId, { user: data.$id });
-      if (response.$id) {
-        setStudentId(studentId);
+      const newStudentId = await databases.createDocument('app', 'student_id', studentId, { 
+        student_id: studentId,
+      });
+      if (newStudentId.$id) {
+        setStudentId(newStudentId.$id);
+        await updateDocument('user', data.$id, { student_id: newStudentId.$id });
         fetchProfile();
+        setError(null);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setStudentId(null);
     }
   };
 

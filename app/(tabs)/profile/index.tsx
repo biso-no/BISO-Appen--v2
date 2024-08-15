@@ -16,7 +16,6 @@ import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { ProfileCard } from '@/components/profile/profile-card';
 
-WebBrowser.maybeCompleteAuthSession();
 
 type Notifications = {
   newEvents: boolean;

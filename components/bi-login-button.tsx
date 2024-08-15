@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import {
+    DiscoveryDocument,
   exchangeCodeAsync,
   makeRedirectUri,
   useAuthRequest,
@@ -11,6 +12,7 @@ import { Button, Text, YStack } from 'tamagui';
 import { Alert } from 'react-native';
 import { useAuth } from './context/auth-provider';
 import { databases } from '@/lib/appwrite';
+import { useLocalSearchParams } from 'expo-router';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -34,6 +36,10 @@ async function fetchUserEmail(accessToken: string) {
 }
 
 export function BILoginButton() {
+    const params = useLocalSearchParams();
+
+
+
     const discovery = useAutoDiscovery('https://login.microsoftonline.com/adee44b2-91fc-40f1-abdd-9cc29351b5fd/v2.0');
     console.log('Discovery:', discovery);
 
@@ -52,9 +58,9 @@ export function BILoginButton() {
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
-    const [request, , promptAsync] = useAuthRequest({
+    const [request, response, promptAsync] = useAuthRequest({
         clientId,
-        scopes: ['openid', 'profile', 'email', 'offline_access'],
+        scopes: ['openid', 'email'],
         redirectUri,
     }, discovery);
 
@@ -65,79 +71,42 @@ export function BILoginButton() {
         }
     }, [request, discovery]);
 
-    const handleLogin = () => {
-        console.log('Login button pressed. IsReady:', isReady);
-        if (isReady) {
-            promptAsync().then((codeResponse) => {
-                console.log('Prompt async response:', codeResponse);
-                if (codeResponse?.type === 'success') {
-                    exchangeCodeAsync(
-                        {
-                            clientId,
-                            code: codeResponse.params.code,
-                            extraParams: request?.codeVerifier
-                                ? { code_verifier: request.codeVerifier }
-                                : undefined,
-                            redirectUri,
-                        },
-                        discovery!,
-                    ).then((res) => {
-                        console.log('Access token exchange successful:', res);
-                        setToken(res.accessToken);
-                        //SecureStore.setItemAsync('accessToken', res.accessToken);
+    useEffect(() => {
+        if (!params.code && !discovery) return;
+        console.log('Code received:', params.code);
+        exchangeCodeAsync(
+            {
+                clientId,
+                code: params.code as string,
+                extraParams: request?.codeVerifier
+                    ? { code_verifier: request.codeVerifier }
+                    : undefined,
+                redirectUri,
+            },
+            discovery as Pick<DiscoveryDocument, 'tokenEndpoint'>,
+        ).then(async (res) => {
+            const email = await fetchUserEmail(res.accessToken);
+            if (!email.endsWith('@bi.no') && !email.endsWith('@biso.no')) {
+                Alert.alert("Invalid Email", "Please use a valid email address ending with @bi.no or @biso.no");
+                return;
+            }
 
-                        // Fetch user email
-                        fetchUserEmail(res.accessToken).then(async (email) => {
-                            console.log('User email fetched:', email);
-                            setEmail(email);
+            const studentId = email.replace(/@bi.no|@biso.no/, '');
+            console.log('Student ID:', studentId);
+            await addStudentId(studentId);
+        }).catch((err) => {
+            console.error('Error exchanging code for token:', err);
+            setError(err.message);
+            Alert.alert("Login Error", err.message);
+        });
+    }, []);
 
-                            // Ensure the email ends with @bi.no or @biso.no
-                            if (!email.endsWith('@bi.no') && !email.endsWith('@biso.no')) {
-                                Alert.alert("Invalid Email", "Please use a valid email address ending with @bi.no or @biso.no");
-                                return;
-                            }
 
-                            // Remove @bi.no or @biso.no from the email, then update the user profile with the studentId
-                            const studentId = email.replace(/@bi.no|@biso.no/, '');
-                            console.log('Student ID:', studentId);
-                            const response = await databases.createDocument('app', 'student_id', studentId, { 
-                                student_id: studentId,
-                                user: data?.$id
-                            });
-                            if (data?.$id && response.$id) {
-                                await databases.updateDocument('app', 'user', data.$id, { 
-                                    student_id: studentId
-                                });
-                                console.log('Student ID updated:', studentId);
-                            }
-                            console.log('Response:', response);
-                            console.log('User email set:', email);
-                        }).catch((err) => {
-                            console.error('Error fetching user email:', err);
-                            setError(err.message);
-                            Alert.alert("Fetch Error", err.message);
-                        });
-                    }).catch((err) => {
-                        console.error('Error exchanging code for token:', err);
-                        setError(err.message);
-                        Alert.alert("Login Error", err.message);
-                    });
-                } else {
-                    console.error('Code response was not successful:', codeResponse);
-                }
-            }).catch((err) => {
-                console.error('Error during promptAsync:', err);
-                setError(err.message);
-                Alert.alert("Login Error", err.message);
-            });
-        } else {
-            console.error('Login attempt when request is not ready.');
-            Alert.alert("Login Error", "Request is not ready, please try again.");
-        }
-    }
-
+    const handleLogin = async () => {
+        promptAsync()
+    };
     return (
-        <Button onPress={handleLogin} variant='outlined'>
+        <Button onPress={handleLogin} variant='outlined' disabled={!isReady}>
             <Text>Login with BI</Text>
         </Button>
     );

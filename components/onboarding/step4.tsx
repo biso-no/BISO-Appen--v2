@@ -18,23 +18,8 @@ interface Step4Props {
 
 export function Step4({ phone, address, city, zipCode, setPhone, setAddress, setCity, setZipCode }: Step4Props) {
 
-  const { data, profile } = useAuth();
+  const { data, profile, updateProfile } = useAuth();
 
-  const updateProfile = async (profileData: { phone?: string, address?: string, city?: string, zip?: string }) => {
-    if (!profile) return;
-
-    const updatedProfile = {
-      ...profile,
-      ...profileData,
-    };
-
-    try {
-      await updateDocument('user', profile.$id, updatedProfile);
-      console.log("Profile updated successfully");
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
 
   return (
     <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

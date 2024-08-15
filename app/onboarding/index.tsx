@@ -88,16 +88,19 @@ export default function Onboarding() {
     {
       label: 'Address Details',
       content: (
-        <Step4 />
+        <Step4 address={address} setAddress={setAddress} city={city} setCity={setCity} zipCode={zipCode} setZipCode={setZipCode} phone={phone} setPhone={setPhone} />
       ),
     }
   ] as Step[];
 
   const handleSubmit = async () => {
-    handleUpdate('phone', phone);
-    handleUpdate('address', address);
-    handleUpdate('city', city);
-    handleUpdate('zip', zipCode);
+    const response = await updateProfile({ 
+      phone, 
+      address, 
+      city, 
+      zip: zipCode, 
+    });
+    console.log(response);
     router.push('/profile');
   };
 

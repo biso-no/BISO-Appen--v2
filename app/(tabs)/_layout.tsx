@@ -116,7 +116,11 @@ export default function TabLayout() {
 
   useEffect(() => {
     console.log('isExpoGo', isExpoGo);
-    if (!isExpoGo && data?.$id && !isLoading) {
+
+    //Search providers for providerType push
+    const provider = data?.targets.find(target => target.providerType === 'push');
+
+    if (!isExpoGo && data?.$id && !isLoading && !provider) {
       setupPushNotifications(data.$id).then((token) => {
         setPushToken(token);
       });
