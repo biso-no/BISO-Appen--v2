@@ -16,7 +16,7 @@ import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { ProfileCard } from '@/components/profile/profile-card';
 
-
+WebBrowser.maybeCompleteAuthSession();
 type Notifications = {
   newEvents: boolean;
   newPosts: boolean;
@@ -99,10 +99,6 @@ export default function ProfileScreen() {
       console.error('Error during linkIdentity', error);
     }
   };
-
-  useEffect(() => {
-    console.log('Profile: ', profile);
-  }, [profile]);
 
   if (isLoading) {
     return null;

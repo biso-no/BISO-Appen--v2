@@ -27,10 +27,13 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   sampleRate: 1,
+  tracesSampleRate: 1.0,
   _experiments: {
     profilesSampleRate: 1.0,
   },
-  debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  debug: true, 
+  enableNative: true,
+  enableNativeCrashHandling: true,
   integrations: [
     new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`

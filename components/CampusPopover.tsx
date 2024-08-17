@@ -25,7 +25,6 @@ export default function CampusPopover() {
         databases.listDocuments('app', 'campus', [
             Query.select(['name', '$id']),
         ]).then((data) => {
-            console.log(data);
             setCampuses(data);
         });
     }, []);

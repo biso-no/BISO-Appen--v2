@@ -22,6 +22,7 @@ export interface AuthContextType {
   data: Models.User<Models.Preferences> | null;
   profile: Profile | null;
   isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
   error: string | null;
   updateName: (name: string) => Promise<void>;
   updateUserPrefs: (key: string, value: any) => Promise<void>;
@@ -179,8 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (newStudentId.$id) {
         setStudentId(newStudentId.$id);
-        await updateDocument('user', data.$id, { student_id: newStudentId.$id });
-        fetchProfile();
+        await updateDocument('user', data.$id, { student_id: newStudentId.$id, studentId: newStudentId.$id });
         setError(null);
       }
     } catch (err: unknown) {
@@ -227,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data,
       profile,
       isLoading,
+      setIsLoading,
       error,
       updateName,
       updateUserPrefs,

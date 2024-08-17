@@ -10,8 +10,7 @@ import { useColorScheme, Dimensions, Platform } from "react-native";
 import { useModal } from "../context/membership-modal-provider";
 
 export function ProfileCard() {
-    const { data, profile: initialProfile, isLoading, updateUserPrefs, isBisoMember, studentId } = useAuth();
-    const [profile, setProfile] = useState(initialProfile);
+    const { data, profile, isLoading, updateUserPrefs, isBisoMember, studentId } = useAuth();
     const [animate, setAnimate] = useState(false);
 
     const handleAnimate = () => {
@@ -38,7 +37,7 @@ export function ProfileCard() {
                             <YStack space="$1">
                                 <H3 size={isSmallScreen ? "$4" : "$6"}>{data?.name}</H3>
                                 <Paragraph size={isSmallScreen ? "$3" : "$5"}>{data?.email}</Paragraph>
-                                <H5 size={isSmallScreen ? "$4" : "$6"}>Student ID: {profile?.studentId?.student_id}</H5>
+                                <H5 size={isSmallScreen ? "$4" : "$6"}>Student ID: {profile?.student_id}</H5>
                             </YStack>
                         </XStack>
 

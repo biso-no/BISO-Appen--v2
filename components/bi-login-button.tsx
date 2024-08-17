@@ -8,7 +8,7 @@ import {
   useAutoDiscovery,
 } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import { Button, Text, YStack } from 'tamagui';
+import { Button, Text, YStack, Spinner } from 'tamagui';
 import { Alert } from 'react-native';
 import { useAuth } from './context/auth-provider';
 import { databases } from '@/lib/appwrite';
@@ -39,7 +39,6 @@ export function BILoginButton() {
     const params = useLocalSearchParams();
 
 
-
     const discovery = useAutoDiscovery('https://login.microsoftonline.com/adee44b2-91fc-40f1-abdd-9cc29351b5fd/v2.0');
     console.log('Discovery:', discovery);
 
@@ -47,18 +46,15 @@ export function BILoginButton() {
         scheme: 'biso',
         path: 'profile',
     });
+
     console.log('Redirect URI:', redirectUri);
 
-    const { profile, addStudentId, data } = useAuth();
-    console.log('User profile:', profile);
+    const { profile, addStudentId, data, isLoading, setIsLoading } = useAuth();
 
     const clientId = '09d8bb72-2cef-4b98-a1d3-2414a7a40873';
-    const [token, setToken] = useState<string | null>(null);
-    const [email, setEmail] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
-    const [request, response, promptAsync] = useAuthRequest({
+    const [request, , promptAsync] = useAuthRequest({
         clientId,
         scopes: ['openid', 'email'],
         redirectUri,
@@ -71,42 +67,41 @@ export function BILoginButton() {
         }
     }, [request, discovery]);
 
-    useEffect(() => {
-        if (!params.code && !discovery) return;
-        console.log('Code received:', params.code);
-        exchangeCodeAsync(
-            {
-                clientId,
-                code: params.code as string,
-                extraParams: request?.codeVerifier
-                    ? { code_verifier: request.codeVerifier }
-                    : undefined,
-                redirectUri,
-            },
-            discovery as Pick<DiscoveryDocument, 'tokenEndpoint'>,
-        ).then(async (res) => {
-            const email = await fetchUserEmail(res.accessToken);
-            if (!email.endsWith('@bi.no') && !email.endsWith('@biso.no')) {
-                Alert.alert("Invalid Email", "Please use a valid email address ending with @bi.no or @biso.no");
-                return;
-            }
-
-            const studentId = email.replace(/@bi.no|@biso.no/, '');
-            console.log('Student ID:', studentId);
-            await addStudentId(studentId);
-        }).catch((err) => {
-            console.error('Error exchanging code for token:', err);
-            setError(err.message);
-            Alert.alert("Login Error", err.message);
-        });
-    }, []);
-
 
     const handleLogin = async () => {
-        promptAsync()
+      setIsLoading(true);
+        const code = await promptAsync();
+        if (code.type === 'success' && discovery) {
+        const { accessToken } = await exchangeCodeAsync({
+            clientId,
+            code: code.params.code,
+            extraParams: request?.codeVerifier
+                ? { code_verifier: request.codeVerifier }
+                : undefined,
+            redirectUri,
+        }, discovery);
+        if (!accessToken) {
+            Alert.alert("Login Error", "Failed to login with BI");
+            setIsLoading(false);
+            return;
+        }
+        const email = await fetchUserEmail(accessToken);
+        if (!email.endsWith('@bi.no') && !email.endsWith('@biso.no')) {
+            Alert.alert("Invalid Email", "Please use a valid email address ending with @bi.no or @biso.no");
+            setIsLoading(false);
+            return;
+        }
+
+        const studentId = email.replace(/@bi.no|@biso.no/, '');
+        console.log('Student ID:', studentId);
+        await addStudentId(studentId);
+        setIsLoading(false);
     };
+  }
+
     return (
         <Button onPress={handleLogin} variant='outlined' disabled={!isReady}>
+            {isLoading && <Spinner size="small" />}
             <Text>Login with BI</Text>
         </Button>
     );

@@ -114,6 +114,9 @@ export default function TabLayout() {
 
   const backgroundColor = theme.background.val
 
+
+  //Need to fix this, crashes on Android
+  /*
   useEffect(() => {
     console.log('isExpoGo', isExpoGo);
 
@@ -124,11 +127,11 @@ export default function TabLayout() {
       setupPushNotifications(data.$id).then((token) => {
         setPushToken(token);
       });
-    }
+  }
   }, [data?.$id, isExpoGo, isLoading]);
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isExpoGo && data?.$id && !isLoading) {
       setNotificationChannelAsync('Miscellaneous', {
         name: 'Miscellaneous',
         importance: AndroidImportance.HIGH,
@@ -144,6 +147,7 @@ export default function TabLayout() {
         });
     }
 
+    if (!isExpoGo && data?.$id && !isLoading) {
     notificationListener.current = addNotificationReceivedListener(
       (notification) => {
         setNotification(notification);
@@ -178,14 +182,17 @@ export default function TabLayout() {
       responseListener.current &&
         removeNotificationSubscription(responseListener.current);
     };
+  }
   }, []);
 
   useEffect(() => {
+    if (!isExpoGo && data?.$id && !isLoading) {
     getNotificationCount().then((count) => {
       setNotificationCount(count);
     });
+  }
   }, []);
-
+*/
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (!data?.$id) {
@@ -242,42 +249,40 @@ export default function TabLayout() {
 
 
     const generateScreens = () => {
-      // Find the tabs route in the navigation state
       const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
       if (!tabsRoute || !tabsRoute.state || !tabsRoute.state.routes) return null;
     
-      // Get all nested routes inside the tabs route
       const nestedRoutes = tabsRoute.state.routes;
     
-      return nestedRoutes.map(route => {
+      return nestedRoutes.map((route, index) => {
         const isTab = tabNames.includes(route.name);
-    
         const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
-
-        //A header component. 
-        //If the route is not in routeswithcampuspoover, we display the title of the route in the middle of the header.
-        //If the route is in routeswithcampuspoover, we display CampusPopover component in the middle of the header, and a chat icon in the right side of the header.
+    
         const HeaderComponent = () => {
           if (routesWithCampusPopover.includes(route.name)) {
             return (
               <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$6">
                 <XStack flex={1} justifyContent="center" alignItems="center">
-
                   <CampusPopover />
                 </XStack>
                 {isTab && data?.$id && chatIcon()}
               </XStack>
             );
           }
-        
+    
           return (
             <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$8">
               <XStack flex={1} justifyContent="center" alignItems="center">
-              <Button position='absolute' chromeless left={10} onPress={() => {
+                <Button
+                  position="absolute"
+                  chromeless
+                  left={10}
+                  onPress={() => {
                     router.back();
-                  }}>
-                    <ChevronLeft size={25} color={Colors[colorScheme ?? 'light'].text} />
-                  </Button>
+                  }}
+                >
+                  <ChevronLeft size={25} color={Colors[colorScheme ?? 'light'].text} />
+                </Button>
                 <Text key={route.key} fontSize={18} fontWeight={"bold"}>
                   {capitalizeFirstLetter(route.name.split('/')[0])}
                 </Text>
@@ -286,32 +291,32 @@ export default function TabLayout() {
             </XStack>
           );
         };
-
+    
         return (
           <Tabs.Screen
-          key={route.key} // key prop is correctly placed here
-          name={route.name}
-          options={{
-            title: '',
-            tabBarIcon: isTab ? ({ color }: { color: string }) => getIconForRoute(route.name, color) : undefined,
-            href: isTab ? undefined : null,
-            // Render the header component
-            header: () => (
-              <XStack
-                justifyContent="center"
-                alignItems="center"
-                paddingHorizontal={10}
-                paddingVertical={5}
-                width="100%"
-              >
-                <HeaderComponent />
-              </XStack>
-            )
-          }}
-        />
+            key={`${route.key}-${index}`} // Added index to ensure uniqueness
+            name={route.name}
+            options={{
+              title: '',
+              tabBarIcon: isTab ? ({ color }: { color: string }) => getIconForRoute(route.name, color) : undefined,
+              href: isTab ? undefined : null,
+              header: () => (
+                <XStack
+                  justifyContent="center"
+                  alignItems="center"
+                  paddingHorizontal={10}
+                  paddingVertical={5}
+                  width="100%"
+                >
+                  <HeaderComponent />
+                </XStack>
+              ),
+            }}
+          />
         );
       });
     };
+    
     
 
   const getIconForRoute = (routeName: string, color: string) => {
