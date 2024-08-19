@@ -15,7 +15,7 @@ export default function DepartmentsScreen() {
     const router = useRouter();
     useEffect(() => {
         async function fetchDepartments() {
-            const departments = await getDepartments(campus?.$id)
+            const departments = await getDepartments(campus?.$id, true)
             console.log(departments)
             setDepartments(departments)
         }
@@ -30,21 +30,20 @@ export default function DepartmentsScreen() {
             {departments?.documents.map(department => (
                 <Card key={department.$id} width="100%" padding="$3" backgroundColor="$background" borderRadius="$3" bordered onPress={() => router.push(`/explore/units/${department.$id}`)}>
                     <Card.Header>
-                        <YStack>
-                            <XGroup marginRight={10}>
+                            <XGroup space="$3" alignItems="center" justifyContent="center">
+                                {department.logo && (
                                 <Image
                                     source={{ uri: department.logo }}
                                     alt="Department icon"
-                                    width={40}
-                                    height={40}
+                                    width={60}
+                                    height={60}
+                                    borderRadius={10}
                                 />
+                                )}
+                                <H3>{department.Name}</H3>
                             </XGroup>
-                            <H3>{department.Name}</H3>
-                        </YStack>
+
                     </Card.Header>
-                    <Card.Footer>
-                        <Paragraph>{department.description}</Paragraph>
-                    </Card.Footer>
                 </Card>
             ))}
         </MyStack>

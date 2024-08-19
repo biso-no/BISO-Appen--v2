@@ -116,7 +116,7 @@ export default function TabLayout() {
 
 
   //Need to fix this, crashes on Android
-  /*
+  
   useEffect(() => {
     console.log('isExpoGo', isExpoGo);
 
@@ -130,8 +130,9 @@ export default function TabLayout() {
   }
   }, [data?.$id, isExpoGo, isLoading]);
 
+
   useEffect(() => {
-    if (Platform.OS === 'android' && !isExpoGo && data?.$id && !isLoading) {
+    if (data && data.$id && !isLoading && Platform.OS === 'android') {
       setNotificationChannelAsync('Miscellaneous', {
         name: 'Miscellaneous',
         importance: AndroidImportance.HIGH,
@@ -184,7 +185,7 @@ export default function TabLayout() {
     };
   }
   }, []);
-
+  /*
   useEffect(() => {
     if (!isExpoGo && data?.$id && !isLoading) {
     getNotificationCount().then((count) => {

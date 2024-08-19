@@ -117,15 +117,6 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     fetchMemberships();
   }, []);
 
-  if (!membershipOptions) {
-    return <Text>Loading...</Text>;
-  }
-
-  if (!profile) {
-    return null;
-  }
-
-
   
 
   return (

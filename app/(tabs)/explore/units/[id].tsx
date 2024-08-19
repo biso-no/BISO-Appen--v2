@@ -77,8 +77,8 @@ if (!department) {
       <View alignItems="center" marginBottom={20}>
         <TamaguiImage
           source={{ uri: department.logo }}
-          width={100}
-          height={100}
+          width="$15"
+          height="$15"
           resizeMode="contain"
         />
         <Text fontWeight="bold" fontSize={24} marginTop={8}>

@@ -316,7 +316,7 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
     return null;
   };
 
-export async function getDepartments(campusId?: string) {
+export async function getDepartments(campusId?: string, active?: boolean) {
 
     let query = [
         //Select only the values used in the UI
@@ -325,6 +325,10 @@ export async function getDepartments(campusId?: string) {
 
     if (campusId) {
         query.push(Query.equal('campus_id', campusId));
+    }
+
+    if (active) {
+        query.push(Query.notEqual('active', false));
     }
 
     const departments = await databases.listDocuments('app', 'departments', query)
