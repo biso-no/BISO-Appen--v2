@@ -46,10 +46,7 @@ export function MemberAccess() {
             content: (
                 <YStack space="$4">
                     <XStack space="$4">
-                        <Button height={"$5"} onPress={() => navigate("/explore/expenses")} icon={<WalletCards size={20} />}>
-                            <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
-                            <Text fontSize="$4">Expenses</Text>
-                        </Button>
+
                         <Button height={"$5"} onPress={() => push("/explore/elections")} icon={<Vote size={20} />}>
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Elections</Text>

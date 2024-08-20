@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Linking, Image } from 'react-native';
-import { Text, View, Button, Image as TamaguiImage } from 'tamagui';
+import { Text, View, Button, Image as TamaguiImage, YStack, Separator } from 'tamagui';
 import RenderHTML from 'react-native-render-html';
 import { useRoute } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
 import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
+import { useWindowDimensions } from 'react-native';
+import { useTheme } from 'tamagui';
+
 
 // Example data - replace with data fetched from your Appwrite backend
 const department = {
@@ -55,7 +58,14 @@ const DepartmentScreen = () => {
   const searchParams = useLocalSearchParams<{ id: string }>();
   const { id } = searchParams;
 
+  const { width } = useWindowDimensions();
+
   const [department, setDepartment] = useState<Models.Document>();
+
+  const theme = useTheme();
+
+  const textColor = theme?.color?.val;
+
 
   useEffect(() => {
     if (id) {
@@ -71,30 +81,40 @@ if (!department) {
   return <Text>Uh oh, we couldn't find that department. Please try again.</Text>;
 }
 
+const htmlStyles = {
+  body: { 
+    fontSize: 16, 
+    lineHeight: 24, 
+    color: textColor,
+  }, 
+};
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
-      <View alignItems="center" marginBottom={20}>
+      <YStack alignItems="center" marginBottom={20}>
         <TamaguiImage
           source={{ uri: department.logo }}
           width={100}
           height={100}
+          borderRadius={16}
           resizeMode="contain"
         />
         <Text fontWeight="bold" fontSize={24} marginTop={8}>
-          {department.name}
+          {department.Name}
         </Text>
         {department.type && (
         <Text color="gray" fontSize={14} marginBottom={8}>
           {department.type} at {department.campus.name}
         </Text>
         )}
-      </View>
-
-      <RenderHTML 
+        <Separator />
+              <RenderHTML 
       source={{ html: department.description }} 
-      contentWidth={400}
-    />
+      contentWidth={width - 40}
+      tagsStyles={htmlStyles}
+          />  
+      </YStack>
+
 
     {department.news.length > 0 && (
       <View marginTop={16} marginBottom={16}>

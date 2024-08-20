@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { H5, Avatar, XStack, Text, Button } from 'tamagui';
-import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare, ChevronLeft } from '@tamagui/lucide-icons';
+import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare, ChevronLeft, Globe } from '@tamagui/lucide-icons';
 import { setupPushNotifications } from '@/lib/notifications';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
@@ -35,6 +35,7 @@ import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import { PromptOnboarding } from '@/components/prompt-onboarding';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'tamagui/linear-gradient';
+import { usePathname } from 'expo-router';
 
 
 Notifications.setNotificationHandler({
@@ -113,6 +114,8 @@ export default function TabLayout() {
   if (!theme.background) return "#fff"
 
   const backgroundColor = theme.background.val
+
+  const pathname = usePathname();
 
 
   //Need to fix this, crashes on Android
@@ -247,6 +250,27 @@ export default function TabLayout() {
     ? ['index', 'explore/index', 'profile/index']
     : ['index', 'explore/index', 'auth/signIn/index'];
 
+    const isEventRoute = pathname.includes('/explore/events');
+
+
+    const eventIcon = () => {
+      return (
+        <Pressable onPress={() => router.push("https://biso.no/events/")}>
+          {({ pressed}) => (
+                    <MaskedView maskElement={<Globe size={25} color={Colors[colorScheme ?? 'light'].text} />} style={{ width: 25, height: 25 }}>
+                      <LinearGradient
+                          start={[0, 0]}
+                          end={[0, 1]}
+                          themeInverse
+                          theme="accent"
+                          colors={['$color', '$color2']}
+                          style={{ width: 25, height: 25 }}
+                      />
+                    </MaskedView>
+          )}
+        </Pressable>
+      );
+    };
 
     const generateScreens = () => {
       const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
@@ -272,24 +296,30 @@ export default function TabLayout() {
     
           return (
             <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$8">
-              <XStack flex={1} justifyContent="center" alignItems="center">
+              <XStack flex={1} alignItems="center">
                 <Button
-                  position="absolute"
                   chromeless
-                  left={10}
                   onPress={() => {
                     router.back();
                   }}
                 >
                   <ChevronLeft size={25} color={Colors[colorScheme ?? 'light'].text} />
                 </Button>
+              </XStack>
+          
+              <XStack flex={2} justifyContent="center" alignItems="center">
                 <Text key={route.key} fontSize={18} fontWeight={"bold"}>
                   {capitalizeFirstLetter(route.name.split('/')[0])}
                 </Text>
               </XStack>
-              {isTab && data?.$id && chatIcon()}
+          
+              <XStack flex={1} justifyContent="flex-end" alignItems="center">
+                {isTab && data?.$id && chatIcon()}
+                {isEventRoute && eventIcon()}
+              </XStack>
             </XStack>
           );
+          
         };
     
         return (

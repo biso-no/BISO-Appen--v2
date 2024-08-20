@@ -6,9 +6,6 @@ import { useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { databases, getDocuments } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
-import { Text as RNText } from "react-native";
-import { useFonts } from 'expo-font';
-import * as Expo from 'expo';
 import MaskedView from '@react-native-masked-view/masked-view';
 
 export default function CampusPopover() {
@@ -32,40 +29,25 @@ export default function CampusPopover() {
     return (
         <Popover size="$4" open={open}>
             <Popover.Trigger asChild>
-                <Button chromeless onPress={() => setOpen(!open)}>
-                    <XStack alignItems="center">
-                        <MaskedView maskElement={<H4>BISO</H4>} style={{ width: 50, height: 30 }}>
-                            <LinearGradient
-                                start={[0, 0]}
-                                end={[0, 1]}
-                                themeInverse
-                                theme="accent"
-                                colors={['$color', '$color2']}
-                                style={{ width: 50, height: 30 }}
-                            />
-                        </MaskedView>
-                        
-                        <MaskedView maskElement={<H4 color="$color2" themeInverse theme="accent" fontSize={18}>{` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}</H4>} style={{ width: 80, height: 30 }}>
-                            <LinearGradient
-                                start={[0, 0]}
-                                end={[0, 1]}
-                                themeInverse
-                                theme="accent"
-                                colors={['$color', '$color2']}
-                                style={{ width: 80, height: 30 }}
-                            />
-                        </MaskedView>
-                        <MaskedView maskElement={open ? <ChevronUp /> : <ChevronDown />} style={{ width: 20, height: 20 }}>
-                            <LinearGradient
-                                start={[0, 0]}
-                                end={[0, 1]}
-                                themeInverse
-                                theme="accent"
-                                colors={['$color', '$color2']}
-                                style={{ width: 20, height: 20 }}
-                            />
-                        </MaskedView>
-                    </XStack>
+                <Button chromeless onPress={() => setOpen(!open)} style={{ paddingHorizontal: 15, paddingVertical: 5 }}>
+                    <MaskedView
+                        maskElement={
+                            <XStack alignItems="center" justifyContent="center">
+                                <H4>BISO {` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}</H4>
+                                {open ? <ChevronUp /> : <ChevronDown />}
+                            </XStack>
+                        }
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: 180, height: 40 }}
+                    >
+                        <LinearGradient
+                            start={[0, 0]}
+                            end={[0, 1]}
+                            themeInverse
+                            theme="accent"
+                            colors={['$color', '$color2']}
+                            style={{ width: '100%', height: '100%' }}
+                        />
+                    </MaskedView>
                 </Button>
             </Popover.Trigger>
             <Popover.Content
