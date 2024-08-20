@@ -1,8 +1,8 @@
 //A cool, feature-rich product details screen consisting of a list of products, each with a title, description, and price, using tamagui components.
 import { Card, H5, Paragraph, XStack, YStack, Image, Button, H3, Separator, Text, YGroup, ScrollView } from "tamagui";
 import { useEffect, useState } from "react";
-import { Models } from "react-native-appwrite";
-import { getDocument } from "@/lib/appwrite";
+import { Models, Query } from "react-native-appwrite";
+import { databases, getDocument } from "@/lib/appwrite";
 import { useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import RenderHtml from 'react-native-render-html';
@@ -21,7 +21,10 @@ export function ProductDetails({productId}: {productId: string}) {
             return;
         }
       const response = async () => {
-        const response = await getDocument('products', productId);
+        const response = await databases.getDocument('app', 'products', productId, [
+            Query.select(['images', 'name', 'price', 'sale_price', 'description', 'url'])
+        ]);
+        console.log(response);
         setProduct(response);
       }
       response();
@@ -58,8 +61,8 @@ export function ProductDetails({productId}: {productId: string}) {
                 <XStack justifyContent="space-between">
                     <Text fontSize={30} fontWeight={"bold"}>{product.name}</Text>
                     <YGroup space="$2">
-                    <Text fontSize={20}>{product.price !== product.regular_price ? product.price + " kr" : product.regular_price + " kr"}</Text>
-                    {product.regular_price && product.price !== product.regular_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.regular_price !== null ? product.regular_price + " kr" : "Free"}</Text>}
+                    <Text fontSize={20}>{product.price !== product.sale_price ? product.price + " kr" : product.sale_price + " kr"}</Text>
+                    {product.sale_price && product.price !== product.sale_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.regular_price !== null ? product.regular_price + " kr" : "Free"}</Text>}
                     </YGroup>
                 </XStack>
                 </YStack>

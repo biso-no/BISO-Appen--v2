@@ -118,7 +118,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   }, []);
 
   if (!membershipOptions) {
-    return <Text>Loading...</Text>;
+    return;
   }
 
   if (!profile) {
