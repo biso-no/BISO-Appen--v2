@@ -50,8 +50,7 @@ export function Events() {
     if (!events || events.length === 0) {
         return (
             <MyStack justifyContent="center" alignItems="center" space="$2">
-              <Frown size={48} />
-              <H6>No events found</H6>
+              <H6>Stay tuned!</H6>
             </MyStack>
           );
         }

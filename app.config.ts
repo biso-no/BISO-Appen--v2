@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: 'BISO',
   slug: 'BISO',
   owner: 'heien',
-  version: "0.91.7",
+  version: "0.91.8",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
   scheme: 'biso',
@@ -38,7 +38,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.biso.no',
-    versionCode: 47,
+    versionCode: 48,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: "./assets/ic_foreground.png",
@@ -49,6 +49,12 @@ const config: ExpoConfig = {
     bundler: 'metro',
     output: 'static',
     favicon: './assets/images/favicon.png',
+  },
+  updates: {
+    url: 'https://u.expo.dev' + process.env.EAS_PROJECTID,
+  },
+  runtimeVersion: {
+    policy: 'appVersion',
   },
   plugins: [
     'expo-router',

@@ -55,8 +55,7 @@ export function News() {
       if (!news || news.total === 0 || loading) {
         return (
           <MyStack justifyContent="center" alignItems="center" space="$2">
-            <Frown size={48} />
-            <H6>No news available</H6>
+            <H6>Stay tuned!</H6>
           </MyStack>
         );
       }
