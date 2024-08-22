@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases, subScribeToProfile } from '@/lib/appwrite';
 import { Models, RealtimeResponseEvent } from 'react-native-appwrite';
 import { useProfileSubscription } from '@/lib/appwrite';
+import { usePathname } from 'expo-router';
 
 interface Profile extends Models.Document {
   name?: string;
@@ -38,10 +39,8 @@ export interface AuthContextType {
   userDepartment: Models.Document | null;
 }
 
-// Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<Models.User<Models.Preferences> | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -53,21 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userCampus, setUserCampus] = useState<Models.Document | null>(null);
   const [userDepartment, setUserDepartment] = useState<Models.Document | null>(null);
 
-  const profileSubscription = useProfileSubscription({
-    userId: data?.$id || '',
-    callback: (response: RealtimeResponseEvent<unknown>) => {
-      const payload = response.payload as { $collectionId: string; $id: string };
-      if (payload.$collectionId === 'user' && payload.$id === data?.$id) {
-        fetchProfile();
-      }
-    },
-  });
-
-  useEffect(() => {
-    return () => {
-      profileSubscription();
-    };
-  }, []);
+  const pathname = usePathname();
 
   const fetchAccount = useCallback(async () => {
     setIsLoading(true);
@@ -84,48 +69,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const fetchProfile = useCallback(async () => {
-    if (data?.$id) {
-      setIsLoading(true);
-      try {
-        const response = await getDocument('user', data.$id);
-        setProfile(response as Profile);
-        setStudentId(response.student_id);
-        setError(null);
-        setIsLoading(false);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setProfile(null);
-        setIsLoading(false);
-      }
+    if (!data?.$id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await getDocument('user', data.$id);
+      setProfile(response as Profile);
+      setStudentId(response.student_id);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
     }
-    
-  }, [data]);
+  }, [data?.$id]);
 
   const fetchCampus = useCallback(async () => {
-    if (profile?.$id && profile.campus_id) {
-      try {
-        const response = await getDocument('campus', profile.campus_id);
-        setUserCampus(response);
-        setError(null);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setUserCampus(null);
-      }
+    if (!profile?.campus_id) return;
+
+    try {
+      const response = await getDocument('campus', profile.campus_id);
+      setUserCampus(response);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setUserCampus(null);
     }
-  }, [data]);
+  }, [profile?.campus_id]);
 
   const fetchDepartment = useCallback(async () => {
-    if (profile?.$id && profile.departments_id) {
-      try {
-        const response = await getDocument('department', profile.departments_id[0]);
-        setUserDepartment(response);
-        setError(null);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setUserDepartment(null);
-      }
+    if (!profile?.departments_ids?.length) return;
+
+    try {
+      const response = await getDocument('department', profile.departments_ids[0]);
+      setUserDepartment(response);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setUserDepartment(null);
     }
-  }, [data]);
+  }, [profile?.departments_ids]);
+
+  useEffect(() => {
+    fetchAccount();
+  }, [fetchAccount]);
 
   useEffect(() => {
     fetchProfile();
@@ -139,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchDepartment();
   }, [fetchDepartment]);
 
-  const updateProfile = async (profileData: Partial<Profile>) => {
+  const updateProfile = useCallback(async (profileData: Partial<Profile>) => {
     if (!data?.$id) return;
 
     try {
@@ -148,9 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error updating profile:', error);
     }
-  };
+  }, [data?.$id]);
 
-  const updateName = async (name: string) => {
+  const updateName = useCallback(async (name: string) => {
     try {
       const response = await updateUserName(name);
       setData(response);
@@ -158,9 +146,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     }
-  };
+  }, []);
 
-  const updateUserPrefs = async (key: string, value: any) => {
+  const updateUserPrefs = useCallback(async (key: string, value: any) => {
     try {
       const currentPrefs = await getUserPreferences();
       const updatedPrefs = { ...currentPrefs, [key]: value };
@@ -169,13 +157,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: unknown) {
       console.error('Error updating preferences', err);
     }
-  };
+  }, []);
 
-  const addStudentId = async (studentId: string) => {
+  const addStudentId = useCallback(async (studentId: string) => {
     if (!data?.$id) throw new Error('User not found');
 
     try {
-      const newStudentId = await databases.createDocument('app', 'student_id', studentId, { 
+      const newStudentId = await databases.createDocument('app', 'student_id', studentId, {
         student_id: studentId,
       });
       if (newStudentId.$id) {
@@ -187,67 +175,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
       setStudentId(null);
     }
-  };
+  }, [data?.$id]);
+
+  const isOnboardingPath = pathname === '/onboarding';
 
   useEffect(() => {
-    fetchAccount();
-  }, [fetchAccount]);
+    if (!data?.$id || isOnboardingPath) return;
 
-  useEffect(() => {
-    if (data?.$id) {
-      const unsubscribe = subScribeToProfile({
-        profileId: data.$id,
-        studentId: profile?.student_id,
-        callback: (response: RealtimeResponseEvent<Models.Document>) => {
-          const payload = response.payload;
-          if (payload.$collectionId === 'student_id' && payload.$id === profile?.student_id) {
-            setIsBisoMember(payload.isMember);
-          } else if (payload.$collectionId === 'user' && payload.$id === data.$id) {
-            fetchProfile();
-          }
-        },
-      });
-      return () => {
-        unsubscribe();
-      };
-    }
-  }, [data?.$id, profile?.studentId]);
+    const unsubscribe = subScribeToProfile({
+      profileId: data.$id,
+      studentId: profile?.student_id,
+      callback: (response: RealtimeResponseEvent<Models.Document>) => {
+        const payload = response.payload;
+        if (payload.$collectionId === 'student_id' && payload.$id === profile?.student_id) {
+          setIsBisoMember(payload.isMember);
+        } else if (payload.$collectionId === 'user' && payload.$id === data.$id) {
+          fetchProfile();
+        }
+      },
+    });
+    return () => unsubscribe();
+  }, [data?.$id, profile?.student_id, fetchProfile]);
 
   useEffect(() => {
     if (profile?.studentId) {
-      const studentIdDoc = profile.studentId
-      setIsBisoMember(studentIdDoc.isMember || false);
+      setIsBisoMember(profile.studentId.isMember || false);
     }
-  }, [profile]);
+  }, [profile?.studentId]);
 
-  const refetchUser = fetchAccount;
+  const refetchUser = useCallback(fetchAccount, [fetchAccount]);
+
+  const contextValue = useMemo(() => ({
+    data,
+    profile,
+    isLoading,
+    setIsLoading,
+    error,
+    updateName,
+    updateUserPrefs,
+    refetchUser,
+    membershipExpiry,
+    isBisoMember,
+    setMembershipExpiry,
+    setIsBisoMember,
+    studentId,
+    addStudentId,
+    updateProfile,
+    userCampus,
+    userDepartment,
+  }), [
+    data, profile, isLoading, error, membershipExpiry, isBisoMember, studentId,
+    userCampus, userDepartment, refetchUser, updateName, updateUserPrefs, updateProfile, addStudentId
+  ]);
 
   return (
-    <AuthContext.Provider value={{
-      data,
-      profile,
-      isLoading,
-      setIsLoading,
-      error,
-      updateName,
-      updateUserPrefs,
-      refetchUser,
-      membershipExpiry,
-      isBisoMember,
-      setMembershipExpiry,
-      setIsBisoMember,
-      studentId,
-      addStudentId,
-      updateProfile,
-      userCampus,
-      userDepartment
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
