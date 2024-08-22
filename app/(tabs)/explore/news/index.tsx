@@ -44,9 +44,7 @@ export default function NewsScreen() {
                     <Card
                         key={index}
                         chromeless
-                        bordered
-
-                        onPress={() => window.open(news.url)}
+                        onPress={() => router.push(`/explore/news/${news.$id}`)}
                     >
                         <Card.Header>
                             <Image

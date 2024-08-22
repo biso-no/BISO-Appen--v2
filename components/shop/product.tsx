@@ -6,12 +6,15 @@ import { databases, getDocument } from "@/lib/appwrite";
 import { useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import RenderHtml from 'react-native-render-html';
+import { useTheme } from "tamagui";
 
 
 export function ProductDetails({productId}: {productId: string}) {
     const [product, setProduct] = useState<Models.Document>();
     const router = useRouter();
     const { width } = useWindowDimensions();
+    const theme = useTheme();
+    const textColor = theme?.color?.val;
     useEffect(() => {
         console.log(productId);
       }, [productId]);
@@ -30,6 +33,14 @@ export function ProductDetails({productId}: {productId: string}) {
       response();
     },
     [productId]);
+
+    const htmlStyles = {
+      body: { 
+        fontSize: 16, 
+        lineHeight: 24, 
+        color: textColor,
+      },    
+    };
 
     return (
         <ScrollView>
@@ -76,6 +87,7 @@ export function ProductDetails({productId}: {productId: string}) {
                     <RenderHtml 
                     source={{ html: product?.description }} 
                     contentWidth={width - 40}
+                    tagsStyles={htmlStyles}
                 />
                 </YStack>
             </YStack>

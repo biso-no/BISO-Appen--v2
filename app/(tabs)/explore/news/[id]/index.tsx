@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Button, Card, View, Image, H6, Paragraph, YStack, XStack, Text } from "tamagui";
+import { Button, Card, View, Image, H6, Paragraph, YStack, XStack, Text, ScrollView } from "tamagui";
 import { MotiView } from 'moti';
 import { databases, getDocument, getNews } from "@/lib/appwrite";
 import { useRouter } from "expo-router";
@@ -11,6 +11,7 @@ import { MyStack } from "@/components/ui/MyStack";
 import { RenderHTML } from 'react-native-render-html';
 import { useWindowDimensions } from "react-native";
 import { useCampus } from "@/lib/hooks/useCampus";
+import { useTheme } from "tamagui";
 
 export default function NewsScreen() {
     const params = useLocalSearchParams();
@@ -20,12 +21,13 @@ export default function NewsScreen() {
 
     const [post, setPost] = useState<Models.Document>();
     const router = useRouter();
-
+    const theme = useTheme();
+    const textColor = theme?.color?.val;
     const { width } = useWindowDimensions();
 
     useEffect(() => {
         databases.getDocument('app', 'news', id as string, [
-            Query.select(['title', 'content', 'image', 'campus_id', 'department_id', '$createdAt', '$id']),
+            Query.select(['title', 'content', 'image', 'campus_id', 'department_id', '$createdAt', '$id', 'url']),
         ]).then(
             (data) => setPost(data),
             (error) => console.log(error)
@@ -56,22 +58,18 @@ export default function NewsScreen() {
     body: { 
       fontSize: 16, 
       lineHeight: 24, 
-      color: '$color', 
+      color: textColor, 
     }, 
   };
 
     return (
-        <View>
+        <ScrollView>
+        <YStack space="$4" padding="$4">
             <MotiView
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
             >
-                <Card
-                    chromeless
-                    width={400}
-                >
-                    <Card.Header>
                         <Image
                             source={{ uri: post.image}}
                             alt="image"
@@ -79,8 +77,6 @@ export default function NewsScreen() {
                             width="100%"
                             borderRadius="$10"
                         />
-                    </Card.Header>
-                    <Card.Footer justifyContent="center">
                         <YStack space="$1">
                         <H6>{post.title}</H6>
                             <XStack justifyContent="space-between"> 
@@ -92,10 +88,12 @@ export default function NewsScreen() {
                             contentWidth={width - 40} 
                             tagsStyles={style}
                             />
+                            {post.url && (
+                            <Button onPress={() => window.open(post.url)}>View on BISO.no</Button>
+                            )}
                         </YStack>
-                    </Card.Footer>
-                </Card>
             </MotiView>
-        </View>
+        </YStack>
+        </ScrollView>
     );
 }

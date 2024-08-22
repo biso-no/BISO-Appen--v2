@@ -28,7 +28,7 @@ export function News() {
             ];
 
             if (campus?.$id) {
-                query.push(Query.equal('campus_id', campus.$id));
+                query.push(Query.equal('campus_id', [campus.$id, '5']));
             }
 
             const fetchedNews = await databases.listDocuments('app', 'news', query);

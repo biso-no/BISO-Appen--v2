@@ -89,7 +89,6 @@ export function FeaturedPostsCarousel() {
   return (
     <XStack
       overflow="hidden"
-      backgroundColor="#000"
       position="relative"
       height={200}
       width="100%"
@@ -99,13 +98,13 @@ export function FeaturedPostsCarousel() {
       <AnimatePresence initial={false} custom={{ going }}>
         <GalleryItem key={page} animation="slow" going={going} onPress={() => router.push(`/explore/news/${currentPost.$id}`)}>
           <Image source={{ uri: currentPost.image, width: 820, height: 200 }} />
-          <Text color="#fff" fontSize={18} fontWeight="bold">
+          <Text fontSize={18} fontWeight="bold">
             {currentPost.title}
           </Text>
-          <Text color="#fff" fontSize={16}>
+          <Text fontSize={16}>
             {currentPost.campus}
           </Text>
-          <Text color="#fff" fontSize={14}>
+          <Text fontSize={14}>
             {currentPost.department}
           </Text>
         </GalleryItem>
@@ -114,6 +113,7 @@ export function FeaturedPostsCarousel() {
         accessibilityLabel="Carousel left"
         icon={ArrowLeft}
         size="$5"
+        opacity={0.5}
         position="absolute"
         left="$4"
         circular
@@ -127,6 +127,7 @@ export function FeaturedPostsCarousel() {
         size="$5"
         position="absolute"
         right="$4"
+        opacity={0.5}
         circular
         elevate
         onPress={() => paginate(1)}

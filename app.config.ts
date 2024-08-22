@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: 'BISO',
   slug: 'BISO',
   owner: 'heien',
-  version: "0.91.8",
+  version: "0.91.9",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
   scheme: 'biso',
@@ -38,7 +38,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.biso.no',
-    versionCode: 48,
+    versionCode: 49,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: "./assets/ic_foreground.png",
@@ -79,6 +79,7 @@ const config: ExpoConfig = {
         android: {
           compileSdkVersion: 34,
           targetSdkVersion: 34,
+          minSdkVersion: 34,
           buildToolsVersion: "34.0.0"
         },
       }],

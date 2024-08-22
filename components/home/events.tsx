@@ -28,7 +28,7 @@ export function Events() {
             ];
 
             if (campus?.$id) {
-                query.push(Query.equal('campus_id', campus.$id));
+                query.push(Query.equal('campus_id', [campus.$id, '5']));
             }
 
             const fetchedEvents = await databases.listDocuments('app', 'event', query);
