@@ -39,6 +39,31 @@ type Theme = {
 
 }
 
+/**
+ * Transforms an array of tuples into a record mapping keys to values.
+ *
+ * This function takes an array of tuples, where each tuple contains two elements:
+ * an index for a key and an index for a value. It uses these indices to look up
+ * corresponding strings from predefined key and value arrays, and constructs a 
+ * record (object) that maps the keys to their respective values.
+ *
+ * @param a - An array of tuples, where each tuple is an array containing two numbers.
+ *            The first number represents the index of the key in the `ks` array,
+ *            and the second number represents the index of the value in the `vs` array.
+ *
+ * @returns A record (object) where each key is a string from the `ks` array and 
+ *          each value is a string from the `vs` array, corresponding to the indices 
+ *          provided in the input array.
+ *
+ * @throws {TypeError} If the input is not an array of tuples or if the indices 
+ *                     exceed the bounds of the `ks` or `vs` arrays.
+ *
+ * @example
+ * const input = [[0, 1], [1, 2]];
+ * const result = t(input);
+ * // Assuming ks = ['key1', 'key2'] and vs = ['value1', 'value2', 'value3'],
+ * // result will be: { key1: 'value2', key2: 'value3' }
+ */
 function t(a: [number, number][]) {
   let res: Record<string,string> = {}
   for (const [ki, vi] of a) {

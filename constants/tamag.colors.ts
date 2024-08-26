@@ -165,6 +165,22 @@ import {
     const isLight = name === 'light'
     const inverseName = isLight ? 'dark' : 'light'
     const inverseTheme = baseThemes[inverseName]
+    /**
+     * Converts an HSL color string to an HSLA color string by adding an opacity value.
+     *
+     * This function takes a string representing an HSL color and an optional opacity value,
+     * and returns the corresponding HSLA color string with the specified opacity.
+     *
+     * @param {string} hsl - The HSL color string to be converted. It should be in the format "hsl(hue, saturation%, lightness%)".
+     * @param {number} [opacity=0] - The opacity value to be applied to the HSLA color. It should be a number between 0 (fully transparent) and 1 (fully opaque). Defaults to 0.
+     * @returns {string} The converted HSLA color string with the specified opacity.
+     *
+     * @example
+     * // Returns "hsla(120, 100%, 50%, 0.5)"
+     * transparent("hsl(120, 100%, 50%)", 0.5);
+     *
+     * @throws {Error} Throws an error if the input HSL string is not in the correct format.
+     */
     const transparent = (hsl: string, opacity = 0) =>
       hsl.replace(`%)`, `%, ${opacity})`).replace(`hsl(`, `hsla(`)
   
@@ -232,6 +248,34 @@ import {
       ...allColorThemes,
     }
   
+    /**
+     * Generates alternative themes based on the provided sub-themes and an optional active theme.
+     *
+     * This function applies a series of masks to the specified theme and its alternatives, 
+     * allowing for customization of visual elements in a user interface. The resulting themes 
+     * can be used to create variations in appearance, particularly for components that require 
+     * different visual states.
+     *
+     * @param {SubTheme} theme - The primary sub-theme to be used as a base for generating alternatives.
+     * @param {SubTheme} inverse - The sub-theme that serves as a contrasting option.
+     * @param {SubTheme} [activeTheme] - An optional active sub-theme. If not provided, a default 
+     *                                    active theme will be generated based on the primary theme.
+     * 
+     * @returns {Object} An object containing the generated alternative themes and the active theme.
+     *                   The structure includes:
+     *                   - alt1: The first alternative theme generated.
+     *                   - alt2: The second alternative theme generated.
+     *                   - active: The currently active theme, which may be the provided activeTheme 
+     *                             or a newly created one based on the primary theme.
+     *
+     * @throws {Error} Throws an error if the theme or inverse parameters are invalid or if 
+     *                 the mask application fails.
+     *
+     * @example
+     * const themes = getAltThemes(primaryTheme, secondaryTheme);
+     * console.log(themes.alt1); // Outputs the first alternative theme
+     * console.log(themes.active); // Outputs the active theme
+     */
     function getAltThemes(theme: SubTheme, inverse: SubTheme, activeTheme?: SubTheme) {
       const maskOptionsAlt = {
         ...maskOptions,
@@ -250,6 +294,38 @@ import {
       })
     }
   
+    /**
+     * Generates a set of component themes based on the provided theme and inverse theme.
+     *
+     * This function applies various masks to the input themes to create a set of themed components
+     * that can be used in a UI. The resulting themes are tailored for different components such as
+     * Card, Button, Checkbox, and others, ensuring consistent styling across the application.
+     *
+     * @param {SubTheme} theme - The primary theme to be used as a base for generating component themes.
+     * @param {SubTheme} inverse - The inverse theme that will be used to create contrasting styles for components.
+     * 
+     * @returns {Object} An object containing themed styles for various components:
+     * - Card
+     * - Button
+     * - Checkbox
+     * - DrawerFrame
+     * - SliderTrack
+     * - SliderTrackActive
+     * - SliderThumb
+     * - Progress
+     * - ProgressIndicator
+     * - Switch
+     * - SwitchThumb
+     * - TooltipArrow
+     * - TooltipContent
+     * - Input
+     * - TextArea
+     * - Tooltip
+     *
+     * @throws {Error} Throws an error if the input themes are not valid SubTheme objects.
+     *
+     * @example
+     * const primaryTheme = { /* primary theme properties */
     function getComponentThemes(theme: SubTheme, inverse: SubTheme) {
       const weaker1 = applyMask(theme, masks.weaker, maskOptions)
       const weaker2 = applyMask(weaker1, masks.weaker, maskOptions)
