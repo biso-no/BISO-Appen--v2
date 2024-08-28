@@ -14,7 +14,7 @@ export default function ExploreScreen() {
 
     const { height, width } = useWindowDimensions();
     const { openModal } = useModal();
-    const { data } = useAuth();
+    const { data, isBisoMember } = useAuth();
     return (
         <YStack minHeight={height - 100} justifyContent="center" alignItems="center">
         <ScrollView space="$4">
@@ -29,7 +29,7 @@ export default function ExploreScreen() {
                             <Text fontSize="$4">Events</Text>
                         </Button>
                     </XStack>
-                    {data?.$id && (
+                    {data?.$id && isBisoMember && (
                     <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/expenses")} size="$4" width="$12" icon={<WalletCards size={20} />} marginTop="$4">
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Expenses</Text>
@@ -37,7 +37,9 @@ export default function ExploreScreen() {
                     )}
                 </YGroup.Item>
                 </YGroup>
+                {/*
                 <MemberAccess />
+                */}
                 <UsefulLinks />
 
             </ScrollView>

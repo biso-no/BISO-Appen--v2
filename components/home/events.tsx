@@ -9,6 +9,7 @@ import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { useRouter } from "expo-router";
 import { useWindowDimensions } from "react-native";
+import { mapCampus } from "@/lib/utils/map-campus";
 export function Events() {
     const { width } = useWindowDimensions();
 
@@ -23,7 +24,7 @@ export function Events() {
 
             let query = [
                 //Select only the values used in the UI
-                Query.select(['title', 'short_description', 'image', '$createdAt', '$id', 'department_id', 'campus_id']),
+                Query.select(['title', 'short_description', 'image', 'event_date', '$id', 'campus_id', 'url', 'description']),
                 Query.limit(25),
             ];
 
@@ -54,6 +55,7 @@ export function Events() {
             </MyStack>
           );
         }
+        
 
     return (
         <YStack space="$4" justifyContent="center" alignItems="center">
@@ -78,7 +80,7 @@ export function Events() {
                             />
                             ) : (
                                 <Image
-                                    source={{ uri: require('@/assets/images/placeholder.png') }}
+                                    source={{ uri: require('@/assets/logo-dark.png') }}
                                     alt="image"
                                     height={120}
                                     borderRadius="$2"
@@ -88,7 +90,7 @@ export function Events() {
                         <Card.Footer>
                         <YStack space="$1">
                             <XStack justifyContent="space-between">
-                            <Paragraph>{capitalizeFirstLetter(event.campus_id)}</Paragraph>
+                            <Paragraph>{capitalizeFirstLetter(mapCampus(event.campus_id))}</Paragraph>
 
                             </XStack>
                             <H6>{event.title}</H6>

@@ -1,20 +1,25 @@
 import {
   View, H1, H3, Button, XStack, Card, Tabs, SizableText,
   Separator, H5, TabsContentProps, YGroup, Label, Input,
-  ScrollView, YStack, XGroup
+  ScrollView, YStack, XGroup,
+  Text, Select,
+  H6
 } from 'tamagui';
 import { useMedia } from 'tamagui';
 import { useAuth } from '@/components/context/auth-provider';
 import { router, useRouter } from 'expo-router';
-import { updateDocument, signOut, signInWithBI } from '@/lib/appwrite';
+import { updateDocument, signOut, signInWithBI, databases } from '@/lib/appwrite';
 import { useEffect, useState, useCallback } from 'react';
 import { ExpenseList } from "@/components/tools/expenses/expense-list";
-import { Models } from 'react-native-appwrite';
+import { ID, Models, Query } from 'react-native-appwrite';
 import { MyStack } from '@/components/ui/MyStack';
 import * as WebBrowser from 'expo-web-browser';
 import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { ProfileCard } from '@/components/profile/profile-card';
+import { Accordion } from '@/components/ui/accordion';
+import { useCampus } from '@/lib/hooks/useCampus';
+import { MySheet } from '@/components/ui/sheet';
 
 WebBrowser.maybeCompleteAuthSession();
 type Notifications = {
@@ -37,6 +42,13 @@ export default function ProfileScreen() {
   const initialDepartments = profile?.department_ids ?? [];
   const [departments, setDepartments] = useState<Models.Document[]>(initialDepartments);
   const [hasProfile, setHasProfile] = useState(false);
+  const [followingUnits, setFollowingUnits] = useState<Models.Document[]>([]);
+  const [currentCampus, setCurrentCampus] = useState<string>(profile?.campus_id ?? '1');
+  const [followingUnitsLoading, setFollowingUnitsLoading] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [campuses, setCampuses] = useState<Models.Document[]>([]);
+
+  const { campus } = useCampus();
 
 
 
@@ -52,6 +64,22 @@ export default function ProfileScreen() {
       updateProfile(response);
     }
   };
+
+  const listFollowingUnits = async () => {
+    if (!profile?.$id) {
+      return;
+    }
+    setFollowingUnitsLoading(true);
+    const response = await databases.listDocuments('app', 'followed_units', [
+      Query.equal('user_id', profile.$id),
+    ]);
+    setFollowingUnits(response.documents);
+    setFollowingUnitsLoading(false);
+  };
+
+  useEffect(() => {
+    listFollowingUnits();
+  }, [campus, profile?.$id]);
 
   const removeDepartment = async (selectedDepartment: Models.Document) => {
     if (!profile) {
@@ -76,11 +104,62 @@ export default function ProfileScreen() {
     }
   };
 
+
+
+  const handleUpdateFollowingUnit = async (selectedUnit: Models.Document) => {
+    if (!profile) return;
+
+    const unitExists = followingUnits.some((unit) => unit.$id === selectedUnit.$id);
+
+    const newUnits = unitExists
+      ? followingUnits.filter((unit) => unit.$id !== selectedUnit.$id)
+      : [...followingUnits, selectedUnit];
+
+    setFollowingUnits(newUnits);
+        // First, check if the document exists
+        const existingDocument = await databases.listDocuments('app', 'followed_units', [
+            Query.equal('user_id', profile.$id),
+            ]
+            );
+        
+        if (existingDocument.total > 0) {
+        const updateResponse = await databases.updateDocument('app', 'followed_units', profile.$id, {
+            user_id: profile.$id,
+            department_ids: newUnits.map((u) => u.$id),
+        });
+
+        if (updateResponse) {
+            setFollowingUnits(newUnits);
+        }
+        } else {
+        const createResponse = await databases.createDocument('app', 'followed_units', profile.$id, {
+            user_id: profile.$id,
+            department_ids: newUnits.map((u) => u.$id),
+        });
+        if (createResponse) {
+            setFollowingUnits(newUnits);
+        }
+        }
+        };
+
+
+
+
   useEffect(() => {
     if (profile) {
       setHasProfile(true);
     }
   }, [profile]);
+
+  useEffect(() => {
+    async function fetchCampuses() {
+      const response = await databases.listDocuments('app', 'campuses', [
+        Query.select(['name', '$id']),
+      ]);
+      setCampuses(response.documents);
+    }
+    fetchCampuses();
+  }, []);
 
   if (!data) {
     return null;
@@ -103,6 +182,8 @@ export default function ProfileScreen() {
   if (isLoading) {
     return null;
   }
+
+
 
   return (
     <ScrollView>
@@ -168,17 +249,47 @@ export default function ProfileScreen() {
               <Separator />
               <H3>Departments</H3>
               <YStack space="$2" width="100%">
-                <DepartmentSelector
-                  campus={profile?.campus_id}
-                  onSelect={handleUpdateDepartment}
-                  selectedDepartments={departments}
-                  multiSelect
-                />
+                <Accordion items={[
+                  {
+                    title: (
+                      <Text fontSize="$4" fontWeight="bold">Follow units</Text>
+                    ),
+                    content: (
+                      <DepartmentSelector
+                        campus={campus?.$id}
+                        onSelect={handleUpdateFollowingUnit}
+                        selectedDepartments={followingUnits}
+                        multiSelect
+                      />
+                    ),
+                    collapsible: true,
+                    defaultOpen: true,
+                    value: 'departments',
+                  },
+                  {
+                    title: (
+                      <Text fontSize="$4" fontWeight="bold">Reimbursement units</Text>
+                    ),
+                    content: (
+                      <DepartmentSelector
+                        campus={profile?.campus_id}
+                        onSelect={handleUpdateDepartment}
+                        selectedDepartments={departments}
+                        multiSelect
+                      />
+                    ),
+                    collapsible: true,
+                    defaultOpen: false,
+                    value: 'followingUnits',
+                  }
+                ]
+              } />
               </YStack>
             </MyStack>
           </TabsContent>
         </Tabs>
       </MyStack>
+
     </ScrollView>
   );
 }

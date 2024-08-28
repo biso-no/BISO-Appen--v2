@@ -8,11 +8,15 @@ import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
 import { Frown } from "@tamagui/lucide-icons";
+import RenderHTML from "react-native-render-html";
+import { useWindowDimensions } from "react-native";
 
 
 
 export default function EventsScreen() {
     const params = useLocalSearchParams();
+
+    const { width } = useWindowDimensions();
 
     const { id } = params;
     const router = useRouter();
@@ -76,7 +80,12 @@ export default function EventsScreen() {
                 {event.description && (
                     <YStack space="$3">
                         <H6>Description</H6>
-                        <Paragraph>{event.description}</Paragraph>
+                        <RenderHTML
+                            source={{
+                                html: event.description,
+                            }}
+                            contentWidth={width - 40}
+                            />
                     </YStack>
                 )}
             </MotiView>
