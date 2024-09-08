@@ -18,6 +18,10 @@ export function ProfileCard() {
         setAnimate(!animate);
     }
 
+    useEffect(() => {
+        console.log("Student ID:", studentId);
+    }, [studentId]);
+
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
     const { openModal } = useModal();

@@ -1,11 +1,10 @@
-import { useEffect, useState, Dispatch, SetStateAction } from 'react';
+import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { databases, triggerFunction } from '@/lib/appwrite';
 import { Sheet } from '@tamagui/sheet';
-import { Models, Query, RealtimeResponseEvent } from 'react-native-appwrite';
-import { Button, H2, XStack, YStack, Input, Label, RadioGroup, Image, Text } from 'tamagui';
+import { Models, Query } from 'react-native-appwrite';
+import { Button, H2, XStack, YStack, Label, RadioGroup, Image, Text } from 'tamagui';
 import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useSubscription } from '@/lib/subscription';
 import { useAuth } from '@/components/context/auth-provider';
 
 const paymentMethods = [
@@ -23,48 +22,55 @@ interface ApiResponse {
   };
 }
 
-type SnapPointsMode = 'percent' | 'constant' | 'fit' | 'mixed';
-
 interface MembershipModalProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
-  const [position, setPosition] = useState(0);
-  const [modal, setModal] = useState(true);
   const [selectedMembership, setSelectedMembership] = useState<Models.Document | undefined>();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [membershipOptions, setMembershipOptions] = useState<Models.DocumentList<Models.Document>>();
-  const [snapPointsMode, setSnapPointsMode] = useState<SnapPointsMode>('percent');
   const [isLoading, setIsLoading] = useState(false);
-  const [shouldSubscribe, setShouldSubscribe] = useState(false);
-  const snapPoints = snapPointsMode === 'percent' ? [85, 50, 25] : ['80%', 256, 190];
-  const timeoutDuration = 15000; // 1 minute
-  const [buttonTitle, setButtonTitle] = useState('Buy BISO membership');
+  const [error, setError] = useState<string | null>(null);
 
   const pathName = usePathname();
-  const { data, profile, isBisoMember } = useAuth();
+  const { isBisoMember } = useAuth();
 
   useEffect(() => {
     if (isBisoMember === true) {
       setOpen(false);
     }
-  }, [isBisoMember]);
+  }, [isBisoMember, setOpen]);
+
+  useEffect(() => {
+    const fetchMemberships = async () => {
+      try {
+        const response = await databases.listDocuments('app', 'memberships', [
+          Query.select(['membership_id', 'price', 'name', '$id']),
+        ]);
+        setMembershipOptions(response);
+      } catch (error) {
+        console.error("Error fetching memberships:", error);
+        setError("Failed to load membership options. Please try again later.");
+      }
+    };
+    fetchMemberships();
+  }, []);
 
   const initiatePurchase = async () => {
-    setIsLoading(true);
     if (!selectedMembership) {
-      console.error("No membership selected");
-      setIsLoading(false);
+      setError("Please select a membership.");
       return;
     }
 
     if (!selectedPaymentMethod) {
-      console.error("No payment method selected");
-      setIsLoading(false);
+      setError("Please select a payment method.");
       return;
     }
+
+    setIsLoading(true);
+    setError(null);
 
     const body = {
       amount: selectedMembership.price,
@@ -83,62 +89,41 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
       });
 
       if (execution.responseBody) {
-        console.log("Response Body:", execution);
         const responseBody = JSON.parse(execution.responseBody) as ApiResponse;
-        console.log("Response Body:", responseBody.checkout.data);
         const url = responseBody.checkout.data.redirectUrl;
-        let result = await WebBrowser.openAuthSessionAsync(url, '/profile');
-        console.log("Result:", result);
-
+        
+        // Open the URL and wait for the result
+        const result = await WebBrowser.openAuthSessionAsync(url, '/profile');
+        
         if (result.type === 'success') {
-          console.log("Successfully opened the URL");
-        } else if (result.type === 'dismiss') {
-          console.log("User dismissed the URL");
-          setIsLoading(false);
-          setShouldSubscribe(true); // Start listening for changes after dismissal
+          // Handle successful purchase
+          console.log("Purchase successful");
+          setOpen(false);
+        } else {
+          // Handle cancelled or failed purchase
+          setError("Purchase was not completed. Please try again.");
         }
       }
     } catch (error) {
       console.error("Error during purchase initiation", error);
+      setError("An error occurred while processing your purchase. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchMemberships = async () => {
-      const response = await databases.listDocuments('app', 'memberships', [
-        Query.select(['membership_id', 'price', 'name', '$id']),
-      ]);
-
-      if (response.documents) {
-        setMembershipOptions(response);
-      }
-    };
-    fetchMemberships();
-  }, []);
-
   if (!membershipOptions) {
-    return;
-  }
-
-  if (!profile) {
     return null;
   }
-
-
-  
 
   return (
     <Sheet
       forceRemoveScrollEnabled={open}
-      modal={modal}
+      modal={true}
       open={open}
       onOpenChange={setOpen}
-      snapPoints={snapPoints}
-      snapPointsMode={snapPointsMode}
+      snapPoints={[85]}
       dismissOnSnapToBottom
-      position={position}
-      onPositionChange={setPosition}
       zIndex={100_000}
       animation="medium"
     >
@@ -151,13 +136,12 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
           name="membership"
           onValueChange={(value) => {
             const membership = membershipOptions?.documents?.find((option) => option.membership_id === value);
-            console.log("Selected Membership:", membership);
             setSelectedMembership(membership);
           }}
         >
           <YStack width={300} alignItems="center" space="$2">
             {membershipOptions?.documents?.map((option) => {
-              const label = option.name + ' - ' + option.price + ' kr';
+              const label = `${option.name} - ${option.price} kr`;
               return (
                 <RadioGroupItemWithLabel key={option.$id} size="$5" value={option.membership_id} label={label} />
               );
@@ -169,10 +153,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         <RadioGroup
           aria-labelledby="Select a payment method"
           name="paymentMethod"
-          onValueChange={(value) => {
-            console.log("Selected Payment Method:", value);
-            setSelectedPaymentMethod(value);
-          }}
+          onValueChange={setSelectedPaymentMethod}
         >
           <YStack width={300} alignItems="center" space="$2">
             {paymentMethods.map((method) => (
@@ -180,24 +161,29 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
             ))}
           </YStack>
         </RadioGroup>
-        <Button onPress={initiatePurchase} disabled={isLoading} chromeless>
-          <Image source={require('@/assets/images/vipps2.png')} />
+        
+        {error && <Text color="$red10">{error}</Text>}
+        
+        <Button 
+          onPress={initiatePurchase} 
+          disabled={isLoading || !selectedMembership || !selectedPaymentMethod}
+        >
+          {isLoading ? 'Processing...' : 'Buy BISO membership'}
         </Button>
       </Sheet.Frame>
     </Sheet>
   );
 };
 
-function RadioGroupItemWithLabel(props: { size: string; value: string; label: string }) {
-  const id = `radiogroup-${props.value}`;
-
+function RadioGroupItemWithLabel({ size, value, label }: { size: string; value: string; label: string }) {
+  const id = `radiogroup-${value}`;
   return (
     <XStack width={300} alignItems="center" space="$4">
-      <RadioGroup.Item value={props.value} id={id} size={props.size}>
+      <RadioGroup.Item value={value} id={id} size={size}>
         <RadioGroup.Indicator />
       </RadioGroup.Item>
-      <Label size={props.size} htmlFor={id}>
-        {props.label}
+      <Label size={size} htmlFor={id}>
+        {label}
       </Label>
     </XStack>
   );

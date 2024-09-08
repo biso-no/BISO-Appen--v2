@@ -16,7 +16,6 @@ export default function LoginScreen() {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
   const [userId, setUserId] = useState('');
-  const [codes, setCodes] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [errorMessages, setErrorMessages] = useState<string[]>();
 
   const { refetchUser, profile, data } = useAuth();
@@ -37,15 +36,14 @@ export default function LoginScreen() {
     setStep(0);
   }
 
-  const handleOtpSubmit = async () => {
-    const otp = codes?.join("");
-    if (!otp) {
+  const handleOtpSubmit = async (code: string) => {
+    if (!code) {
       setErrorMessages(["Please enter a valid OTP."]);
       return;
     }
   
     try {
-      const response = await verifyOtp(userId, otp);
+      const response = await verifyOtp(userId, code);
       if (response) {
         console.log("User successfully verified");
         push('/')
@@ -58,26 +56,6 @@ export default function LoginScreen() {
       setErrorMessages(["An unexpected error occurred. Please try again."]);
     }
   };
-
-
-  const onChangeCode = (text: string, index: number) => {
-    if (text.length > 1) {
-      // If user pastes the OTP
-      const newCodes = text.split("").slice(0, OTP_LENGTH);
-      setCodes(newCodes);
-      refs[OTP_LENGTH - 1]?.current?.focus();
-      return;
-    }
-  
-    const newCodes = [...codes];
-    newCodes[index] = text;
-    setCodes(newCodes);
-  
-    if (text !== "" && index < OTP_LENGTH - 1) {
-      refs[index + 1]?.current?.focus();
-    }
-  };
-  
 
   return (
     <MyStack flex={1} justifyContent="center" alignItems="center" padding="$4">
@@ -110,16 +88,12 @@ export default function LoginScreen() {
                 <YStack space="$4" maxWidth="100%">
             <Text fontSize="$4" marginBottom="$2">An email has been sent to {email}</Text>
             <OTP 
-            onChangeCode={onChangeCode}
-            codes={codes!}
-            refs={refs}
-            errorMessages={errorMessages}
+            onComplete={handleOtpSubmit} length={6}
              />
              <XGroup justifyContent='center' space="$4">
              <Button onPress={handleGoBack}>
               Back
              </Button>
-            <Button onPress={handleOtpSubmit}>Sign in</Button>
             </XGroup>
           </YStack>
           </MotiView>

@@ -289,7 +289,7 @@ export default function TabLayout() {
                 <XStack flex={1} justifyContent="center" alignItems="center">
                   <CampusPopover />
                 </XStack>
-                {isTab && data?.$id && chatIcon()}
+                {/* {isTab && data?.$id && chatIcon()} */}
               </XStack>
             );
           }
@@ -314,7 +314,7 @@ export default function TabLayout() {
               </XStack>
           
               <XStack flex={1} justifyContent="flex-end" alignItems="center">
-                {isTab && data?.$id && chatIcon()}
+               {/* {isTab && data?.$id && chatIcon()} */}
                 {isEventRoute && eventIcon()}
               </XStack>
             </XStack>
@@ -337,6 +337,7 @@ export default function TabLayout() {
                   paddingHorizontal={10}
                   paddingVertical={5}
                   width="100%"
+                  marginTop
                 >
                   <HeaderComponent />
                 </XStack>

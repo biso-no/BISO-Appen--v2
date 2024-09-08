@@ -1,60 +1,58 @@
-import { useState, type RefObject } from "react";
-import { TextInput, StyleSheet, Platform } from "react-native";
-import { Input, View } from "tamagui";
+import React, { useState, useRef, useCallback } from 'react'
+import { TextInput } from 'react-native'
+import { Input, XStack, getTokens, useTheme } from 'tamagui'
 
 interface OTPInputProps {
-  codes: string[];
-  refs: RefObject<TextInput>[];
-  errorMessages: string[] | undefined;
-  onChangeCode: (text: string, index: number) => void;
-  length?: number;
+  length?: number
+  onComplete?: (code: string) => void
 }
 
-interface OTPInputConfig {
-  backgroundColor: string;
-  textColor: string;
-  borderColor: string;
-  errorColor: string;
-  focusColor: string;
-}
+export const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
+  const [otp, setOTP] = useState<string[]>(Array(length).fill(''))
+  const inputRefs = useRef<(TextInput | null)[]>([])
+  const theme = useTheme()
 
-export function OTPInput({
-  codes,
-  refs,
-  errorMessages,
-  onChangeCode,
-  length
-}: OTPInputProps) {
+  const handleChange = useCallback((value: string, index: number) => {
+    const newOTP = [...otp]
+    newOTP[index] = value.slice(-1)
+    setOTP(newOTP)
+
+    if (value && index < length - 1) {
+      inputRefs.current[index + 1]?.focus()
+    }
+
+    if (newOTP.every(digit => digit !== '')) {
+      onComplete?.(newOTP.join(''))
+    }
+  }, [otp, length, onComplete])
+
+  const handleKeyPress = useCallback((e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }, [otp])
+
   return (
-    <View flexDirection="row" justifyContent="center" alignItems="center">
-      {Array.from({ length: length ?? 6 }, (_, index) => (
+    <XStack space="$2">
+      {otp.map((digit, index) => (
         <Input
           key={index}
-          ref={refs[index]}
-          value={codes[index]}
-          onChangeText={(text) => onChangeCode(text, index)}
+          ref={el => inputRefs.current[index] = el}
+          value={digit}
+          onChangeText={(value) => handleChange(value, index)}
+          onKeyPress={(e) => handleKeyPress(e, index)}
           keyboardType="number-pad"
           maxLength={1}
           textAlign="center"
-          style={{
-            width: 40,
-            height: 50,
-            marginHorizontal: 5,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 5,
-            fontSize: 18,
-            ...(Platform.OS === "ios" && {
-              paddingVertical: 10,
-            }),
-          }}
-          onKeyPress={({ nativeEvent: { key } }) => {
-            if (key === "Backspace" && codes[index] === "" && index > 0) {
-              refs[index - 1]?.current?.focus();
-            }
-          }}
+          width={50}
+          height={50}
+          fontSize={20}
+          borderWidth={1}
+          borderColor="$borderColor"
+          borderRadius="$2"
+          focusStyle={{ borderColor: theme?.blue10?.get() }}
         />
       ))}
-    </View>
-  );
+    </XStack>
+  )
 }
