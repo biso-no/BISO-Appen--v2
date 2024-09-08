@@ -21,7 +21,7 @@ import { ChevronRight, Briefcase } from "@tamagui/lucide-icons";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { Models } from "react-native-appwrite";
 
-export default function VolunteerScreen() {
+export default function VolunteerList({ limit = 10, screen }: { limit?: number, screen?: boolean }) {
   const [jobs, setJobs] = useState<Models.Document[]>([]);
   const theme = useTheme();
   const { campus } = useCampus();
@@ -38,7 +38,7 @@ export default function VolunteerScreen() {
   };
 
   useEffect(() => {
-    axios.get(`https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=10&campus=${campus?.name}`)
+    axios.get(`https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=${limit}&campus=${campus?.name}`)
       .then((response) => {
         setJobs(response.data);
         setLoading(false);
@@ -64,10 +64,14 @@ export default function VolunteerScreen() {
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500 }}
       >
+
         <YStack space="$4" padding="$4">
+        {screen && (
+            <>
           <H2>Available Positions</H2>
           <Paragraph>Explore volunteer opportunities at {campus?.name}</Paragraph>
-          
+          </>
+        )}
           {jobs.length > 0 ? (
             <YStack space="$4">
             {jobs.map((job, index) => (
@@ -103,7 +107,7 @@ export default function VolunteerScreen() {
             ))}
           </YStack>
           )  : (
-            <Card padding="$4" alignItems="center" space="$4">
+            <Card padding="$4" alignItems="center" space="$4" chromeless>
               <Text fontSize={24} color={textColor} textAlign="center">
                 No jobs available at the moment
               </Text>

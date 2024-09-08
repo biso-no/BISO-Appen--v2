@@ -52,6 +52,7 @@ export function FeaturedPostsCarousel() {
       try {
         const featured = await databases.listDocuments('app', 'news', [
           Query.select(['title', 'content', 'url', 'department_id', 'image', 'campus_id', '$createdAt', '$id']),
+          Query.equal('sticky', true),
           Query.limit(5),
           filters,
         ]);

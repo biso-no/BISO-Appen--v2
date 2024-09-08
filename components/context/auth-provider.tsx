@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases, subScribeToProfile } from '@/lib/appwrite';
-import { Models, RealtimeResponseEvent } from 'react-native-appwrite';
+import { Models, Query, RealtimeResponseEvent } from 'react-native-appwrite';
 import { useProfileSubscription } from '@/lib/appwrite';
 import { usePathname } from 'expo-router';
 
@@ -75,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await getDocument('user', data.$id);
       setProfile(response as Profile);
-      setStudentId(response.student_id);
       setError(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -84,6 +83,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   }, [data?.$id]);
+
+  const fetchStudentId = useCallback(async () => {
+    if (!data?.$id) return;
+
+    try {
+      const response = await databases.listDocuments('app', 'student_id', [
+        Query.select(['student_id']),
+      ]);
+      console.log("Student Response:", response);
+      setStudentId(response.documents[0].student_id);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setStudentId(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [data?.$id]);
+
+  useEffect(() => {
+    fetchStudentId();
+  }, [fetchStudentId]);
 
   const fetchCampus = useCallback(async () => {
     if (!profile?.campus_id) return;

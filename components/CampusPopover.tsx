@@ -1,4 +1,4 @@
-import { Popover, Button, Text, YGroup, XStack, Separator, H4 } from "tamagui";
+import { Popover, Button, Text, YGroup, XStack, Separator, H4, View } from "tamagui";
 import { LinearGradient } from "tamagui/linear-gradient";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
@@ -33,7 +33,13 @@ export default function CampusPopover() {
                     <MaskedView
                         maskElement={
                             <XStack alignItems="center" justifyContent="center">
-                                <H4>BISO {` ${capitalizeFirstLetter(campus?.name || "Select Campus")}`}</H4>
+                                <View width={140} height={40} justifyContent="center">
+                                    {campus?.name &&                                     <Text adjustsFontSizeToFit numberOfLines={1} style={{ fontSize: 16 }}>
+                                        BISO {` ${capitalizeFirstLetter(campus?.name)}`}
+                                    </Text>
+                                    }
+                                    {!campus?.name && <Text>Select Campus</Text>}
+                                </View>
                                 {open ? <ChevronUp /> : <ChevronDown />}
                             </XStack>
                         }

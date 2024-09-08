@@ -153,7 +153,7 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     async function fetchCampuses() {
-      const response = await databases.listDocuments('app', 'campuses', [
+      const response = await databases.listDocuments('app', 'campus', [
         Query.select(['name', '$id']),
       ]);
       setCampuses(response.documents);

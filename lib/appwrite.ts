@@ -274,20 +274,17 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
       ]);
   
       if (documents.total > 0) {
-        await databases.updateDocument('app', 'subs', documents.documents[0].$id, {
+        const response = await databases.updateDocument('app', 'subs', documents.documents[0].$id, {
           subscribed,
         });
+        console.log("Updated subscription:", response);
       } else {
-        await databases.createDocument('app', 'subs', ID.unique(), {
+        const response = await databases.createDocument('app', 'subs', ID.unique(), {
           user_id: userId,
           topic,
           subscribed,
-        }, [
-          Permission.read(Role.user(userId)),
-          Permission.write(Role.user(userId)),
-          Permission.delete(Role.user(userId)),
-          Permission.update(Role.user(userId)),
-        ]);
+        });
+        console.log("Created subscription:", response);
       }
     } catch (error) {
       console.error("Error updating subscription:", error);
@@ -321,6 +318,7 @@ export async function getDepartments(campusId?: string) {
     let query = [
         //Select only the values used in the UI
         Query.select(['Name', 'description', '$id', 'logo']),
+        Query.equal('active', true),
     ];
 
     if (campusId) {
