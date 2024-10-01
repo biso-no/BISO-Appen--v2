@@ -1,7 +1,7 @@
 import { Button, XStack, XGroup, YStack, Text, ScrollView, YGroup } from "tamagui";
 import { useState } from "react";
 import { MemberAccess } from "@/components/explore/member-access";
-import { Newspaper, Calendar, WalletCards } from "@tamagui/lucide-icons";
+import { Newspaper, Calendar, WalletCards, Briefcase } from "@tamagui/lucide-icons";
 import { UsefulLinks } from "@/components/explore/links";
 import { useModal } from "@/components/context/membership-modal-provider";
 import { useRouter } from "expo-router";
@@ -29,11 +29,17 @@ export default function ExploreScreen() {
                             <Text fontSize="$4">Events</Text>
                         </Button>
                     </XStack>
-                    {data?.$id && isBisoMember && (
+                    {data?.$id && (
+                    <XStack space="$4" alignItems="center" justifyContent="center">
                     <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/expenses")} size="$4" width="$12" icon={<WalletCards size={20} />} marginTop="$4">
                             <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Expenses</Text>
                     </Button>
+                    <Button bordered backgroundColor={"$color1"} onPress={() => push("/explore/elections")} size="$4" width="$12" icon={<Briefcase size={20} />} marginTop="$4">
+                            <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
+                            <Text fontSize="$4">Elections</Text>
+                    </Button>
+                    </XStack>
                     )}
                 </YGroup.Item>
                 </YGroup>

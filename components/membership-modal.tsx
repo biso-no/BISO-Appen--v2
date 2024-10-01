@@ -35,7 +35,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const pathName = usePathname();
-  const { isBisoMember } = useAuth();
+  const { isBisoMember, data } = useAuth();
 
   useEffect(() => {
     if (isBisoMember === true) {
@@ -44,6 +44,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   }, [isBisoMember, setOpen]);
 
   useEffect(() => {
+    if (data?.$id) {
     const fetchMemberships = async () => {
       try {
         const response = await databases.listDocuments('app', 'memberships', [
@@ -56,6 +57,8 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
       }
     };
     fetchMemberships();
+    }
+
   }, []);
 
   const initiatePurchase = async () => {
