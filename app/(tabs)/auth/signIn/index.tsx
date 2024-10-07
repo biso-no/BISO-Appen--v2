@@ -1,4 +1,4 @@
-import React, { RefObject, useRef, useState } from 'react';
+import React, { RefObject, useEffect, useRef, useState } from 'react';
 import { Button, Input, Text, YStack, XGroup } from 'tamagui';
 import { signIn, triggerFunction, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ const OTP_LENGTH = 6;
 export default function LoginScreen() {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
   const [errorMessages, setErrorMessages] = useState<string[]>();
 
@@ -56,6 +57,13 @@ export default function LoginScreen() {
       setErrorMessages(["An unexpected error occurred. Please try again."]);
     }
   };
+  
+  //If 6 digits are entered, attempt to submit the OTP
+  useEffect(() => {
+    if (otp.length === OTP_LENGTH) {
+      handleOtpSubmit(otp);
+    }
+  }, [otp]);
 
   return (
     <MyStack flex={1} justifyContent="center" alignItems="center" padding="$4">
@@ -87,9 +95,17 @@ export default function LoginScreen() {
               >
                 <YStack space="$4" maxWidth="100%">
             <Text fontSize="$4" marginBottom="$2">An email has been sent to {email}</Text>
-            <OTP 
-            onComplete={handleOtpSubmit} length={6}
-             />
+              <Input
+                placeholder="Enter OTP"
+                backgroundColor={"transparent"}
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                marginBottom="$4"
+                size="$4"
+                ref={refs[0]}
+                />
              <XGroup justifyContent='center' space="$4">
              <Button onPress={handleGoBack}>
               Back

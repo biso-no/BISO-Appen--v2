@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from "expo-router";
 import { Models } from "react-native-appwrite";
 import RenderHTML from "react-native-render-html";
@@ -13,7 +13,8 @@ import {
   H3, 
   Text,
   useTheme,
-  Button
+  Button,
+  Spinner
 } from "tamagui";
 import { ChevronRight } from "@tamagui/lucide-icons";
 import { MyStack } from "@/components/ui/MyStack";
@@ -21,6 +22,7 @@ import { getDepartments } from "@/lib/appwrite";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { MotiView } from 'moti';
 import { useWindowDimensions } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 const truncateHTML = (html: string, maxLength = 50) => {
   const strippedText = html.replace(/<[^>]+>/g, '');
@@ -32,19 +34,45 @@ const truncateHTML = (html: string, maxLength = 50) => {
 };
 
 export default function DepartmentsScreen() {
-  const [departments, setDepartments] = useState<Models.DocumentList<Models.Document>>();
+  const [departments, setDepartments] = useState<Models.Document[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const { campus } = useCampus();
   const router = useRouter();
   const theme = useTheme();
   const { width } = useWindowDimensions();
 
-  useEffect(() => {
-    async function fetchDepartments() {
-      const deps = await getDepartments(campus?.$id);
-      setDepartments(deps);
+  const fetchDepartments = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    try {
+      const deps = await getDepartments(campus?.$id, page);
+      if (deps.documents.length === 0) {
+        setHasMore(false);
+      } else {
+        setDepartments(prevDeps => [...prevDeps, ...deps.documents]);
+        setPage(prevPage => prevPage + 1);
+      }
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    } finally {
+      setLoading(false);
     }
+  }, [campus?.$id, page, loading, hasMore]);
+
+  useEffect(() => {
     fetchDepartments();
   }, [campus?.$id]);
+
+  const handleScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const paddingToBottom = 20;
+    if (layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - paddingToBottom) {
+      fetchDepartments();
+    }
+  };
 
   const htmlStyles = {
     body: { 
@@ -55,7 +83,7 @@ export default function DepartmentsScreen() {
   };
 
   return (
-    <ScrollView>
+    <ScrollView onScroll={handleScroll} scrollEventThrottle={400}>
       <MyStack space="$4" padding="$4">
         <YStack space="$2">
           <H2>Our Departments</H2>
@@ -68,7 +96,7 @@ export default function DepartmentsScreen() {
           transition={{ type: 'timing', duration: 500 }}
         >
           <YStack space="$4">
-            {departments?.documents.map((department, index) => (
+            {departments.map((department, index) => (
               <MotiView
                 key={department.$id}
                 from={{ opacity: 0, translateY: 20 }}
@@ -113,6 +141,14 @@ export default function DepartmentsScreen() {
             ))}
           </YStack>
         </MotiView>
+        {loading && (
+          <YStack alignItems="center" paddingVertical="$4">
+            <Spinner size="large" color={theme?.color?.val} />
+          </YStack>
+        )}
+        {!hasMore && (
+          <Text textAlign="center" paddingVertical="$4">No more departments to load</Text>
+        )}
       </MyStack>
     </ScrollView>
   );
