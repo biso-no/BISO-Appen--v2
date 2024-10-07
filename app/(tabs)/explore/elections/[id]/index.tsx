@@ -32,10 +32,32 @@ interface VotingItem extends Models.Document {
   allowAbstain: boolean
 }
 
+interface Election extends Models.Document {
+  electionUsers: ElectionUser[]
+  sessions: ElectionSession[]
+}
+
 interface ElectionSession extends Models.Document {
   name: string
   votingItems: VotingItem[]
+  election: Election
 }
+
+interface Vote {
+  optionId: string
+  voterId: string
+  electionId: string
+  votingSessionId: string
+  votingItemId: string
+  weight: number
+  electionUsers: string
+}
+
+interface ElectionUser extends Models.Document {
+  voterId: string
+  voteWeight: number
+}
+
 
 type ElectionState = 'waiting' | 'sessionStarting' | 'voting' | 'submitted'
 
@@ -57,10 +79,12 @@ export default function OngoingElectionScreen() {
 
       if (response.documents.length > 0) {
         const session = response.documents[0]
+        console.log(JSON.stringify(session))
         return {
           $id: session.$id,
           name: session.name,
-          votingItems: session.votingItems
+          votingItems: session.votingItems,
+          election: session.election
         } as ElectionSession
       } else {
         throw new Error('No ongoing election session found')
@@ -76,7 +100,6 @@ export default function OngoingElectionScreen() {
       if (!currentSession || !data) return false
       const response = await databases.listDocuments('app', 'election_vote', [
         Query.equal('votingSessionId', currentSession.$id),
-        Query.equal('userId', data?.$id),
       ])
 
       return response.documents.length > 0
@@ -85,6 +108,10 @@ export default function OngoingElectionScreen() {
       return false
     }
   }, [])
+
+  useEffect(() => {
+    console.log(JSON.stringify(currentSession))
+  }, [currentSession])
 
   const loadElectionData = useCallback(async () => {
     setRefreshing(true)
@@ -163,13 +190,50 @@ export default function OngoingElectionScreen() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateVotes()) {
-      console.log('Submitting votes:', selectedVotes)
-      setElectionState('submitted')
-      setTimeout(() => setElectionState('waiting'), 3000)
+      if (!currentSession || !currentSession.election || !currentSession.election.electionUsers || currentSession.election.electionUsers.length === 0) {
+        console.error('Invalid session data');
+        setErrors({ submit: 'An error occurred while submitting your votes. Please try again.' });
+        return;
+      }
+
+  
+      // Prepare the votes for submission
+      const votesToSubmit: Vote[] = [];
+      currentSession.votingItems.forEach((item) => {
+        const selectedOptions = selectedVotes[item.title] || [];
+        selectedOptions.forEach((optionValue) => {
+          const option = item.votingOptions.find(opt => opt.value === optionValue);
+          if (option) {
+            votesToSubmit.push({
+              optionId: option.$id,
+              voterId: currentSession.election.electionUsers[0].$id,
+              electionId: currentSession.election.$id,
+              votingSessionId: currentSession.$id,
+              votingItemId: item.$id,
+              weight: currentSession.election.electionUsers[0].voteWeight,
+              electionUsers: currentSession.election.electionUsers[0].$id
+            });
+          }
+        });
+      });
+  
+      try {
+        // Submit each vote to the database
+        await Promise.all(
+          votesToSubmit.map(vote => databases.createDocument('app', 'election_vote', 'unique()', vote))
+        );
+  
+        console.log('Votes submitted:', votesToSubmit);
+        setElectionState('submitted');
+        setTimeout(() => setElectionState('waiting'), 3000);
+      } catch (error) {
+        console.error('Error submitting votes:', error);
+        setErrors({ submit: 'An error occurred while submitting your votes. Please try again.' });
+      }
     }
-  }
+  };
 
   const isVoteSelected = (itemTitle: string, optionValue: string) => {
     return selectedVotes[itemTitle]?.includes(optionValue) || false
