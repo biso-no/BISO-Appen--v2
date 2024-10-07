@@ -329,7 +329,7 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
     return null;
   };
 
-export async function getDepartments(campusId?: string, page: number = 1) {
+export async function getDepartments(campusId?: string, page: number = 1, search?: string) {
     
     const limit = 20;
     const offset = (page - 1) * limit;
@@ -344,6 +344,9 @@ export async function getDepartments(campusId?: string, page: number = 1) {
 
     if (campusId) {
         query.push(Query.equal('campus_id', campusId));
+    }
+    if (search) {
+        query.push(Query.search('Name', search));
     }
 
     const departments = await databases.listDocuments('app', 'departments', query)

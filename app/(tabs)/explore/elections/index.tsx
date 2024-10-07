@@ -56,7 +56,7 @@ export default function ElectionsScreen() {
     return (
             <ScrollView>
                 <YStack gap="$4" padding="$4">
-                    {upcomingElections.length > 0 && (
+                    {startedElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Ongoing Elections</H4>
                         <YGroup space="$4">
