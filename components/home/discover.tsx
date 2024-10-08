@@ -46,7 +46,7 @@ export function Discover() {
             {selectedCategory.title === "Work" && (
                 <YStack space="$4" padding="$4" width="100%">
                     <Button onPress={() => router.push("/explore/volunteer")}>View all</Button>
-                    <VolunteerList limit={5} />
+                    <VolunteerList limit={15} />
                 </YStack>
             )}
             {selectedCategory.title === "Shop" && <HomeProducts />}

@@ -14,14 +14,17 @@ import {
   H4,
 } from 'tamagui'
 import { Check, FileText, Users, AlertTriangle } from '@tamagui/lucide-icons'
+import { Models, Query } from 'react-native-appwrite'
+import { databases } from '@/lib/appwrite'
+import { useAuth } from '@/components/context/auth-provider'
 
 type VotingItemType = 'statute' | 'position'
 
-interface VotingOption {
+interface VotingOption extends Models.Document {
   value: string
 }
 
-interface VotingItem {
+interface VotingItem extends Models.Document {
   type: VotingItemType
   title: string
   votingOptions: VotingOption[]
@@ -29,10 +32,32 @@ interface VotingItem {
   allowAbstain: boolean
 }
 
-interface ElectionSession {
+interface Election extends Models.Document {
+  electionUsers: ElectionUser[]
+  sessions: ElectionSession[]
+}
+
+interface ElectionSession extends Models.Document {
   name: string
   votingItems: VotingItem[]
+  election: Election
 }
+
+interface Vote {
+  optionId: string
+  voterId: string
+  electionId: string
+  votingSessionId: string
+  votingItemId: string
+  weight: number
+  electionUsers: string
+}
+
+interface ElectionUser extends Models.Document {
+  voterId: string
+  voteWeight: number
+}
+
 
 type ElectionState = 'waiting' | 'sessionStarting' | 'voting' | 'submitted'
 
@@ -42,70 +67,78 @@ export default function OngoingElectionScreen() {
   const [selectedVotes, setSelectedVotes] = useState<Record<string, string[]>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [refreshing, setRefreshing] = useState(false)
+  const [hasVoted, setHasVoted] = useState(false)
+  const { data } = useAuth()
 
-  const fetchElectionData = useCallback(() => {
-    // Simulating API call
-    return new Promise<ElectionSession>((resolve) => {
-      setTimeout(() => {
-        resolve({
-          name: 'Board Member Elections and Statute Changes',
-          votingItems: [
-            {
-              type: 'position',
-              title: 'President',
-              votingOptions: [
-                { value: 'John Doe' },
-                { value: 'Jane Smith' },
-                { value: 'Abstain' },
-              ],
-              maxSelections: 1,
-              allowAbstain: true,
-            },
-            {
-              type: 'position',
-              title: 'Vice Presidents',
-              votingOptions: [
-                { value: 'Alice Johnson' },
-                { value: 'Bob Williams' },
-                { value: 'Carol Brown' },
-                { value: 'David Lee' },
-                { value: 'Abstain' },
-              ],
-              maxSelections: 3,
-              allowAbstain: true,
-            },
-            {
-              type: 'statute',
-              title: 'Amendment to Article 5',
-              votingOptions: [
-                { value: 'Approve' },
-                { value: 'Reject' },
-              ],
-              maxSelections: 1,
-              allowAbstain: false,
-            },
-          ],
-        })
-      }, 2000)
-    })
+  const fetchElectionData = useCallback(async () => {
+    try {
+      const response = await databases.listDocuments('app', 'election_sessions', [
+        Query.equal('status', 'ongoing'),
+        Query.limit(1)
+      ])
+
+      if (response.documents.length > 0) {
+        const session = response.documents[0]
+        console.log(JSON.stringify(session))
+        return {
+          $id: session.$id,
+          name: session.name,
+          votingItems: session.votingItems,
+          election: session.election
+        } as ElectionSession
+      } else {
+        throw new Error('No ongoing election session found')
+      }
+    } catch (error) {
+      console.error('Error fetching election data:', error)
+      throw error
+    }
   }, [])
 
-  const loadElectionData = useCallback(() => {
+  const checkUserVoteStatus = useCallback(async () => {
+    try {
+      if (!currentSession || !data) return false
+      const response = await databases.listDocuments('app', 'election_vote', [
+        Query.equal('votingSessionId', currentSession.$id),
+      ])
+
+      return response.documents.length > 0
+    } catch (error) {
+      console.error('Error checking user vote status:', error)
+      return false
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log(JSON.stringify(currentSession))
+  }, [currentSession])
+
+  const loadElectionData = useCallback(async () => {
     setRefreshing(true)
     setElectionState('sessionStarting')
-    fetchElectionData().then((data) => {
+    try {
+      const data = await fetchElectionData()
+      const userHasVoted = await checkUserVoteStatus() // Replace with actual user ID
+      setHasVoted(userHasVoted)
+      
       setTimeout(() => {
         setCurrentSession(data)
-        setElectionState('voting')
+        setElectionState(userHasVoted ? 'waiting' : 'voting')
         setRefreshing(false)
-      }, 1500) // Show the "Session Starting" screen for 1.5 seconds
-    })
-  }, [fetchElectionData])
+      }, 1500)
+    } catch (error) {
+      console.error('Error loading election data:', error)
+      setElectionState('waiting')
+      setRefreshing(false)
+    }
+  }, [fetchElectionData, checkUserVoteStatus])
 
   useEffect(() => {
     const timer = setTimeout(loadElectionData, 3000)
     return () => clearTimeout(timer)
   }, [loadElectionData])
+
+
 
   const handleVote = (itemTitle: string, optionValue: string) => {
     setSelectedVotes(prev => {
@@ -157,13 +190,50 @@ export default function OngoingElectionScreen() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateVotes()) {
-      console.log('Submitting votes:', selectedVotes)
-      setElectionState('submitted')
-      setTimeout(() => setElectionState('waiting'), 3000)
+      if (!currentSession || !currentSession.election || !currentSession.election.electionUsers || currentSession.election.electionUsers.length === 0) {
+        console.error('Invalid session data');
+        setErrors({ submit: 'An error occurred while submitting your votes. Please try again.' });
+        return;
+      }
+
+  
+      // Prepare the votes for submission
+      const votesToSubmit: Vote[] = [];
+      currentSession.votingItems.forEach((item) => {
+        const selectedOptions = selectedVotes[item.title] || [];
+        selectedOptions.forEach((optionValue) => {
+          const option = item.votingOptions.find(opt => opt.value === optionValue);
+          if (option) {
+            votesToSubmit.push({
+              optionId: option.$id,
+              voterId: currentSession.election.electionUsers[0].$id,
+              electionId: currentSession.election.$id,
+              votingSessionId: currentSession.$id,
+              votingItemId: item.$id,
+              weight: currentSession.election.electionUsers[0].voteWeight,
+              electionUsers: currentSession.election.electionUsers[0].$id
+            });
+          }
+        });
+      });
+  
+      try {
+        // Submit each vote to the database
+        await Promise.all(
+          votesToSubmit.map(vote => databases.createDocument('app', 'election_vote', 'unique()', vote))
+        );
+  
+        console.log('Votes submitted:', votesToSubmit);
+        setElectionState('submitted');
+        setTimeout(() => setElectionState('waiting'), 3000);
+      } catch (error) {
+        console.error('Error submitting votes:', error);
+        setErrors({ submit: 'An error occurred while submitting your votes. Please try again.' });
+      }
     }
-  }
+  };
 
   const isVoteSelected = (itemTitle: string, optionValue: string) => {
     return selectedVotes[itemTitle]?.includes(optionValue) || false
@@ -180,7 +250,9 @@ export default function OngoingElectionScreen() {
         <Spinner size="large" color="$blue10" />
         <H2 marginTop="$4">Please Wait</H2>
         <Paragraph textAlign="center" marginTop="$2">
-          The next voting session is being prepared. We appreciate your patience.
+          {hasVoted 
+            ? "You have already voted in this session. Waiting for the next session."
+            : "The next voting session is being prepared. We appreciate your patience."}
         </Paragraph>
         <Paragraph textAlign="center" marginTop="$2" color="$gray10">
           Pull down to refresh manually.
@@ -256,7 +328,7 @@ export default function OngoingElectionScreen() {
 
   return (
     <Theme name="light">
-      <YStack flex={1} backgroundColor="$background">
+      <YStack flex={1}>
         {electionState === 'waiting' && renderWaitingScreen()}
         {electionState === 'sessionStarting' && renderSessionStartingScreen()}
         {electionState === 'voting' && renderVotingScreen()}

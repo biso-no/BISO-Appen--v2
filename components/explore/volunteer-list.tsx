@@ -77,10 +77,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
             {jobs.map((job, index) => (
               <Card 
                 key={job.id} 
-                elevate 
-                bordered
                 animation="bouncy"
-                scale={0.9}
                 hoverStyle={{ scale: 0.95 }}
                 pressStyle={{ scale: 0.9 }}
                 onPress={() => router.push(`/explore/volunteer/${job.id}`)}

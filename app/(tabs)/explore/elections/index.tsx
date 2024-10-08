@@ -28,7 +28,7 @@ export default function ElectionsScreen() {
                         {icon}
                         <YGroup space="$2">
                             <H4>{election.name}</H4>
-                            <Text>{getFormattedDateFromString(election.date)}</Text>
+                            <Text>{election.date ? getFormattedDateFromString(election.date) : "No date specified"}</Text>
                         </YGroup>
                     </XGroup>
                     <ChevronRight size={20} />
@@ -56,7 +56,7 @@ export default function ElectionsScreen() {
     return (
             <ScrollView>
                 <YStack gap="$4" padding="$4">
-                    {upcomingElections.length > 0 && (
+                    {startedElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Ongoing Elections</H4>
                         <YGroup space="$4">

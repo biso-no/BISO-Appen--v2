@@ -61,6 +61,22 @@ export async function verifyOtp(userId: string, otp: string) {
 
 }
 
+export async function createMagicUrl(email: string) {
+    const response = await account.createMagicURLToken(
+        ID.unique(),
+        email,
+        'biso://(tabs)/auth/verify',
+    )
+    return response;
+}
+
+export async function verifyMagicUrl(email: string, token: string) {
+    const response = await account.updateMagicURLSession(
+        email,
+        token
+    )
+    return response;
+}
 
 
 export async function getUser() {
@@ -313,16 +329,24 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
     return null;
   };
 
-export async function getDepartments(campusId?: string) {
+export async function getDepartments(campusId?: string, page: number = 1, search?: string) {
+    
+    const limit = 20;
+    const offset = (page - 1) * limit;
 
     let query = [
         //Select only the values used in the UI
         Query.select(['Name', 'description', '$id', 'logo']),
         Query.equal('active', true),
+        Query.limit(20),
+        Query.offset(offset),
     ];
 
     if (campusId) {
         query.push(Query.equal('campus_id', campusId));
+    }
+    if (search) {
+        query.push(Query.search('Name', search));
     }
 
     const departments = await databases.listDocuments('app', 'departments', query)
