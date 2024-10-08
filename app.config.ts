@@ -4,7 +4,7 @@ import { withSentry } from "@sentry/react-native/expo";
 const config: ExpoConfig = {
   name: 'BISO',
   slug: 'BISO',
-  owner: 'heien',
+  owner: 'bi_student_organisation',
   version: "0.92.1",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
