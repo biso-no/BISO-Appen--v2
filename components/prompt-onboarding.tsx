@@ -12,16 +12,14 @@ export function PromptOnboarding() {
 
     const { push } = useRouter();
 
+    const promptPref = data?.prefs.promptOnboarding;
+
     useEffect(() => {
         if (data?.$id && !profile?.name && !isLoading) {
             async function getPromptOnboarding() {
                 //If there is a value in Async storage, or it is set to true, then we dont need to prompt the user as they have already been asked. 
                 const promptOnboarding = data?.prefs.promptOnboarding;
                 console.log("Prompt onboarding: ", promptOnboarding);
-                if (promptOnboarding === null || promptOnboarding === 'true' || promptOnboarding === undefined) {
-                    setOpen(true);
-                    AsyncStorage.default.setItem('promptOnboarding', 'true');
-                }
             }
             getPromptOnboarding();
         }
@@ -41,6 +39,11 @@ export function PromptOnboarding() {
         setOpen(false);
         push('/onboarding');
     }
+
+    if (!promptPref || promptPref === 'false') {
+      return null;
+    }
+    
 
   return (
 

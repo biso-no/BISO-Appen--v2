@@ -39,6 +39,7 @@ const wrap = (min: number, max: number, v: number) => {
 
 export function FeaturedPostsCarousel() {
   const [[page, going], setPage] = React.useState([0, 0]);
+  const [isLoading, setIsLoading] = useState(false);
   const { campus } = useCampus();
   const [featuredPosts, setFeaturedPosts] = useState<Models.DocumentList<Models.Document>>();
 
@@ -65,13 +66,8 @@ export function FeaturedPostsCarousel() {
     fetchFeatured();
   }, [campus]);
 
-  if (!featuredPosts) {
-    console.log('No featured posts available');
-    return <Text>Loading...</Text>; // Show a loading message while fetching
-  }
 
-  if (featuredPosts.total === 0) {
-    console.log('No posts found');
+  if (!featuredPosts || featuredPosts.total === 0) {
     return null;
   }
 

@@ -33,7 +33,7 @@ export function Discover() {
     const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState<Category>(categories[0]);
     return (
-        <MyStack justifyContent="center" alignItems="center" space="$4" padding="$4">
+        <YStack justifyContent="center" alignItems="center" space="$4" padding="$4">
             <XStack space="$4">
             <Categories
                 categories={categories}
@@ -51,6 +51,6 @@ export function Discover() {
             )}
             {selectedCategory.title === "Shop" && <HomeProducts />}
 
-        </MyStack>
+        </YStack>
     );
 }
