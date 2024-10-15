@@ -38,7 +38,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.biso.no',
-    versionCode: 51,
+    versionCode: 52,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
       foregroundImage: "./assets/ic_foreground.png",
