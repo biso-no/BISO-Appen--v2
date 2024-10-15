@@ -1,20 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
-import { YStack, H1, XStack, YGroup, XGroup, Card, Separator, Button, Text, View, Image, ScrollView, useTheme, H4, Spinner } from "tamagui";
+import {
+    YStack,
+    H1,
+    XStack,
+    YGroup,
+    XGroup,
+    Card,
+    Separator,
+    Button,
+    Text,
+    View,
+    Image,
+    ScrollView,
+    useTheme,
+    H4,
+    Spinner
+} from "tamagui";
 import { Calendar, CheckCircle, ChevronRight, Clock } from "@tamagui/lucide-icons";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
-import { Election, useElections } from "@/lib/hooks/useElections";
-import { useWindowDimensions } from "react-native";
-
+import { useElections } from "@/lib/hooks/useElections";
+import { useWindowDimensions, RefreshControl } from "react-native";
+import { Election } from "@/types/election";
 
 export default function ElectionsScreen() {
-    const { pastElections, upcomingElections, isLoading, startedElections } = useElections();
+    const { pastElections, upcomingElections, isLoading, startedElections, refetch } = useElections();
     const { width } = useWindowDimensions();
     const router = useRouter();
     const { campus } = useCampus();
+
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch(); // Assuming refetch is a function that reloads the elections data
+        setRefreshing(false);
+    }, [refetch]);
 
     function renderElectionCard(election: Partial<Election>, icon: JSX.Element) {
         return (
@@ -54,33 +78,43 @@ export default function ElectionsScreen() {
     }
 
     return (
-            <ScrollView>
-                <YStack gap="$4" padding="$4">
-                    {startedElections.length > 0 && (
+        <ScrollView
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+        >
+            <YStack gap="$4" padding="$4">
+                {startedElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Ongoing Elections</H4>
                         <YGroup space="$4">
-                            {startedElections.map((election) => renderElectionCard(election, <Clock size={20} color="green" />))}
+                            {startedElections.map((election) =>
+                                renderElectionCard(election, <Clock size={20} color="green" />)
+                            )}
                         </YGroup>
                     </YStack>
-                    )}
-                    {upcomingElections.length > 0 && (
+                )}
+                {upcomingElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Upcoming Elections</H4>
                         <YGroup space="$4">
-                            {upcomingElections.map((election) => renderElectionCard(election, <CheckCircle size={20} color="yellow"/>))}
+                            {upcomingElections.map((election) =>
+                                renderElectionCard(election, <CheckCircle size={20} color="yellow" />)
+                            )}
                         </YGroup>
                     </YStack>
-                    )}
-                    {pastElections.length > 0 && (
+                )}
+                {pastElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Past Elections</H4>
                         <YGroup gap="$4">
-                            {pastElections.map((election) => renderElectionCard(election, <Calendar size={20} color="blue" />))}
+                            {pastElections.map((election) =>
+                                renderElectionCard(election, <Calendar size={20} color="blue" />)
+                            )}
                         </YGroup>
                     </YStack>
-                    )}
-                </YStack>
-            </ScrollView>
+                )}
+            </YStack>
+        </ScrollView>
     );
 }

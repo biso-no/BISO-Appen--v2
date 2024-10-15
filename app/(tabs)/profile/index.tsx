@@ -495,10 +495,10 @@ interface Props {
 
 const NotificationSwitch = ({ label, topic }: Props) => (
 
-  <>
+  <View>
     <XStack alignItems="center" justifyContent="space-between">
       <Switch label={label} topic={topic} size="$4" />
     </XStack>
     <Separator />
-  </>
+  </View>
 );

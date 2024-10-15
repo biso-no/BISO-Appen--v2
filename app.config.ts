@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: 'BISO',
   slug: 'BISO',
   owner: 'bi_student_organisation',
-  version: "0.92.1",
+  version: "0.95.0",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
   scheme: 'biso',
