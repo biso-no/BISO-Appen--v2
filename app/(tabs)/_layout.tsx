@@ -285,7 +285,7 @@ export default function TabLayout() {
         const HeaderComponent = () => {
           if (routesWithCampusPopover.includes(route.name)) {
             return (
-              <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$6">
+              <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$6" zIndex={100}>
                 <XStack flex={1} justifyContent="center" alignItems="center">
                   <CampusPopover />
                 </XStack>
