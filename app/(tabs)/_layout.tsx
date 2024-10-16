@@ -1,38 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import Constants from 'expo-constants';
+import React, { useState } from 'react';
+import { Platform, Pressable,View } from 'react-native';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { H5, Avatar, XStack, Text, Button } from 'tamagui';
-import { Bell, UserRound, LogIn, Home, LayoutList, MessageSquare, ChevronLeft, Globe } from '@tamagui/lucide-icons';
-import { setupPushNotifications } from '@/lib/notifications';
+import { Avatar, XStack, Text, Button } from 'tamagui';
+import { UserRound, LogIn, Home, LayoutList, MessageSquare, ChevronLeft, Globe } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
-import { getNotificationCount } from '@/lib/appwrite';
 import { ChatProvider } from '@/lib/ChatContext';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import {
-  addNotificationReceivedListener,
-  addNotificationResponseReceivedListener,
-  AndroidImportance,
-  getNotificationChannelsAsync,
-  NotificationResponse,
   registerTaskAsync,
-  removeNotificationSubscription,
-  setNotificationChannelAsync,
-  Subscription,
 } from 'expo-notifications';
 import { defineTask } from 'expo-task-manager';
 import { AppState } from 'react-native';
-import { CampusProvider } from '@/lib/hooks/useCampus';
 import { useNavigationState } from '@react-navigation/native';
 import { Tabs } from 'expo-router';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import CampusPopover from '@/components/CampusPopover';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
-import { PromptOnboarding } from '@/components/prompt-onboarding';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { usePathname } from 'expo-router';
@@ -92,20 +79,11 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { data, profile, isLoading, } = useAuth();
   const avatarId = profile?.avatar;
-  const isExpoGo = Constants.appOwnership === 'expo';
 
-  const [notificationCount, setNotificationCount] = useState(0);
-
-  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [pushToken, setPushToken] = useState<string | null>(null);
-  const [response, setResponse] = useState<NotificationResponse | undefined>(undefined);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
   const [image, setImage] = useState(profile?.avatar || '');
 
-  const notificationListener = useRef<Subscription>();
-  const responseListener = useRef<Subscription>();
+  const insets = useSafeAreaInsets();
+
 
   const theme = useTheme();
   const navigationState = useNavigationState(state => state);
@@ -116,86 +94,6 @@ export default function TabLayout() {
   const backgroundColor = theme.background.val
 
   const pathname = usePathname();
-
-
-  //Need to fix this, crashes on Android
-  /*
-  useEffect(() => {
-    console.log('isExpoGo', isExpoGo);
-
-    //Search providers for providerType push
-    const provider = data?.targets.find(target => target.providerType === 'push');
-
-    if (!isExpoGo && data?.$id && !isLoading && !provider) {
-      setupPushNotifications(data.$id).then((token) => {
-        setPushToken(token);
-      });
-  }
-  }, [data?.$id, isExpoGo, isLoading]);
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && !isExpoGo && data?.$id && !isLoading) {
-      setNotificationChannelAsync('Miscellaneous', {
-        name: 'Miscellaneous',
-        importance: AndroidImportance.HIGH,
-      })
-        .then((value) => {
-          console.log(`Set channel ${value?.name}`);
-          getNotificationChannelsAsync().then((value) =>
-            setChannels(value ?? []),
-          );
-        })
-        .catch((error) => {
-          console.log(`Error in setting channel: ${error}`);
-        });
-    }
-
-    if (!isExpoGo && data?.$id && !isLoading) {
-    notificationListener.current = addNotificationReceivedListener(
-      (notification) => {
-        setNotification(notification);
-        console.log(
-          `${Platform.OS} saw notification ${notification.request.content.title}`,
-        );
-      },
-    );
-
-    responseListener.current = addNotificationResponseReceivedListener(
-      (response) => {
-        setResponse(response);
-        console.log(
-          `${Platform.OS} saw response for ${JSON.stringify(response, null, 2)}`,
-        );
-
-        // Handle navigation when a notification is pressed
-        const notificationData = response.notification.request.trigger.remoteMessage.data;
-        if (notificationData && notificationData.href) {
-          console.log('Now redirecting to:', notificationData.href);
-          router.push(notificationData.href);
-        }
-      },
-    );
-
-    console.log(`${Platform.OS} added listeners`);
-
-    return () => {
-      console.log(`${Platform.OS} removed listeners`);
-      notificationListener.current &&
-        removeNotificationSubscription(notificationListener.current);
-      responseListener.current &&
-        removeNotificationSubscription(responseListener.current);
-    };
-  }
-  }, []);
-
-  useEffect(() => {
-    if (!isExpoGo && data?.$id && !isLoading) {
-    getNotificationCount().then((count) => {
-      setNotificationCount(count);
-    });
-  }
-  }, []);
-*/
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (!data?.$id) {
@@ -210,38 +108,6 @@ export default function TabLayout() {
         </Avatar>
       );
     }
-  };
-  const chatIcon = () => {
-    return (
-      <Pressable>
-
-        {({ pressed}) => (
-                  <MaskedView maskElement={<MessageSquare size={25} color={Colors[colorScheme ?? 'light'].text} />} style={{ width: 25, height: 25 }}>
-                    <LinearGradient
-                        start={[0, 0]}
-                        end={[0, 1]}
-                        themeInverse
-                        theme="accent"
-                        colors={['$color', '$color2']}
-                        style={{ width: 25, height: 25 }}
-                    />
-                  </MaskedView>
-        )}
-      </Pressable>
-    );
-  };
-  // Notification bell icon including notification count
-  const bellIcon = () => {
-    return (
-      <View style={{ marginRight: 15 }}>
-        <Bell size={25} color={Colors[colorScheme ?? 'light'].text} />
-        {notificationCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{notificationCount}</Text>
-          </View>
-        )}
-      </View>
-    );
   };
   
 
@@ -281,16 +147,19 @@ export default function TabLayout() {
       return nestedRoutes.map((route, index) => {
         const isTab = tabNames.includes(route.name);
         const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
+
+        const showCampusPopover = routesWithCampusPopover.includes(route.name);
     
         const HeaderComponent = () => {
           if (routesWithCampusPopover.includes(route.name)) {
             return (
-              <XStack justifyContent="space-between" alignItems="center" width="100%" paddingTop="$6" zIndex={100}>
-                <XStack flex={1} justifyContent="center" alignItems="center">
-                  <CampusPopover />
-                </XStack>
-                {/* {isTab && data?.$id && chatIcon()} */}
-              </XStack>
+                <View style={{ flex: 1, paddingTop: showCampusPopover ? 0 : insets.top }}>
+                  {showCampusPopover && (
+                    <XStack justifyContent="center" alignItems="center" paddingTop={insets.top}>
+                      <CampusPopover />
+                    </XStack>
+                  )}
+                </View>
             );
           }
     
@@ -391,22 +260,3 @@ return (
   </ChatProvider>
 );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    position: 'absolute',
-    right: -5,
-    top: -5,
-    backgroundColor: 'red',
-    borderRadius: 7,
-    padding: 2,
-    minWidth: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-});
