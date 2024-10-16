@@ -1,7 +1,7 @@
-import { ExpoConfig, ConfigContext } from 'expo/config';
-import { withSentry } from "@sentry/react-native/expo";
+import { ConfigContext, ExpoConfig } from 'expo/config';
 
-const config: ExpoConfig = {
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
   name: 'BISO',
   slug: 'BISO',
   owner: 'bi_student_organisation',
@@ -67,7 +67,6 @@ const config: ExpoConfig = {
         "defaultChannel": "default",
       }
     ],
-    // Remove the Sentry plugin from here
     [
       'expo-build-properties',
        { 
@@ -110,14 +109,4 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
   },
-};
-
-export default ({ config: expoConfig }: ConfigContext): ExpoConfig => withSentry({
-  ...config,
-}, {
-  url: "https://sentry.io/",
-  // Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.
-  project: "react-native",
-  organization: "bi-student-organisation",
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-});
+})

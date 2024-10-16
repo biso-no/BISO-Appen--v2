@@ -17,32 +17,10 @@ import 'react-native-gesture-handler';
 import { useLocalSearchParams } from 'expo-router';
 import { CampusProvider } from '@/lib/hooks/useCampus';
 import { ModalProvider } from '@/components/context/membership-modal-provider';
-import * as Sentry from '@sentry/react-native';
-import { isRunningInExpoGo } from 'expo';
-
-const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
 
 
-//Sentry SDK is compatbible with GlitchTip, which is currently the bug & error tracking software used by BISO.
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  sampleRate: 0.5,
-  tracesSampleRate: 0.5,
-  _experiments: {
-    profilesSampleRate: 0.5,
-  },
-  debug: true, 
-  enableNative: true,
-  enableNativeCrashHandling: true,
-  integrations: [
-    new Sentry.ReactNativeTracing({
-      // Pass instrumentation to be used as `routingInstrumentation`
-      routingInstrumentation,
-      enableNativeFramesTracking: !isRunningInExpoGo(),
-      // ...
-    }),
-  ],
-});
+
+
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -68,14 +46,6 @@ function RootLayout() {
     ...FontAwesome.font,
   });
 
-  const ref = useNavigationContainerRef();
-
-  useEffect(() => {
-    if (ref) {
-      routingInstrumentation.registerNavigationContainer(ref);
-    }
-  }, [ref]);
-
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -94,9 +64,8 @@ function RootLayout() {
   return <RootLayoutNav />;
 }
 
-export default Sentry.wrap(RootLayout);
 
-function RootLayoutNav() {
+export default function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isExpoGo = Constants.appOwnership === 'expo';
 
