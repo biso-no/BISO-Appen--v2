@@ -53,7 +53,7 @@ export default function CampusPopover({
     <MaskedView
       maskElement={
         <XStack alignItems="center" justifyContent="center">
-          <Text adjustsFontSizeToFit numberOfLines={1} style={{ fontSize: 16 }}>
+          <Text adjustsFontSizeToFit numberOfLines={1} style={{ fontSize: 20, fontWeight: 'bold' }}>
             {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
           </Text>
           {open ? <ChevronUp /> : <ChevronDown />}
@@ -76,7 +76,6 @@ export default function CampusPopover({
     if (!campuses || campuses.documents.length === 0) return <Text>No campuses available</Text>;
 
     return (
-      <ScrollView maxHeight={maxHeight}>
         <YGroup space="$2">
           {campuses.documents.map((campus, index) => (
             <YGroup.Item key={campus.$id}>
@@ -92,7 +91,6 @@ export default function CampusPopover({
             </YGroup.Item>
           ))}
         </YGroup>
-      </ScrollView>
     );
   };
 
@@ -102,7 +100,6 @@ export default function CampusPopover({
           <Button
             chromeless
             onPress={() => setOpen(!open)}
-            style={{ paddingHorizontal: 15, paddingVertical: 5 }}
           >
             {renderButton()}
           </Button>
