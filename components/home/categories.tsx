@@ -19,6 +19,7 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
     const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
 
     const handleCategoryClick = (index: number) => {
+        console.log("Test")
         setSelectedCategoryIndex(index);
         setSelectedCategory(categories[index]);
     };
