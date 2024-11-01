@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'BISO',
   slug: 'BISO',
+  newArchEnabled: true,
   owner: 'bi_student_organisation',
   version: "0.95.0",
   orientation: 'portrait',
@@ -72,14 +73,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
        { 
         ios: { 
           useFrameworks: 'static',
-          newArchEnabled: true,
-          deploymentTarget: "13.4"
+          deploymentTarget: "15.1"
         },
         android: {
           compileSdkVersion: 34,
           targetSdkVersion: 34,
           minSdkVersion: 34,
-          newArchEnabled: true,
           buildToolsVersion: "34.0.0"
         },
       }],
