@@ -17,6 +17,13 @@
     "metro": "^0.81.0",
     "metro-resolver": "^0.81.0",
     "metro-config": "^0.81.0"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
   },  
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
