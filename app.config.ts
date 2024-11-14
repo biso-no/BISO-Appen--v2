@@ -73,7 +73,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ios: { 
           useFrameworks: 'static',
           newArchEnabled: false,
-          deploymentTarget: "13.4"
+          deploymentTarget: "15.1"
         },
         android: {
           compileSdkVersion: 34,
