@@ -1,492 +1,251 @@
+import { useState, useEffect } from 'react';
+import { ScrollView } from 'react-native';
 import {
-  View, H1, H3, Button, XStack, Card, Tabs, SizableText,
-  Separator, H5, TabsContentProps, YGroup, Label, Input,
-  ScrollView, YStack, XGroup,
-  Text, Select,
-  H6
+  View, Card, Separator, Text, Button,
+  XStack, YStack, H2, H4, Avatar,
+  Sheet, Input, Label,
 } from 'tamagui';
-import { useMedia } from 'tamagui';
+import { User, Settings, CreditCard, Bell, LogOut } from '@tamagui/lucide-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/components/context/auth-provider';
-import { router, useRouter } from 'expo-router';
-import { updateDocument, signOut, signInWithBI, databases } from '@/lib/appwrite';
-import { useEffect, useState, useCallback } from 'react';
-import { ExpenseList } from "@/components/tools/expenses/expense-list";
-import { ID, Models, Query } from 'react-native-appwrite';
-import { MyStack } from '@/components/ui/MyStack';
-import * as WebBrowser from 'expo-web-browser';
-import { SwitchWithLabel as Switch } from '@/components/subscriber-switch';
+import { updateDocument, signOut } from '@/lib/appwrite';
+import { ExpenseList } from '@/components/tools/expenses/expense-list';
 import DepartmentSelector from '@/components/SelectDepartments';
+import { Switch } from '@/components/ui/switch';
 import { ProfileCard } from '@/components/profile/profile-card';
-import { Accordion } from '@/components/ui/accordion';
-import { useCampus } from '@/lib/hooks/useCampus';
-import { MySheet } from '@/components/ui/sheet';
 
-WebBrowser.maybeCompleteAuthSession();
-type Notifications = {
-  newEvents: boolean;
-  newPosts: boolean;
-  messages: boolean;
-  expenses: boolean;
-};
+interface ProfileSection {
+  icon: React.ReactNode;
+  title: string;
+  content: React.ReactNode;
+}
 
 export default function ProfileScreen() {
-  const isMobile = useMedia().xs;
-  const { data, profile, isLoading, updateUserPrefs, updateProfile, isBisoMember } = useAuth();
-  const [notifications, setNotifications] = useState<Notifications>({
-    newEvents: false,
-    newPosts: false,
-    messages: false,
-    expenses: false,
-  });
-
-  const initialDepartments = profile?.department_ids ?? [];
-  const [departments, setDepartments] = useState<Models.Document[]>(initialDepartments);
-  const [hasProfile, setHasProfile] = useState(false);
-  const [followingUnits, setFollowingUnits] = useState<Models.Document[]>([]);
-  const [currentCampus, setCurrentCampus] = useState<string>(profile?.campus_id ?? '1');
-  const [followingUnitsLoading, setFollowingUnitsLoading] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [campuses, setCampuses] = useState<Models.Document[]>([]);
-
-  const { campus } = useCampus();
-
-
-
-
-  const addDepartment = async (selectedDepartment: Models.Document) => {
-    if (!profile) {
-      return;
-    }
-    const newDepartments = [...departments, selectedDepartment];
-    setDepartments(newDepartments);
-    const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
-    if (response) {
-      updateProfile(response);
-    }
-  };
-
-  const listFollowingUnits = async () => {
-    if (!profile?.$id) {
-      return;
-    }
-    setFollowingUnitsLoading(true);
-    const response = await databases.listDocuments('app', 'followed_units', [
-      Query.equal('user_id', profile.$id),
-    ]);
-    setFollowingUnits(response.documents);
-    setFollowingUnitsLoading(false);
-  };
-
-  useEffect(() => {
-    listFollowingUnits();
-  }, [campus, profile?.$id]);
-
-  const removeDepartment = async (selectedDepartment: Models.Document) => {
-    if (!profile) {
-      return;
-    }
-    const newDepartments = departments.filter((department) => department.$id !== selectedDepartment.$id);
-    setDepartments(newDepartments);
-    const response = await updateDocument('user', profile.$id, { departments: newDepartments.map(d => d.$id) });
-    if (response) {
-      updateProfile(response);
-    }
-  };
-
-  const handleUpdateDepartment = async (selectedDepartment: Models.Document) => {
-    if (!profile) {
-      return;
-    }
-    if (departments.some((department) => department.$id === selectedDepartment.$id)) {
-      await removeDepartment(selectedDepartment);
-    } else {
-      await addDepartment(selectedDepartment);
-    }
-  };
-
-
-
-  const handleUpdateFollowingUnit = async (selectedUnit: Models.Document) => {
-    if (!profile) return;
-
-    const unitExists = followingUnits.some((unit) => unit.$id === selectedUnit.$id);
-
-    const newUnits = unitExists
-      ? followingUnits.filter((unit) => unit.$id !== selectedUnit.$id)
-      : [...followingUnits, selectedUnit];
-
-    setFollowingUnits(newUnits);
-        // First, check if the document exists
-        const existingDocument = await databases.listDocuments('app', 'followed_units', [
-            Query.equal('user_id', profile.$id),
-            ]
-            );
-        
-        if (existingDocument.total > 0) {
-        const updateResponse = await databases.updateDocument('app', 'followed_units', profile.$id, {
-            user_id: profile.$id,
-            department_ids: newUnits.map((u) => u.$id),
-        });
-
-        if (updateResponse) {
-            setFollowingUnits(newUnits);
-        }
-        } else {
-        const createResponse = await databases.createDocument('app', 'followed_units', profile.$id, {
-            user_id: profile.$id,
-            department_ids: newUnits.map((u) => u.$id),
-        });
-        if (createResponse) {
-            setFollowingUnits(newUnits);
-        }
-        }
-        };
-
-
-
-
-  useEffect(() => {
-    if (profile) {
-      setHasProfile(true);
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    async function fetchCampuses() {
-      const response = await databases.listDocuments('app', 'campus', [
-        Query.select(['name', '$id']),
-      ]);
-      setCampuses(response.documents);
-    }
-    fetchCampuses();
-  }, []);
-
-  if (!data) {
-    return null;
-  }
-
-  const linkIdentity = async () => {
-    try {
-      const url = signInWithBI();
-      if (url instanceof URL) {
-        const result = await WebBrowser.openBrowserAsync(url.toString());
-        console.log(result);
-      } else {
-        console.error('Failed to get URL from signInWithBI');
-      }
-    } catch (error) {
-      console.error('Error during linkIdentity', error);
-    }
-  };
-
-  if (isLoading) {
-    return null;
-  }
-
-
-
-  return (
-    <ScrollView>
-      <MyStack flex={1} padding="$4">
-        <ProfileCard />
-        <Tabs
-          defaultValue="tab1"
-          orientation="horizontal"
-          flexDirection="column"
-          flex={1}
-          borderRadius="$4"
-          borderWidth="$0.25"
-          overflow="hidden"
-          borderColor="$borderColor"
-        >
-          <Tabs.List
-            separator={<Separator vertical />}
-            disablePassBorderRadius="bottom"
-            aria-label="Manage your account"
-          >
-            <Tabs.Tab flex={1} value="tab1">
-              <SizableText fontFamily="$body" fontSize="$4" fontWeight="bold">Profile</SizableText>
-            </Tabs.Tab>
-            <Tabs.Tab flex={1} value="tab2">
-              <SizableText fontFamily="$body" fontSize="$4" fontWeight="bold">Expenses</SizableText>
-            </Tabs.Tab>
-            <Tabs.Tab flex={1} value="tab3">
-              <SizableText fontFamily="$body" fontSize="$4" fontWeight="bold">Preferences</SizableText>
-            </Tabs.Tab>
-          </Tabs.List>
-          <Separator />
-          <TabsContent value="tab1">
-            {!isLoading && profile?.name ? (
-              <Profile />
-            ) : (
-              <NoProfile />
-            )}
-          </TabsContent>
-          <TabsContent value="tab2">
-            {isBisoMember ? (
-            <MyStack space="$4" padding="$4">
-              <XGroup space="$4" alignItems="center" justifyContent="center" width="100%">
-                <Button onPress={() => router.push("/explore/expenses/create")}>Create new expense</Button>
-                <Button onPress={() => router.push("/explore/expenses")} chromeless>View all</Button>
-              </XGroup>
-              <ExpenseList withFilters={false} profileScreen />
-            </MyStack>
-            ) : (
-              <MyStack space="$4" padding="$4">
-                <H3>You must be a BISO member to submit expenses</H3>
-              </MyStack>
-            )}
-          </TabsContent>
-          <TabsContent value="tab3">
-            <MyStack space="$4" padding="$4" alignItems="center">
-              <H3>Notifications</H3>
-              <YStack space="$4" width="100%">
-                <NotificationSwitch label="New events" topic="events" />
-                <NotificationSwitch label="New posts" topic="posts" />
-                <NotificationSwitch label="New messages" topic="messages" />
-                <NotificationSwitch label="New expense details" topic="expenses" />
-              </YStack>
-              <Separator />
-              <H3>Departments</H3>
-              <YStack space="$2" width="100%">
-                <Accordion items={[
-                  {
-                    title: (
-                      <Text fontSize="$4" fontWeight="bold">Follow units</Text>
-                    ),
-                    content: (
-                      <DepartmentSelector
-                        campus={campus?.$id}
-                        onSelect={handleUpdateFollowingUnit}
-                        selectedDepartments={followingUnits}
-                        multiSelect
-                      />
-                    ),
-                    collapsible: true,
-                    defaultOpen: true,
-                    value: 'departments',
-                  },
-                  {
-                    title: (
-                      <Text fontSize="$4" fontWeight="bold">Reimbursement units</Text>
-                    ),
-                    content: (
-                      <DepartmentSelector
-                        campus={profile?.campus_id}
-                        onSelect={handleUpdateDepartment}
-                        selectedDepartments={departments}
-                        multiSelect
-                      />
-                    ),
-                    collapsible: true,
-                    defaultOpen: false,
-                    value: 'followingUnits',
-                  }
-                ]
-              } />
-              </YStack>
-            </MyStack>
-          </TabsContent>
-        </Tabs>
-      </MyStack>
-
-    </ScrollView>
-  );
-}
-
-
-const TabsContent = (props: TabsContentProps) => (
-  <Tabs.Content
-    backgroundColor="$background"
-    padding="$4"
-    flex={1}
-    borderColor="$background"
-    borderRadius="$2"
-    borderTopLeftRadius={0}
-    borderTopRightRadius={0}
-    borderWidth="$2"
-    {...props}
-  >
-    {props.children}
-  </Tabs.Content>
-);
-
-
-
-
-const EditProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
-
-  const { profile } = useAuth();
-
-  const [phone, setPhone] = useState(profile?.phone ?? '');
-  const [address, setAddress] = useState(profile?.address ?? '');
-  const [city, setCity] = useState(profile?.city ?? '');
-  const [zip, setZip] = useState(profile?.zip ?? '');
-  const [bankAccount, setBankAccount] = useState(profile?.bank_account ?? '');
-
-  const handleSubmit = async () => {
-    if (!profile?.$id) {
-      return;
-    }
-
-    const updatedProfile = {
-      phone,
-      address,
-      city,
-      zip,
-      bank_account: bankAccount,
-    };
-
-    try {
-      await updateDocument('user', profile.$id, updatedProfile);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating document:', error);
-    }
-  };
-
-  return (
-    <ScrollView automaticallyAdjustsScrollIndicatorInsets width="100%" contentContainerStyle={{ flexGrow: 1 }}>
-      <MyStack space="$2" width="100%">
-        <YGroup width="100%">
-          <Label>Phone</Label>
-          <Input
-            placeholder="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType='phone-pad'
-            width="100%"
-          />
-        <YGroup.Item>
-          <Label>Address</Label>
-          <Input
-            placeholder="Address"
-            value={address}
-            onChangeText={setAddress}
-            width="100%"
-          />
-        </YGroup.Item>
-        <YGroup.Item>
-          <Label>City</Label>
-          <Input
-            placeholder="City"
-            value={city}
-            onChangeText={setCity}
-            width="100%"
-          />
-        </YGroup.Item>
-        <YGroup.Item>
-          <Label>Zip Code</Label>
-          <Input
-            placeholder="Zip Code"
-            value={zip}
-            onChangeText={setZip}
-            keyboardType='number-pad'
-            width="100%"
-          />
-        </YGroup.Item>
-        <YGroup.Item>
-          <Label>Bank Account</Label>
-          <Input
-            placeholder="Bank Account"
-            value={bankAccount}
-            onChangeText={setBankAccount}
-            keyboardType='number-pad'
-            width="100%"
-          />
-        </YGroup.Item>
-        </YGroup>
-        <Button marginTop="$2" onPress={handleSubmit}>Submit</Button>
-      </MyStack>
-    </ScrollView>
-  );
-};
-
-interface ProfileDetails {
-  phone: string;
-  address: string;
-  city: string;
-  zip: string;
-  bank_account: string;
-}
-
-const ViewProfileDetails = ({ setIsEditing }: { setIsEditing: (value: boolean) => void }) => {
-  const { refetchUser, profile } = useAuth();
-
-  const [profileDetails, setProfileDetails] = useState<ProfileDetails>({
+  const { data, profile, isLoading, isBisoMember, refetchUser } = useAuth();
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileDetails, setProfileDetails] = useState({
     phone: profile?.phone ?? '',
     address: profile?.address ?? '',
     city: profile?.city ?? '',
     zip: profile?.zip ?? '',
-    bank_account: profile?.bank_account ?? '',
+    bank_account: profile?.bank_account ?? ''
   });
+
+  // Profile update handlers
+  const handleUpdateProfile = async (updates: Partial<typeof profileDetails>) => {
+    if (!profile?.$id) return;
+    try {
+      await updateDocument('user', profile.$id, updates);
+      setProfileDetails(prev => ({ ...prev, ...updates }));
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut(refetchUser);
-    router.replace('/');
+    router.replace('/(tabs)');
   };
 
-  useEffect(() => {
-    if (profile) {
-      setProfileDetails({
-        phone: profile?.phone ?? '',
-        address: profile?.address ?? '',
-        city: profile?.city ?? '',
-        zip: profile?.zip ?? '',
-        bank_account: profile?.bank_account ?? '',
-      });
+  if (isLoading || !data) return null;
+
+  if (!profile?.name) {
+    return (
+      <YStack space="$4" padding="$6" alignItems="center" justifyContent="center">
+        <H2>Welcome!</H2>
+        <Text textAlign="center">Complete your profile to get started</Text>
+        <Button 
+          size="$4" 
+          theme="active"
+          onPress={() => router.navigate('/onboarding')}
+        >
+          Complete Profile
+        </Button>
+      </YStack>
+    );
+  }
+
+  const sections: ProfileSection[] = [
+    {
+      icon: <User size={24} />,
+      title: "Personal Information",
+      content: (
+        <Card bordered padding="$4" margin="$2">
+          <YStack space="$4">
+            <XStack justifyContent="space-between" alignItems="center">
+              <H4>{profile.name}</H4>
+              <Button 
+                size="$3" 
+                variant="outlined"
+                onPress={() => setIsEditing(true)}
+              >
+                Edit
+              </Button>
+            </XStack>
+            <Separator />
+            <ProfileField label="Phone" value={profileDetails.phone} />
+            <ProfileField label="Address" value={profileDetails.address} />
+            <ProfileField label="City" value={profileDetails.city} />
+            <ProfileField label="ZIP" value={profileDetails.zip} />
+          </YStack>
+        </Card>
+      )
+    },
+    {
+      icon: <CreditCard size={24} />,
+      title: "Payment Information",
+      content: (
+        <Card bordered padding="$4" margin="$2">
+          <YStack space="$4">
+            <ProfileField 
+              label="Bank Account" 
+              value={profileDetails.bank_account} 
+              secure
+            />
+            {isBisoMember && (
+              <View>
+                <Separator />
+                <H4>Recent Expenses</H4>
+                <ExpenseList withFilters={false} profileScreen />
+                <Button 
+                  onPress={() => router.push("/explore/expenses")}
+                  variant="outlined"
+                >
+                  View All Expenses
+                </Button>
+              </View>
+            )}
+          </YStack>
+        </Card>
+      )
+    },
+    {
+      icon: <Bell size={24} />,
+      title: "Notifications",
+      content: (
+        <Card bordered padding="$4" margin="$2">
+          <YStack space="$4">
+            <NotificationSwitch label="New Events" topic="events" />
+            <NotificationSwitch label="New Posts" topic="posts" />
+            <NotificationSwitch label="Messages" topic="messages" />
+            <NotificationSwitch label="Expense Updates" topic="expenses" />
+          </YStack>
+        </Card>
+      )
+    },
+    {
+      icon: <Settings size={24} />,
+      title: "Preferences",
+      content: (
+        <Card bordered padding="$4" margin="$2">
+          <YStack space="$4">
+            <H4>Department Settings</H4>
+            <DepartmentSelector
+              campus={profile?.campus_id}
+              onSelect={() => {}} // Add your handler
+              selectedDepartments={[]}
+              multiSelect
+            />
+          </YStack>
+        </Card>
+      )
     }
-  }, [profile]);
-  return (
-    <MyStack alignItems='stretch' space="$4">
-      <XStack justifyContent="center" space="$4" marginTop="$4">
-        <Button size="$4" onPress={() => setIsEditing(true)}>Edit Profile</Button>
-        <Button size="$4" variant="outlined" onPress={handleLogout}>Sign Out</Button>
-      </XStack>
-      <SizableText fontSize="$6">Phone: {profileDetails?.phone}</SizableText>
-      <Separator />
-      <SizableText fontSize="$6">Address: {profileDetails?.address}</SizableText>
-      <Separator />
-      <SizableText fontSize="$6">City: {profileDetails?.city}</SizableText>
-      <Separator />
-      <SizableText fontSize="$6">Zip Code: {profileDetails?.zip}</SizableText>
-      <Separator />
-      <SizableText fontSize="$6">Bank Account: {profileDetails?.bank_account}</SizableText>
-    </MyStack>
-  );
-};
-
-function Profile() {
-  const [isEditing, setIsEditing] = useState(false);
+  ];
 
   return (
-    <View style={{ flex: 1 }}>
-      {isEditing ? (
-        <EditProfileDetails setIsEditing={setIsEditing} />
-      ) : (
-        <ViewProfileDetails setIsEditing={setIsEditing} />
-      )}
-    </View>
+    <ScrollView>
+      <YStack padding="$4" space="$4">
+        {/* Profile Header */}
+        <ProfileCard />
+
+        {/* Profile Sections */}
+        {sections.map((section, index) => (
+          <YStack key={index} space="$2">
+            <XStack space="$2" alignItems="center" paddingLeft="$2">
+              {section.icon}
+              <H4>{section.title}</H4>
+            </XStack>
+            {section.content}
+          </YStack>
+        ))}
+
+        {/* Logout Button */}
+        <Button 
+          onPress={handleLogout}
+          variant="outlined"
+          icon={<LogOut size={18} />}
+          marginTop="$4"
+        >
+          Sign Out
+        </Button>
+      </YStack>
+
+      {/* Edit Profile Sheet */}
+      <Sheet
+        modal
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        snapPoints={[80]}
+        dismissOnSnapToBottom
+      >
+        <Sheet.Frame padding="$4">
+          <Sheet.Handle />
+          <YStack space="$4">
+            <H4>Edit Profile</H4>
+            <Input
+              value={profileDetails.phone}
+              onChangeText={(text) => setProfileDetails(prev => ({ ...prev, phone: text }))}
+              placeholder="Phone"
+              keyboardType="phone-pad"
+            />
+            <Input
+              value={profileDetails.address}
+              onChangeText={(text) => setProfileDetails(prev => ({ ...prev, address: text }))}
+              placeholder="Address"
+            />
+            <Input
+              value={profileDetails.city}
+              onChangeText={(text) => setProfileDetails(prev => ({ ...prev, city: text }))}
+              placeholder="City"
+            />
+            <Input
+              value={profileDetails.zip}
+              onChangeText={(text) => setProfileDetails(prev => ({ ...prev, zip: text }))}
+              placeholder="ZIP Code"
+              keyboardType="number-pad"
+            />
+            <Button 
+              onPress={() => handleUpdateProfile(profileDetails)}
+              theme="active"
+            >
+              Save Changes
+            </Button>
+          </YStack>
+        </Sheet.Frame>
+      </Sheet>
+    </ScrollView>
   );
-};
+}
 
-function NoProfile() {
-
-  const { data } = useAuth();
-  const router = useRouter();
-
-  return (
-    <MyStack space="$4" padding="$4" alignItems="center" justifyContent="center">
-      <H5 fontSize="$7">No Profile Found</H5>
-      <SizableText fontSize="$6" textAlign="center">
-        It looks like you haven't set up your profile yet. Click the button below to start the onboarding process and set up your profile.
-      </SizableText>
-      <Button onPress={() => {
-          router.navigate('/onboarding');
-        }}>Go to Onboarding</Button>
-    </MyStack>
-  );
-};
+// Helper component for displaying profile fields
+const ProfileField = ({ 
+  label, 
+  value, 
+  secure = false 
+}: { 
+  label: string;
+  value: string;
+  secure?: boolean;
+}) => (
+  <YStack space="$2">
+    <Text color="$gray11" fontSize="$3">{label}</Text>
+    <Text fontSize="$4">
+      {secure ? value.replace(/./g, '•') : value || 'Not set'}
+    </Text>
+  </YStack>
+);
 
 interface Props {
   label: string;

@@ -50,24 +50,27 @@ export default function CampusPopover({
   }, []);
 
   const renderButton = () => (
-    <MaskedView
-      maskElement={
-        <XStack alignItems="center" justifyContent="center">
-          <Text adjustsFontSizeToFit numberOfLines={1} style={{ fontSize: 20, fontWeight: 'bold' }}>
-            {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
-          </Text>
-          {open ? <ChevronUp /> : <ChevronDown />}
-        </XStack>
-      }
-      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: buttonWidth, height: buttonHeight }}
+    <XStack 
+      alignItems="center" 
+      justifyContent="center"
+      padding="$2"
+      borderRadius="$4"
+      width={buttonWidth}
+      height={buttonHeight}
     >
-      <LinearGradient
-        start={[0, 0]}
-        end={[0, 1]}
-        colors={gradientColors}
-        style={{ width: '100%', height: '100%' }}
-      />
-    </MaskedView>
+      <Text 
+        adjustsFontSizeToFit 
+        numberOfLines={1} 
+        style={{ fontWeight: 'bold' }}
+      >
+        {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
+      </Text>
+      {open ? (
+        <ChevronUp color="white" />
+      ) : (
+        <ChevronDown color="white" />
+      )}
+    </XStack>
   );
 
   const renderContent = () => {
@@ -101,12 +104,15 @@ export default function CampusPopover({
             chromeless
             onPress={() => setOpen(!open)}
           >
-            {renderButton()}
+           {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
+           {open ? (
+        <ChevronUp />
+      ) : (
+        <ChevronDown />
+      )}
           </Button>
         </Popover.Trigger>
         <Popover.Content
-          enterStyle={{ y: -10, opacity: 0 }}
-          exitStyle={{ y: -10, opacity: 0 }}
           elevate
           animation={[
             'quick',
@@ -117,7 +123,21 @@ export default function CampusPopover({
             },
           ]}
         >
-          {renderContent()}
+        <YGroup space="$2">
+          {campuses?.documents.map((campus, index) => (
+            <YGroup.Item key={campus.$id}>
+              <Button
+                onPress={() => handleCampusChange(campus)}
+                chromeless
+                hoverStyle={{ backgroundColor: '$backgroundHover' }}
+                pressStyle={{ backgroundColor: '$backgroundPress' }}
+              >
+                <Text>{capitalizeFirstLetter(campus.name)}</Text>
+              </Button>
+              {index !== campuses.documents.length - 1 && <Separator />}
+            </YGroup.Item>
+          ))}
+        </YGroup>
         </Popover.Content>
       </Popover>
   );

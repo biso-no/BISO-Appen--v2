@@ -25,7 +25,8 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelec
       const fetchDepartments = async () => {
         const response = await databases.listDocuments('app', 'departments', [
           Query.equal('campus_id', campus),
-          Query.select(['Name', '$id', 'campus_id'])
+          Query.select(['Name', '$id', 'campus_id']),
+          Query.limit(200),
         ]);
         setDepartments(response.documents);
       };
