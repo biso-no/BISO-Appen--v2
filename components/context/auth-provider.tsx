@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases, subScribeToProfile } from '@/lib/appwrite';
+import { getAccount, updateUserName, getUserPreferences, updateUserPreferences, getDocument, updateDocument, databases, subScribeToProfile, functions } from '@/lib/appwrite';
 import { Models, Query, RealtimeResponseEvent } from 'react-native-appwrite';
 import { useProfileSubscription } from '@/lib/appwrite';
 import { usePathname } from 'expo-router';
@@ -19,6 +19,16 @@ interface Profile extends Models.Document {
   avatar?: string;
 }
 
+interface Membership {
+  membership_id: string;
+  name: string;
+  price: number;
+  category: string;
+  status: boolean;
+  expiryDate: string;
+  $id: string;
+}
+
 export interface AuthContextType {
   data: Models.User<Models.Preferences> | null;
   profile: Profile | null;
@@ -36,7 +46,8 @@ export interface AuthContextType {
   addStudentId: (studentId: string) => Promise<void>;
   updateProfile: (profile: Partial<Profile>) => Promise<void>;
   userCampus: Models.Document | null;
-  userDepartment: Models.Document | null;
+  userDepartment: Models.Document | null
+  membership: Membership | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isBisoMember, setIsBisoMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<Date | null>(null);
+  const [membership, setMembership] = useState<Membership | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userCampus, setUserCampus] = useState<Models.Document | null>(null);
   const [userDepartment, setUserDepartment] = useState<Models.Document | null>(null);
@@ -205,24 +217,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribe = subScribeToProfile({
       profileId: data.$id,
-      studentId: profile?.student_id,
       callback: (response: RealtimeResponseEvent<Models.Document>) => {
         const payload = response.payload;
-        if (payload.$collectionId === 'student_id' && payload.$id === profile?.student_id) {
-          setIsBisoMember(payload.isMember);
-        } else if (payload.$collectionId === 'user' && payload.$id === data.$id) {
+        if (payload.$collectionId === 'user' && payload.$id === data.$id) {
           fetchProfile();
         }
       },
     });
     return () => unsubscribe();
-  }, [data?.$id, profile?.student_id, fetchProfile]);
+  }, [data?.$id, fetchProfile, isOnboardingPath]);
 
   useEffect(() => {
-    if (profile?.studentId) {
-      setIsBisoMember(profile.studentId.isMember || false);
+    async function fetchBisoMembership() {
+      if (studentId) {
+        const body = {
+          snumber: studentId
+        }
+        const execution = await functions.createExecution('verify_biso_membership', studentId, false);
+        console.log("This is execution: ", execution.responseBody);
+        // Parse and extract just the nested membership object
+        const response = JSON.parse(execution.responseBody);
+        setMembership(response.membership);
+      }
     }
-  }, [profile?.studentId]);
+    fetchBisoMembership();
+  }, [studentId]);
 
   const refetchUser = useCallback(fetchAccount, [fetchAccount]);
 
@@ -244,9 +263,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateProfile,
     userCampus,
     userDepartment,
+    membership
   }), [
     data, profile, isLoading, error, membershipExpiry, isBisoMember, studentId,
-    userCampus, userDepartment, refetchUser, updateName, updateUserPrefs, updateProfile, addStudentId
+    userCampus, userDepartment, refetchUser, updateName, updateUserPrefs, updateProfile, addStudentId, membership
   ]);
 
   return (

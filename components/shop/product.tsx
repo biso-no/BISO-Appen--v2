@@ -2,15 +2,29 @@
 import { Card, H5, Paragraph, XStack, YStack, Image, Button, H3, Separator, Text, YGroup, ScrollView } from "tamagui";
 import { useEffect, useState } from "react";
 import { Models, Query } from "react-native-appwrite";
-import { databases, getDocument } from "@/lib/appwrite";
+import { databases, functions, getDocument } from "@/lib/appwrite";
 import { useWindowDimensions } from 'react-native';
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ExternalPathString, useLocalSearchParams, useRouter } from "expo-router";
 import RenderHtml from 'react-native-render-html';
 import { useTheme } from "tamagui";
 
+interface Product {
+    product: {
+        id: number;
+        name: string;
+        campus: { value: string; label: string };
+        department: { value: string; label: string };
+        images: string[];
+        price: string;
+        sale_price: string;
+        short_description: string;
+        description: string;
+        url: string;
+    };
+}
 
 export function ProductDetails({productId}: {productId: string}) {
-    const [product, setProduct] = useState<Models.Document>();
+    const [product, setProduct] = useState<Product | null>(null);
     const router = useRouter();
     const { width } = useWindowDimensions();
     const theme = useTheme();
@@ -24,11 +38,15 @@ export function ProductDetails({productId}: {productId: string}) {
             return;
         }
       const response = async () => {
-        const response = await databases.getDocument('app', 'products', productId, [
-            Query.select(['images', 'name', 'price', 'sale_price', 'description', 'url'])
-        ]);
-        console.log(response);
-        setProduct(response);
+        console.log("Product ID: ", productId);
+        const body = {
+            productId: productId
+        }
+        const response = await functions.createExecution('webshop_product', productId, false)
+
+        console.log("This is product: ", response.responseBody);
+        const data = JSON.parse(response.responseBody) as Product
+        setProduct(data);
       }
       response();
     },
@@ -42,22 +60,28 @@ export function ProductDetails({productId}: {productId: string}) {
       },    
     };
 
+    if (!product) {
+        return <Text>Loading...</Text>;
+    }
+
     return (
         <ScrollView>
         <YStack space="$4" padding="$4">
             {product && (
                 <YStack space="$4">
+                    {product.product.images?.length > 0 &&
                             <Image
-                                source={{ uri: product.images[0] }}
+                                source={{ uri: product.product.images[0] }}
                                 alt="image"
                                 height="$16"
                                 width="$25"
                                 borderRadius="$10"
                             />
-                    {product.images.length > 1 && (
+                    }
+                    {product.product.images?.length > 1 && (
                         <ScrollView horizontal>
                         <XStack space="$4">
-                            {product.images.slice(1).map((image: string) => (
+                            {product.product.images.slice(1).map((image: string) => (
                                 <Image
                                     source={{ uri: image }}
                                     alt="image"
@@ -70,26 +94,38 @@ export function ProductDetails({productId}: {productId: string}) {
                         </ScrollView>
                     )}
                 <XStack justifyContent="space-between">
-                    <Text fontSize={30} fontWeight={"bold"}>{product.name}</Text>
                     <YGroup space="$2">
-                    <Text fontSize={20}>{product.price !== product.sale_price ? product.price + " kr" : product.sale_price + " kr"}</Text>
-                    {product.sale_price && product.price !== product.sale_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.regular_price !== null ? product.regular_price + " kr" : "Free"}</Text>}
+                    <Text fontSize={30} fontWeight={"bold"}>{product.product.name}</Text>
+                    <RenderHtml 
+                    source={{ html: product?.product.short_description }} 
+                    contentWidth={width - 40}
+                    tagsStyles={htmlStyles}
+                        />
+                    </YGroup>
+                    <YGroup space="$2">
+                    <Text fontSize={20}>{product.product.price !== product.product.sale_price ? product.product.price + " kr" : product.product.sale_price + " kr"}</Text>
+                    {product.product.sale_price && product.product.price !== product.product.sale_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.product.price + " kr"}</Text>}
                     </YGroup>
                 </XStack>
                 </YStack>
             )}
                 <YStack space="$4" padding="$4">
                     <XStack space="$4" alignItems="center" justifyContent="center">
-                        <Button onPress={() => router.push(product?.url)}>View on BISO.no</Button>
+                        
                     </XStack>
+                    {product.product.description && (
+                    <YStack space="$4">
                     <Separator />
                     <Text fontSize={20} fontWeight={"bold"}>Description</Text>
                     <RenderHtml 
-                    source={{ html: product?.description }} 
+                    source={{ html: product?.product.description }} 
                     contentWidth={width - 40}
                     tagsStyles={htmlStyles}
                 />
+                    </YStack>
+                    )}
                 </YStack>
+                <Button onPress={() => router.push(product.product.url as ExternalPathString)}>Go to product</Button>
             </YStack>
         </ScrollView>
         )

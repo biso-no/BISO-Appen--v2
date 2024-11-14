@@ -9,20 +9,16 @@ import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { ChatProvider } from '@/lib/ChatContext';
 import { router } from 'expo-router';
-import {
-  registerTaskAsync,
-} from 'expo-notifications';
-import { defineTask } from 'expo-task-manager';
-import { AppState } from 'react-native';
 import { useNavigationState } from '@react-navigation/native';
 import { Tabs } from 'expo-router';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import CampusPopover from '@/components/CampusPopover';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { usePathname } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 
 Notifications.setNotificationHandler({
@@ -33,47 +29,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
-defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
-  console.log(
-    `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: App in ${AppState.currentState} state.`,
-  );
-
-  if (error) {
-    console.log(`${Platform.OS} BACKGROUND-NOTIFICATION-TASK: Error! ${JSON.stringify(error)}`);
-    return;
-  }
-
-  if (AppState.currentState.match(/inactive|background/) === null) {
-    console.log(
-      `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: App not in background state, skipping task.`,
-    );
-    return;
-  }
-
-  console.log(
-    `${Platform.OS} BACKGROUND-NOTIFICATION-TASK: Received a notification in the background! ${JSON.stringify(
-      data,
-      null,
-      2,
-    )}`,
-  );
-});
-
-registerTaskAsync(BACKGROUND_NOTIFICATION_TASK)
-  .then(() => {
-    console.log(
-      `${Platform.OS} Notifications.registerTaskAsync success: ${BACKGROUND_NOTIFICATION_TASK}`,
-    );
-  })
-  .catch((reason) => {
-    console.log(`${Platform.OS} Notifications registerTaskAsync failed: ${reason}`);
-  });
-
-function handleRegistrationError(errorMessage: string) {
-  alert(errorMessage);
-  throw new Error(errorMessage);
-}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -154,6 +109,7 @@ export default function TabLayout() {
           if (routesWithCampusPopover.includes(route.name)) {
             return (
                 <View style={{ flex: 1, paddingTop: showCampusPopover ? 0 : insets.top }}>
+                      <StatusBar style={"auto"} />
                   {showCampusPopover && (
                     <XStack justifyContent="center" alignItems="center" paddingTop={insets.top}>
                       <CampusPopover />
@@ -253,8 +209,8 @@ return (
             headerStyle: { backgroundColor: backgroundColor, elevation: 0 },
             headerLeft: undefined,
           }}
-          sceneContainerStyle={{ backgroundColor: backgroundColor }}
         >
+
           {generateScreens()}
         </Tabs>
   </ChatProvider>

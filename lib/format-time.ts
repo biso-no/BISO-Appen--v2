@@ -4,10 +4,14 @@ import { nb, enUS } from 'date-fns/locale';
 const date = new Date(2024, 0, 1); // Replace with your specific date
 export const getFormattedDate = (date: Date) => formatDistanceToNow(date, { addSuffix: true, locale: enUS });
 
-export const getFormattedDateFromString = (dateStr: string) => {
+export const getFormattedDateFromString = (dateStr?: string) => {
+    if (!dateStr) return "Date not available"; // Handle missing date string
+
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "Invalid date"; // Handle invalid date format
+
     return formatDistanceToNow(date, { addSuffix: true, locale: nb });
-}
+};
 
 //Format to dd.mm.yyyy
 export const formatDate = (date: Date) => {

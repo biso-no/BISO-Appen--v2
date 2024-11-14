@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { TamaguiProvider, Theme } from 'tamagui';
+import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
 import { AuthProvider } from '@/components/context/auth-provider';
 import * as Updates from 'expo-updates';
@@ -17,6 +17,8 @@ import 'react-native-gesture-handler';
 import { useLocalSearchParams } from 'expo-router';
 import { CampusProvider } from '@/lib/hooks/useCampus';
 import { ModalProvider } from '@/components/context/membership-modal-provider';
+import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 
 
 
@@ -37,7 +39,7 @@ SplashScreen.preventAutoHideAsync();
 
 
 
-function RootLayout() {
+export default function RootLayout() {
   
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -65,7 +67,7 @@ function RootLayout() {
 }
 
 
-export default function RootLayoutNav() {
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -100,6 +102,7 @@ useEffect(() => {
 
     <TamaguiProvider config={config}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <PortalProvider shouldAddRootHost>
     <AuthProvider>
     <CampusProvider>
       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
@@ -114,6 +117,7 @@ useEffect(() => {
       </Theme>
       </CampusProvider>
       </AuthProvider>
+      </PortalProvider>
     </ThemeProvider>
     </TamaguiProvider>
 
