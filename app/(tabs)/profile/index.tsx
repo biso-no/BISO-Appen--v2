@@ -8,11 +8,12 @@ import {
 import { User, Settings, CreditCard, Bell, LogOut } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/components/context/auth-provider';
-import { updateDocument, signOut } from '@/lib/appwrite';
+import { updateDocument, signOut, databases } from '@/lib/appwrite';
 import { ExpenseList } from '@/components/tools/expenses/expense-list';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { Switch } from '@/components/ui/switch';
 import { ProfileCard } from '@/components/profile/profile-card';
+import { Models, Query } from 'react-native-appwrite';
 
 interface ProfileSection {
   icon: React.ReactNode;
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
   const { data, profile, isLoading, isBisoMember, refetchUser } = useAuth();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [followedDepartments, setFollowedDepartments] = useState<Models.Document[]>([]);
   const [profileDetails, setProfileDetails] = useState({
     phone: profile?.phone ?? '',
     address: profile?.address ?? '',
@@ -31,6 +33,73 @@ export default function ProfileScreen() {
     zip: profile?.zip ?? '',
     bank_account: profile?.bank_account ?? ''
   });
+  
+ // Fetch followed departments
+  useEffect(() => {
+    const fetchFollowedDepartments = async () => {
+      if (!profile?.$id) return;
+      
+      try {
+        const response = await databases.listDocuments('app', 'followed_units', [
+          Query.equal('user_id', profile.$id),
+        ]);
+        
+        if (response.documents.length > 0) {
+          const departmentIds = response.documents[0].department_ids || [];
+          
+          // Fetch department details
+          const departmentsResponse = await databases.listDocuments('app', 'departments', [
+            Query.equal('$id', departmentIds),
+          ]);
+          
+          setFollowedDepartments(departmentsResponse.documents);
+        }
+      } catch (error) {
+        console.error('Error fetching followed departments:', error);
+      }
+    };
+
+    fetchFollowedDepartments();
+  }, [profile?.$id]);
+
+  const handleDepartmentSelect = async (department: Models.Document) => {
+    if (!profile?.$id) return;
+
+    const isSelected = followedDepartments.some(d => d.$id === department.$id);
+    let updatedDepartments: Models.Document[];
+
+    if (isSelected) {
+      updatedDepartments = followedDepartments.filter(d => d.$id !== department.$id);
+    } else {
+      updatedDepartments = [...followedDepartments, department];
+    }
+
+    setFollowedDepartments(updatedDepartments);
+
+    try {
+      // Check if document exists
+      const existingDoc = await databases.listDocuments('app', 'followed_units', [
+        Query.equal('user_id', profile.$id),
+      ]);
+
+      if (existingDoc.documents.length > 0) {
+        // Update existing document
+        await databases.updateDocument('app', 'followed_units', existingDoc.documents[0].$id, {
+          department_ids: updatedDepartments.map(d => d.$id),
+        });
+      } else {
+        // Create new document
+        await databases.createDocument('app', 'followed_units', profile.$id, {
+          user_id: profile.$id,
+          department_ids: updatedDepartments.map(d => d.$id),
+        });
+      }
+    } catch (error) {
+      console.error('Error updating followed departments:', error);
+      // Revert state on error
+      setFollowedDepartments(followedDepartments);
+    }
+  };
 
   // Profile update handlers
   const handleUpdateProfile = async (updates: Partial<typeof profileDetails>) => {
@@ -144,8 +213,8 @@ export default function ProfileScreen() {
             <H4>Department Settings</H4>
             <DepartmentSelector
               campus={profile?.campus_id}
-              onSelect={() => {}} // Add your handler
-              selectedDepartments={[]}
+              onSelect={handleDepartmentSelect}
+              selectedDepartments={followedDepartments}
               multiSelect
             />
           </YStack>
@@ -157,10 +226,8 @@ export default function ProfileScreen() {
   return (
     <ScrollView>
       <YStack padding="$4" space="$4">
-        {/* Profile Header */}
         <ProfileCard />
-
-        {/* Profile Sections */}
+        
         {sections.map((section, index) => (
           <YStack key={index} space="$2">
             <XStack space="$2" alignItems="center" paddingLeft="$2">
@@ -171,7 +238,6 @@ export default function ProfileScreen() {
           </YStack>
         ))}
 
-        {/* Logout Button */}
         <Button 
           onPress={handleLogout}
           variant="outlined"
