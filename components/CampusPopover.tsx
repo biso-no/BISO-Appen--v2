@@ -1,12 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Popover, Button, Text, YGroup, XStack, Separator, Spinner, Theme, ScrollView } from "tamagui";
-import { LinearGradient } from "tamagui/linear-gradient";
-import { useCampus } from "@/lib/hooks/useCampus";
+import React, { useEffect, useState, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { 
+  Popover, 
+  Button, 
+  Text, 
+  YGroup, 
+  Separator, 
+  Spinner,
+  Sheet,
+  ScrollView,
+  XStack,
+  YStack
+} from "tamagui";
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
-import { databases, getDocuments } from "@/lib/appwrite";
+import { databases } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
-import MaskedView from '@react-native-masked-view/masked-view';
+import { useCampus } from "@/lib/hooks/useCampus";
 
 interface CampusPopoverProps {
   maxHeight?: number;
@@ -27,118 +37,137 @@ export default function CampusPopover({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCampusChange = async (newCampus: Models.Document) => {
-    await onChange(newCampus);
-    setOpen(false);
-  };
+  const handleCampusChange = useCallback(async (newCampus: Models.Document) => {
+    try {
+      await onChange(newCampus);
+      setOpen(false);
+    } catch (err) {
+      setError('Failed to update campus');
+    }
+  }, [onChange]);
 
-  useEffect(() => {
-    const fetchCampuses = async () => {
-      try {
-        const data = await databases.listDocuments('app', 'campus', [
-          Query.select(['name', '$id']),
-        ]);
-        setCampuses(data);
-      } catch (err) {
-        setError('Failed to load campuses');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampuses();
+  const fetchCampuses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await databases.listDocuments('app', 'campus', [
+        Query.select(['name', '$id']),
+      ]);
+      setCampuses(data);
+    } catch (err) {
+      setError('Failed to load campuses');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const renderButton = () => (
-    <XStack 
-      alignItems="center" 
-      justifyContent="center"
-      padding="$2"
-      borderRadius="$4"
-      width={buttonWidth}
-      height={buttonHeight}
-    >
-      <Text 
-        adjustsFontSizeToFit 
-        numberOfLines={1} 
-        style={{ fontWeight: 'bold' }}
-      >
-        {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
-      </Text>
-      {open ? (
-        <ChevronUp color="white" />
-      ) : (
-        <ChevronDown color="white" />
-      )}
-    </XStack>
+  useEffect(() => {
+    fetchCampuses();
+  }, [fetchCampuses]);
+
+  const buttonText = campus?.name 
+    ? `BISO ${capitalizeFirstLetter(campus.name)}` 
+    : 'Select Campus';
+
+  const CampusList = () => (
+    <YGroup space="$2">
+      {campuses?.documents.map((campusItem, index) => (
+        <YGroup.Item key={campusItem.$id}>
+          <Button
+            onPress={() => handleCampusChange(campusItem)}
+            chromeless
+            hoverStyle={{ backgroundColor: '$backgroundHover' }}
+            pressStyle={{ backgroundColor: '$backgroundPress' }}
+          >
+            <Text>{capitalizeFirstLetter(campusItem.name)}</Text>
+          </Button>
+          {index !== (campuses.documents.length - 1) && <Separator />}
+        </YGroup.Item>
+      ))}
+    </YGroup>
   );
 
-  const renderContent = () => {
-    if (loading) return <Spinner size="large" />;
-    if (error) return <Text color="$red10">{error}</Text>;
-    if (!campuses || campuses.documents.length === 0) return <Text>No campuses available</Text>;
+  if (loading) {
+    return <Spinner size="large" />;
+  }
 
+  if (error) {
+    return <Text color="$red10">{error}</Text>;
+  }
+
+  // Use Sheet on Android, Popover on iOS
+  if (Platform.OS === 'android') {
     return (
-        <YGroup space="$2">
-          {campuses.documents.map((campus, index) => (
-            <YGroup.Item key={campus.$id}>
-              <Button
-                onPress={() => handleCampusChange(campus)}
-                chromeless
-                hoverStyle={{ backgroundColor: '$backgroundHover' }}
-                pressStyle={{ backgroundColor: '$backgroundPress' }}
-              >
-                <Text>{capitalizeFirstLetter(campus.name)}</Text>
-              </Button>
-              {index !== campuses.documents.length - 1 && <Separator />}
-            </YGroup.Item>
-          ))}
-        </YGroup>
-    );
-  };
-
-  return (
-      <Popover size="$4" open={open} onOpenChange={setOpen}>
-        <Popover.Trigger asChild>
-          <Button
-            chromeless
-            onPress={() => setOpen(!open)}
-          >
-           {campus?.name ? `BISO ${capitalizeFirstLetter(campus.name)}` : 'Select Campus'}
-           {open ? (
-        <ChevronUp />
-      ) : (
-        <ChevronDown />
-      )}
-          </Button>
-        </Popover.Trigger>
-        <Popover.Content
-          elevate
-          animation={[
-            'quick',
-            {
-              opacity: {
-                overshootClamping: true,
-              },
-            },
-          ]}
+      <YStack>
+        <Button
+          chromeless
+          onPress={() => setOpen(true)}
+          style={{
+            width: buttonWidth,
+            height: buttonHeight,
+          }}
         >
-        <YGroup space="$2">
-          {campuses?.documents.map((campus, index) => (
-            <YGroup.Item key={campus.$id}>
-              <Button
-                onPress={() => handleCampusChange(campus)}
-                chromeless
-                hoverStyle={{ backgroundColor: '$backgroundHover' }}
-                pressStyle={{ backgroundColor: '$backgroundPress' }}
-              >
-                <Text>{capitalizeFirstLetter(campus.name)}</Text>
-              </Button>
-              {index !== campuses.documents.length - 1 && <Separator />}
-            </YGroup.Item>
-          ))}
-        </YGroup>
-        </Popover.Content>
-      </Popover>
+          <XStack space="$2" alignItems="center">
+            <Text>{buttonText}</Text>
+            <ChevronDown />
+          </XStack>
+        </Button>
+
+        <Sheet
+          modal
+          open={open}
+          onOpenChange={setOpen}
+          snapPoints={[40]}
+          position={0}
+          dismissOnSnapToBottom
+        >
+          <Sheet.Overlay />
+          <Sheet.Frame padding="$4">
+            <Sheet.ScrollView>
+              <YStack space="$4">
+                <Text fontSize={18} fontWeight="bold">Select Campus</Text>
+                <CampusList />
+              </YStack>
+            </Sheet.ScrollView>
+          </Sheet.Frame>
+        </Sheet>
+      </YStack>
+    );
+  }
+
+  // iOS Popover
+  return (
+    <Popover size="$4" open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <Button
+          chromeless
+          onPress={() => setOpen(!open)}
+          style={{
+            width: buttonWidth,
+            height: buttonHeight,
+          }}
+        >
+          <XStack space="$2" alignItems="center">
+            <Text>{buttonText}</Text>
+            {open ? <ChevronUp /> : <ChevronDown />}
+          </XStack>
+        </Button>
+      </Popover.Trigger>
+
+      <Popover.Content
+        elevate
+        animation={[
+          'quick',
+          {
+            opacity: {
+              overshootClamping: true,
+            },
+          },
+        ]}
+      >
+        <ScrollView maxHeight={maxHeight}>
+          <CampusList />
+        </ScrollView>
+      </Popover.Content>
+    </Popover>
   );
 }
