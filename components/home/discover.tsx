@@ -49,7 +49,7 @@ export function Discover() {
                     <VolunteerList limit={15} />
                 </YStack>
             )}
-            {selectedCategory.title === "Shop" && <HomeProducts />}
+            {selectedCategory.title === "Shop" && <HomeProducts hideAllButton={false}/>}
 
         </YStack>
     );

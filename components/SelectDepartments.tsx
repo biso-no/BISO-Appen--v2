@@ -1,8 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { YStack, Input, Spinner, ScrollView, YGroup, ListItem, Separator, useTheme } from 'tamagui';
+import { 
+  YStack, Input, ScrollView, Card, XStack, 
+  Button, Spinner, Text, H4,
+  AnimatePresence, View
+} from 'tamagui';
 import { Models, Query } from 'react-native-appwrite';
-import { Check } from '@tamagui/lucide-icons';
+import { Search, Check, X, Info } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
+import { useColorScheme } from 'react-native';
 
 interface DepartmentSelectorProps {
   campus: string | null | undefined;
@@ -11,52 +16,152 @@ interface DepartmentSelectorProps {
   multiSelect?: boolean;
 }
 
-const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ campus, onSelect, selectedDepartments, multiSelect = false }) => {
+const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({ 
+  campus, 
+  onSelect, 
+  selectedDepartments
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const theme = useTheme();
-  const [filteredDepartments, setDepartments] = useState<Models.Document[]>([]);
-
-  const handleSelect = useCallback((department: Models.Document) => {
-    onSelect(department);
-  }, [onSelect]);
+  const [departments, setDepartments] = useState<Models.Document[]>([]);
+  const [loading, setLoading] = useState(false);
+  const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
     if (campus) {
       const fetchDepartments = async () => {
-        const response = await databases.listDocuments('app', 'departments', [
-          Query.equal('campus_id', campus),
-          Query.select(['Name', '$id', 'campus_id'])
-        ]);
-        setDepartments(response.documents);
+        setLoading(true);
+        try {
+          const response = await databases.listDocuments('app', 'departments', [
+            Query.equal('campus_id', campus),
+            Query.select(['Name', '$id', 'campus_id']),
+            Query.limit(200),
+          ]);
+          setDepartments(response.documents);
+        } catch (error) {
+          console.error('Error fetching departments:', error);
+        }
+        setLoading(false);
       };
       fetchDepartments();
     }
   }, [campus]);
 
-  const isSelected = (department: Models.Document) => selectedDepartments.some(d => d.$id === department.$id);
+  const filteredDepartments = departments.filter(dept => 
+    dept.Name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const isSelected = useCallback((department: Models.Document) => 
+    selectedDepartments.some(d => d.$id === department.$id),
+  [selectedDepartments]);
 
   return (
-    <YStack flex={1}>
-      <Input
-        placeholder="Search departments..."
-        value={searchTerm}
-        onChangeText={setSearchTerm}
-        marginBottom={20}
-      />
-      <ScrollView flexGrow={1}>
-        <YGroup alignSelf='center' size="$4" animation="medium" bordered>
-          {filteredDepartments?.map((department: Models.Document) => (
-            <YGroup.Item key={department.$id}>
-              <ListItem
-                title={department.Name}
-                icon={isSelected(department) ? <Check animation={'spring'} /> : undefined}
-                backgroundColor={isSelected(department) ? theme?.primary?.get() : undefined}
-                onPress={() => handleSelect(department)}
-              />
-              <Separator direction='rtl' />
-            </YGroup.Item>
-          ))}
-        </YGroup>
+    <YStack space="$4" flex={1}>
+      {/* Header */}
+      <XStack justifyContent="space-between" alignItems="center">
+        <H4>Follow Units</H4>
+        <XStack 
+          backgroundColor="$blue4" 
+          paddingHorizontal="$3" 
+          paddingVertical="$2" 
+          borderRadius="$4"
+          space="$2"
+          alignItems="center"
+        >
+          <Info size={16} />
+          <Text>
+            {selectedDepartments.length} selected
+          </Text>
+        </XStack>
+      </XStack>
+
+      {/* Search */}
+      <Card bordered padding="$2">
+        <XStack space="$2" alignItems="center">
+          <Search size={20} opacity={0.5} />
+          <Input
+            placeholder="Search units..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            flex={1}
+            borderWidth={0}
+            backgroundColor="transparent"
+          />
+          {searchTerm && (
+            <Button
+              size="$2"
+              circular
+              icon={X}
+              onPress={() => setSearchTerm('')}
+              backgroundColor="transparent"
+              opacity={0.5}
+            />
+          )}
+        </XStack>
+      </Card>
+
+      {/* Selected Units */}
+      {selectedDepartments.length > 0 && (
+        <YStack space="$2">
+          <Text color="$gray11">Selected units:</Text>
+          <XStack flexWrap="wrap" gap="$2">
+            {selectedDepartments.map((dept) => (
+              <Button
+                key={dept.$id}
+                size="$3"
+                theme="active"
+                onPress={() => onSelect(dept)}
+                iconAfter={X}
+              >
+                {dept.Name}
+              </Button>
+            ))}
+          </XStack>
+        </YStack>
+      )}
+
+      {/* Units List */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack space="$2">
+          {loading ? (
+            <Card padding="$4" alignItems="center">
+              <Spinner size="large" />
+            </Card>
+          ) : filteredDepartments.length > 0 ? (
+            filteredDepartments.map((department) => {
+              const selected = isSelected(department);
+              return (
+                <Button
+                  key={department.$id}
+                  size="$4"
+                  borderRadius="$4"
+                  backgroundColor={selected ? '$blue8' : '$gray4'}
+                  pressStyle={{ scale: 0.98 }}
+                  onPress={() => onSelect(department)}
+                  justifyContent="space-between"
+                  paddingHorizontal="$4"
+                  paddingVertical="$3"
+                >
+                  <Text 
+                    color={selected ? 'white' : '$gray12'}
+                    fontWeight={selected ? 'bold' : 'normal'}
+                  >
+                    {department.Name}
+                  </Text>
+                  {selected && (
+                    <Check 
+                      size={20} 
+                      color="white"
+                    />
+                  )}
+                </Button>
+              );
+            })
+          ) : (
+            <Card padding="$4" alignItems="center">
+              <Text color="$gray11">No units found</Text>
+            </Card>
+          )}
+        </YStack>
       </ScrollView>
     </YStack>
   );

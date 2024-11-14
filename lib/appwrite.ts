@@ -24,7 +24,7 @@ const messaging = new Messaging(client);
 
 const teams = new Teams(client);
 
-const functions = new Functions(client);
+export const functions = new Functions(client);
 
 export async function signIn(email: string) {
     const response = await account.createEmailToken(ID.unique(), email);
