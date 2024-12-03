@@ -34,7 +34,7 @@ export function News() {
             const fetchedNews = await databases.listDocuments('app', 'news', query);
 
             setNews(fetchedNews);
-            console.log("Fetched news: ", fetchedNews);
+            //console.log("Fetched news: ", fetchedNews);
         }
         fetchNews();
         setLoading(false);

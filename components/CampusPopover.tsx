@@ -94,8 +94,7 @@ export default function CampusPopover({
     return <Text color="$red10">{error}</Text>;
   }
 
-  // Use Sheet on Android, Popover on iOS
-  if (Platform.OS === 'android') {
+
     return (
       <YStack>
         <Button
@@ -132,42 +131,4 @@ export default function CampusPopover({
         </Sheet>
       </YStack>
     );
-  }
-
-  // iOS Popover
-  return (
-    <Popover size="$4" open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <Button
-          chromeless
-          onPress={() => setOpen(!open)}
-          style={{
-            width: buttonWidth,
-            height: buttonHeight,
-          }}
-        >
-          <XStack space="$2" alignItems="center">
-            <Text>{buttonText}</Text>
-            {open ? <ChevronUp /> : <ChevronDown />}
-          </XStack>
-        </Button>
-      </Popover.Trigger>
-
-      <Popover.Content
-        elevate
-        animation={[
-          'quick',
-          {
-            opacity: {
-              overshootClamping: true,
-            },
-          },
-        ]}
-      >
-        <ScrollView maxHeight={maxHeight}>
-          <CampusList />
-        </ScrollView>
-      </Popover.Content>
-    </Popover>
-  );
 }

@@ -116,8 +116,6 @@ export default function DepartmentsScreen() {
       transition={{ type: 'timing', duration: 500, delay: index * 100 }}
     >
       <Card
-        elevate
-        bordered
         animation="bouncy"
         scale={0.95}
         marginBottom="$4"
