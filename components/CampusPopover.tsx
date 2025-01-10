@@ -10,9 +10,10 @@ import {
   Sheet,
   ScrollView,
   XStack,
-  YStack
+  YStack,
+  useTheme
 } from "tamagui";
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
+import { ChevronDown, ChevronUp, MapPin } from "@tamagui/lucide-icons";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { databases } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
@@ -36,6 +37,8 @@ export default function CampusPopover({
   const [campuses, setCampuses] = useState<Models.DocumentList<Models.Document> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const theme = useTheme();
 
   const handleCampusChange = useCallback(async (newCampus: Models.Document) => {
     try {
@@ -106,6 +109,7 @@ export default function CampusPopover({
           }}
         >
           <XStack space="$2" alignItems="center">
+            <MapPin size={16} color={theme?.gray11?.get()} />
             <Text>{buttonText}</Text>
             <ChevronDown />
           </XStack>

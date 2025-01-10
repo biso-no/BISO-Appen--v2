@@ -1,6 +1,7 @@
 {
     "cli": {
-      "version": ">=5.4.0"
+      "version": ">=14.3.1",
+      "appVersionSource": "remote"
     },
     "build": {
       "dev": {
@@ -21,13 +22,14 @@
         }
       },
       "production": {
-      "android": {
-        "image": "latest"
-      },
-      "ios": {
-        "image": "latest"
+        "autoIncrement": true,
+        "android": {
+          "image": "latest"
+        },
+        "ios": {
+          "image": "latest"
+        }
       }
-    }
       },
       "submit": {
         "production": {

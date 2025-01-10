@@ -47,7 +47,9 @@ export interface AuthContextType {
   updateProfile: (profile: Partial<Profile>) => Promise<void>;
   userCampus: Models.Document | null;
   userDepartment: Models.Document | null
-  membership: Membership | null
+  membership: Membership | null;
+  followedDepartments: Models.Document[]
+  onToggleDepartmentFollow: (department: Models.Document) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   const [userCampus, setUserCampus] = useState<Models.Document | null>(null);
   const [userDepartment, setUserDepartment] = useState<Models.Document | null>(null);
+  const [followedDepartments, setFollowedDepartments] = useState<Models.Document[]>([]);
 
   const pathname = usePathname();
 
@@ -143,6 +146,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserDepartment(null);
     }
   }, [profile?.departments_ids]);
+
+  const onToggleDepartmentFollow = useCallback(async (department: Models.Document) => {
+    if (!profile?.$id) return;
+
+    try {
+      const response = await databases.listDocuments('app', 'followed_units', [
+        Query.equal('user_id', profile.$id),
+      ]);
+      
+      if (response.documents.length > 0) {
+        await databases.deleteDocument('app', 'followed_units', response.documents[0].$id);
+      } else {
+        await databases.createDocument('app', 'followed_units', department.$id, {
+          user_id: profile.$id,
+          department_ids: [department.$id],
+        });
+      }
+    } catch (error) {
+      console.error('Error updating followed units:', error);
+    }
+  }, [profile?.$id]);
 
   useEffect(() => {
     fetchAccount();
@@ -243,6 +267,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchBisoMembership();
   }, [studentId]);
 
+  useEffect(() => {
+    const fetchFollowedDepartments = async () => {
+      if (!profile?.$id) return;
+      
+      try {
+        const response = await databases.listDocuments('app', 'followed_units', [
+          Query.equal('user_id', profile.$id),
+        ]);
+        
+        if (response.documents.length > 0) {
+          const departmentIds = response.documents[0].department_ids || [];
+          
+          // Fetch department details
+          const departmentsResponse = await databases.listDocuments('app', 'departments', [
+            Query.equal('$id', departmentIds),
+          ]);
+          
+          setFollowedDepartments(departmentsResponse.documents);
+        }
+      } catch (error) {
+        console.error('Error fetching followed departments:', error);
+      }
+    };
+
+    fetchFollowedDepartments();
+  }, [profile?.$id]);
+
   const refetchUser = useCallback(fetchAccount, [fetchAccount]);
 
   const contextValue = useMemo(() => ({
@@ -263,7 +314,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateProfile,
     userCampus,
     userDepartment,
-    membership
+    membership,
+    followedDepartments,
+    onToggleDepartmentFollow
   }), [
     data, profile, isLoading, error, membershipExpiry, isBisoMember, studentId,
     userCampus, userDepartment, refetchUser, updateName, updateUserPrefs, updateProfile, addStudentId, membership
