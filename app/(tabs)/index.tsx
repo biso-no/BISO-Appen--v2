@@ -33,6 +33,7 @@ import { capitalizeFirstLetter, getFormattedDateFromString } from '@/lib/utils/h
 import { LinearGradient } from '@tamagui/linear-gradient';
 import RenderHTML from 'react-native-render-html';
 import { formatDate, parse, parseISO } from 'date-fns';
+import { useColorScheme } from 'react-native';
 
 // Types from your existing components
 interface Product {
@@ -85,6 +86,8 @@ export default function HomeScreen() {
   const [news, setNews] = useState<Models.DocumentList<Models.Document>>();
   const [isLoading, setIsLoading] = useState(true);
 
+  const colorsScheme = useColorScheme();
+
   useEffect(() => {
     loadAllData();
   }, [campus]);
@@ -128,7 +131,15 @@ export default function HomeScreen() {
         featured_image: event.featured_image
       }));
   
-      setEvents(transformedEvents);
+      //remove events that have date and time in the past
+      const today = new Date();
+      const filteredEvents = transformedEvents.filter((event: any) => {
+        const eventDate = parseISO(event.date);
+        return eventDate > today;
+      });
+  
+      setEvents(filteredEvents);
+      
     } catch (err) {
       console.error('Error loading events:', err);
     } finally {
@@ -175,6 +186,16 @@ export default function HomeScreen() {
     setRefreshing(true);
     await loadAllData();
     setRefreshing(false);
+  };
+
+  const textColor = colorsScheme === 'dark' ? 'white' : 'black';
+
+  const htmlStyles = {
+    body: { 
+      fontSize: 16, 
+      lineHeight: 24, 
+      color: textColor,
+    }, 
   };
 
   const LoadingCard = () => (
@@ -368,6 +389,8 @@ export default function HomeScreen() {
                     <RenderHTML
                       source={{ html: job.title }}
                       contentWidth={300}
+                      //Text color to white or dark depetnding on theme
+                      tagsStyles={htmlStyles}
                     />
                   </Text>
                 </XStack>

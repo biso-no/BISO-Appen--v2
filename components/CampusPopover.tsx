@@ -108,7 +108,7 @@ export default function CampusPopover({
             height: buttonHeight,
           }}
         >
-          <XStack space="$2" alignItems="center">
+          <XStack gap="$2" alignItems="center">
             <MapPin size={16} color={theme?.gray11?.get()} />
             <Text>{buttonText}</Text>
             <ChevronDown />

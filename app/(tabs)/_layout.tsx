@@ -125,9 +125,7 @@ export default function TabLayout() {
                       flexDirection="row"
                       alignItems="center"
                     >
-                      <Text marginLeft="$2" fontSize={14} color="$gray11">
                         <CampusPopover />
-                      </Text>
                     </Button>
                   </XStack>
                   <Button 
@@ -146,7 +144,7 @@ export default function TabLayout() {
               <StatusBar style={"auto"} />
               {showCampusPopover && (
                 <XStack justifyContent="center" alignItems="center">
-                  <Text><CampusPopover /></Text>
+                  <CampusPopover />
                 </XStack>
               )}
             </View>
@@ -158,9 +156,7 @@ export default function TabLayout() {
             justifyContent="space-between" 
             alignItems="center" 
             width="100%" 
-            paddingTop={insets.top}
             paddingHorizontal="$4"
-            paddingBottom="$4"
           >
             <XStack flex={1} alignItems="center">
               <Button

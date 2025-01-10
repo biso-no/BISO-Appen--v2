@@ -8,7 +8,8 @@ import {
   Input, 
   ScrollView, 
   Button, 
-  Image 
+  Image,
+  useTheme
 } from 'tamagui'
 import { 
   Search, 
@@ -20,7 +21,8 @@ import {
   Briefcase,
   Bell,
   Lock,
-  ChevronRight 
+  ChevronRight, 
+  Users
 } from '@tamagui/lucide-icons'
 import { MotiView } from 'moti'
 import { Link, useRouter } from 'expo-router'
@@ -29,6 +31,7 @@ import { useCampus } from '@/lib/hooks/useCampus'
 import { databases } from '@/lib/appwrite'
 import axios from 'axios'
 import { useAuth } from '@/components/context/auth-provider'
+import { useColorScheme } from 'react-native'
 
 interface Event {
   id: number;
@@ -43,29 +46,28 @@ interface Event {
 }
 
 interface WordPressEvent {
-    id: number;
-    date: string;
-    slug: string;
-    status: string;
-    description: string;
-    link: string;
-    image: {
-        url: string;
-    }
-    title: {
-      rendered: string;
-    };
-    content: {
-      rendered: string;
-    };
-    _embedded?: {
-      'wp:featuredmedia'?: Array<{
-        source_url: string;
-      }>;
-    };
-    organizer_name: string;
+  id: number;
+  date: string;
+  slug: string;
+  status: string;
+  description: string;
+  link: string;
+  image: {
+    url: string;
   }
-  
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+  };
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string;
+    }>;
+  };
+  organizer_name: string;
+}
 
 type ExploreCategory = {
   id: string
@@ -95,6 +97,14 @@ const categories: ExploreCategory[] = [
     link: '/explore/products'
   },
   {
+    id: 'units',
+    title: 'All clubs & units',
+    description: 'Discover student clubs and organizations',
+    icon: Users,
+    color: 'blue',
+    link: '/explore/units'
+  },
+  {
     id: 'reimbursements',
     title: 'Reimbursements',
     description: 'Submit and track expenses',
@@ -112,6 +122,7 @@ const categories: ExploreCategory[] = [
     link: '/explore/volunteer'
   }
 ]
+
 export default function ExploreScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -121,6 +132,8 @@ export default function ExploreScreen() {
   const { campus } = useCampus()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     loadEvents()
@@ -143,7 +156,6 @@ export default function ExploreScreen() {
   
       const response = await axios.get(url, { params });
       
-      // Transform the events to match the Event interface
       const transformedEvents = response.data.map((event: any) => ({
         id: event.id,
         title: event.title,
@@ -182,7 +194,7 @@ export default function ExploreScreen() {
       }}
     >
       <Stack
-        backgroundColor="$gray2"
+        backgroundColor="$backgroundHover"
         borderRadius="$4"
         height={250}
         marginVertical="$2"
@@ -191,8 +203,8 @@ export default function ExploreScreen() {
   )
 
   const EventCard = ({ event }: { event: Event }) => {
-
     const router = useRouter()
+    
     const formatEventDate = (dateString: string) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-NO', {
@@ -227,7 +239,8 @@ export default function ExploreScreen() {
             <Stack
               backgroundColor="$background"
               borderRadius="$4"
-              borderColor="$gray5"
+              borderColor="$borderColor"
+              borderWidth={1}
               overflow="hidden"
               marginVertical="$2"
             >
@@ -238,14 +251,28 @@ export default function ExploreScreen() {
                 resizeMode="cover"
               />
               <YStack padding="$4" space="$2">
-                <Text fontSize={18} fontWeight="bold" numberOfLines={1}>
+                <Text 
+                  fontSize={18} 
+                  fontWeight="bold" 
+                  numberOfLines={1}
+                  color="$color"
+                >
                   {event.title}
                 </Text>
-                <Text fontSize={14} color="$gray11" numberOfLines={2}>
+                <Text 
+                  fontSize={14} 
+                  color="$color"
+                  opacity={0.7}
+                  numberOfLines={2}
+                >
                   {event.excerpt}
                 </Text>
                 <XStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize={14} color="$gray11">
+                  <Text 
+                    fontSize={14} 
+                    color="$color" 
+                    opacity={0.7}
+                  >
                     {formatEventDate(event.date)}
                   </Text>
                   <Button
@@ -256,7 +283,7 @@ export default function ExploreScreen() {
                     pressStyle={{ scale: 0.97 }}
                     onPress={() => router.push(`/explore/events/${event.id}`)}
                   >
-                    View Details
+                    <Text color="white">View Details</Text>
                   </Button>
                 </XStack>
               </YStack>
@@ -267,85 +294,116 @@ export default function ExploreScreen() {
     );
   };
 
-  const CategoryCard = ({ category }: { category: ExploreCategory }) => {
-    const handlePress = () => {
-      if (category.requiresAuth && !user) {
-        setShowAuthDialog(true)
-        return
-      }
-      router.push(category.link as any)
+// CategoryCard component with improved contrast
+const CategoryCard = ({ category }: { category: ExploreCategory }) => {
+  const theme = useTheme()
+  const handlePress = () => {
+    if (category.requiresAuth && !user) {
+      setShowAuthDialog(true)
+      return
     }
-
-    return (
-      <Button
-        unstyled
-        disabled={category.requiresAuth && !user}
-        pressStyle={{ scale: 0.98 }}
-        onPress={handlePress}
-      >
-        <MotiView
-          from={{ opacity: 0, translateX: -20 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{
-            type: 'spring',
-            damping: 18,
-            mass: 0.8,
-            delay: categories.findIndex(c => c.id === category.id) * 100
-          }}
-        >
-          <XStack
-            backgroundColor={`$${category.color}2`}
-            padding="$4"
-            borderRadius="$4"
-            alignItems="flex-start"
-            justifyContent="space-between"
-            width="100%"
-          >
-            <XStack 
-              space="$4" 
-              alignItems="flex-start"
-              flex={1}
-              flexWrap="nowrap"
-            >
-              <Stack
-                backgroundColor={`$${category.color}4`}
-                padding="$3"
-                borderRadius="$3"
-                flexShrink={0}
-              >
-                {category.requiresAuth && !user ? (
-                  <Lock size={24} />
-                ) : (
-                  <category.icon size={24} />
-                )}
-              </Stack>
-              <YStack flex={1} minWidth={0}>
-                <Text 
-                  fontWeight="bold"
-                  numberOfLines={1}
-                >
-                  {category.title}
-                </Text>
-                <Text 
-                  fontSize={14} 
-                  color="$gray11"
-                  numberOfLines={2}
-                  flexWrap="wrap"
-                >
-                  {category.requiresAuth && !user ? 
-                    'Please sign in to access this feature' : 
-                    category.description}
-                </Text>
-              </YStack>
-            </XStack>
-            <Stack flexShrink={0} marginLeft="$2">
-              <ChevronRight size={20} color={`${category.color}8)`} />
-            </Stack>
-          </XStack>
-        </MotiView>
-      </Button>
-    )
+    router.push(category.link as any)
   }
+
+  // Get correct background and border colors based on theme
+  const getBackgroundColor = () => {
+    return colorScheme === 'dark' 
+      ? `$${category.color}7` // Slightly lighter background in dark mode
+      : `$${category.color}1` // Lighter background in light mode
+  }
+
+  const getBorderColor = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}5` // More visible border in dark mode
+      : `$${category.color}3` // Subtle border in light mode
+  }
+
+  const getIconBackground = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}5` // More visible icon background in dark mode
+      : `$${category.color}2` // Subtle icon background in light mode
+  }
+
+  const getIconColor = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}11` // Brighter icon in dark mode
+      : `$${category.color}9`  // Standard icon color in light mode
+  }
+
+  return (
+    <Button
+      unstyled
+      disabled={category.requiresAuth && !user}
+      pressStyle={{ scale: 0.98 }}
+      onPress={handlePress}
+    >
+      <MotiView
+        from={{ opacity: 0, translateX: -20 }}
+        animate={{ opacity: 1, translateX: 0 }}
+        transition={{
+          type: 'spring',
+          damping: 18,
+          mass: 0.8,
+          delay: categories.findIndex(c => c.id === category.id) * 100
+        }}
+      >
+        <XStack
+          backgroundColor={getBackgroundColor()}
+          borderColor={getBorderColor()}
+          borderWidth={1}
+          padding="$4"
+          borderRadius="$4"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          width="100%"
+        >
+          <XStack 
+            space="$4" 
+            alignItems="flex-start"
+            flex={1}
+            flexWrap="nowrap"
+          >
+            <Stack
+              backgroundColor={getIconBackground()}
+              padding="$3"
+              borderRadius="$3"
+              flexShrink={0}
+            >
+              {category.requiresAuth && !user ? (
+                <Lock size={24} color={getIconColor()} />
+              ) : (
+                <category.icon size={24} color={getIconColor()} />
+              )}
+            </Stack>
+            <YStack flex={1} minWidth={0}>
+              <Text 
+                fontWeight="bold"
+                numberOfLines={1}
+                color="$color"
+              >
+                {category.title}
+              </Text>
+              <Text 
+                fontSize={14} 
+                color="$color"
+                opacity={0.8} // Increased opacity for better readability
+                numberOfLines={2}
+                flexWrap="wrap"
+              >
+                {category.requiresAuth && !user ? 
+                  'Please sign in to access this feature' : 
+                  category.description}
+              </Text>
+            </YStack>
+          </XStack>
+          <Stack flexShrink={0} marginLeft="$2">
+            <ChevronRight size={20} color={getIconColor()} />
+          </Stack>
+        </XStack>
+      </MotiView>
+    </Button>
+  )
+}
 
   return (
     <YStack flex={1} backgroundColor="$background">
@@ -355,45 +413,23 @@ export default function ExploreScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Search */}
-        {/*}
-        <Stack
-          backgroundColor="$gray2"
-          borderRadius="$4"
-          flexDirection="row"
-          alignItems="center"
-          paddingHorizontal="$4"
-          marginBottom="$4"
-        >
-          <Search size={20} color="$gray9" />
-          <Input
-            flex={1}
-            marginLeft="$2"
-            placeholder="Search events, tickets, shops..."
-            borderWidth={0}
-            backgroundColor="transparent"
-          />
-        </Stack>
-        */}
-        {/* Featured Events */}
         <YStack space="$4">
-          <Text fontSize={18} fontWeight="bold">Featured Events</Text>
+          <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
           {error ? (
             <Stack
               backgroundColor="$red2"
               padding="$4"
               borderRadius="$4"
               borderWidth={1}
-              borderColor="$red5"
+              borderColor="$red4"
             >
-              <Text color="$red11">{error}</Text>
+              <Text color="$red9">{error}</Text>
               <Button
                 marginTop="$2"
                 onPress={loadEvents}
-                backgroundColor="$red5"
-                color="white"
+                backgroundColor="$red8"
               >
-                Retry
+                <Text color="white">Retry</Text>
               </Button>
             </Stack>
           ) : isLoading ? (
@@ -402,7 +438,7 @@ export default function ExploreScreen() {
               <LoadingEventCard />
             </>
           ) : events.length === 0 ? (
-            <Text color="$gray11" textAlign="center" padding="$4">
+            <Text color="$color" opacity={0.7} textAlign="center" padding="$4">
               No events found
             </Text>
           ) : (
@@ -412,9 +448,8 @@ export default function ExploreScreen() {
           )}
         </YStack>
 
-        {/* Services */}
         <YStack space="$4" marginTop="$6" marginBottom="$8">
-          <Text fontSize={18} fontWeight="bold">Services</Text>
+          <Text fontSize={18} fontWeight="bold" color="$color">Services</Text>
           <YStack space="$3">
             {categories.map(category => (
               <CategoryCard key={category.id} category={category} />

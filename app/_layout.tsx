@@ -118,6 +118,5 @@ useEffect(() => {
       </PortalProvider>
     </ThemeProvider>
     </TamaguiProvider>
-
   );
 }
