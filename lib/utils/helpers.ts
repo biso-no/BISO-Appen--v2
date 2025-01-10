@@ -14,3 +14,13 @@ export function truncateString(str: string, maxLength: number) {
     }
     return str.substring(0, maxLength) + '...';
   }
+
+  export function getFormattedDateFromString(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  }

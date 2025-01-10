@@ -10,9 +10,10 @@ import {
   Sheet,
   ScrollView,
   XStack,
-  YStack
+  YStack,
+  useTheme
 } from "tamagui";
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
+import { ChevronDown, ChevronUp, MapPin } from "@tamagui/lucide-icons";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { databases } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
@@ -36,6 +37,8 @@ export default function CampusPopover({
   const [campuses, setCampuses] = useState<Models.DocumentList<Models.Document> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const theme = useTheme();
 
   const handleCampusChange = useCallback(async (newCampus: Models.Document) => {
     try {
@@ -94,8 +97,7 @@ export default function CampusPopover({
     return <Text color="$red10">{error}</Text>;
   }
 
-  // Use Sheet on Android, Popover on iOS
-  if (Platform.OS === 'android') {
+
     return (
       <YStack>
         <Button
@@ -106,7 +108,8 @@ export default function CampusPopover({
             height: buttonHeight,
           }}
         >
-          <XStack space="$2" alignItems="center">
+          <XStack gap="$2" alignItems="center">
+            <MapPin size={16} color={theme?.gray11?.get()} />
             <Text>{buttonText}</Text>
             <ChevronDown />
           </XStack>
@@ -132,42 +135,4 @@ export default function CampusPopover({
         </Sheet>
       </YStack>
     );
-  }
-
-  // iOS Popover
-  return (
-    <Popover size="$4" open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <Button
-          chromeless
-          onPress={() => setOpen(!open)}
-          style={{
-            width: buttonWidth,
-            height: buttonHeight,
-          }}
-        >
-          <XStack space="$2" alignItems="center">
-            <Text>{buttonText}</Text>
-            {open ? <ChevronUp /> : <ChevronDown />}
-          </XStack>
-        </Button>
-      </Popover.Trigger>
-
-      <Popover.Content
-        elevate
-        animation={[
-          'quick',
-          {
-            opacity: {
-              overshootClamping: true,
-            },
-          },
-        ]}
-      >
-        <ScrollView maxHeight={maxHeight}>
-          <CampusList />
-        </ScrollView>
-      </Popover.Content>
-    </Popover>
-  );
 }

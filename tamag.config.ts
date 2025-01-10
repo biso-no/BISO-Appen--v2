@@ -22,6 +22,7 @@ const extendedTokens = {
     blue8: '#2d64ff',
     blue9: '#0f4dff',
     blue10: '#0037d0',
+    blue11: '#0024a3',
 
     // Green spectrum
     green1: '#e7f9ed',
@@ -34,6 +35,43 @@ const extendedTokens = {
     green8: '#43d370',
     green9: '#2bce5e',
     green10: '#14c94c',
+    green11: '#0d8f36',
+
+    purple1: '#f5f3ff',
+    purple2: '#ede9fe',
+    purple3: '#ddd6fe',
+    purple4: '#c4b5fd',
+    purple5: '#a78bfa',
+    purple6: '#8b5cf6',
+    purple7: '#7c3aed',
+    purple8: '#6d28d9',
+    purple9: '#5b21b6',
+    purple10: '#4c1d95',
+    purple11: '#4c1d95',
+
+    orange1: '#fff7ed',
+    orange2: '#ffedd5',
+    orange3: '#fed7aa',
+    orange4: '#fdba74',
+    orange5: '#fb923c',
+    orange6: '#f97316',
+    orange7: '#ea580c',
+    orange8: '#c2410c',
+    orange9: '#9a3412',
+    orange10: '#7c2d12',
+    orange11: '#7c2d12',
+
+    pink1: '#fdf2f8',
+    pink2: '#fce7f3',
+    pink3: '#fbcfe8',
+    pink4: '#f9a8d4',
+    pink5: '#f472b6',
+    pink6: '#ec4899',
+    pink7: '#db2777',
+    pink8: '#be185d',
+    pink9: '#9d174d',
+    pink10: '#831843',
+    pink11: '#831843',
   }
 };
 
@@ -76,7 +114,9 @@ const extendedThemes = {
     blue8: '#c3d4ff',
     blue9: '#e1e9ff',
     blue10: '#f0f4ff',
+    blue11: '#ffffff', // Brightest variation for dark mode
 
+    // Greens (similarly adjusted for dark mode)
     green1: '#14c94c',
     green2: '#2bce5e',
     green3: '#43d370',
@@ -87,6 +127,7 @@ const extendedThemes = {
     green8: '#b8eeca',
     green9: '#d0f4dc',
     green10: '#e7f9ed',
+    green11: '#ffffff',
   }
 };
 

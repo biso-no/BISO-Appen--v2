@@ -32,13 +32,11 @@ function ExpenseCard({ expense }: { expense: Models.Document }) {
 
     return (
         <Card 
-            bordered
-            borderWidth={3}
             width={"100%"}
             size="$6"
             onPress={() => router.push(`/explore/expenses/${expense.$id}`)}
         >
-            <YStack space="$5" alignItems="flex-start" justifyContent="center">
+            <YStack gap="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
                     <YStack>
                         <Text fontSize={30} fontWeight={"bold"}>{description}</Text>
@@ -63,7 +61,7 @@ export function CreateExpenseCard() {
             bordered
             borderWidth={3}
         >
-            <YStack space="$5" alignItems="flex-start" justifyContent="center">
+            <YStack gap="$5" alignItems="flex-start" justifyContent="center">
                 <Card.Header>
                     <YStack>
                         <XGroup marginRight={10}>
@@ -158,9 +156,9 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
 
     return (
         <ScrollView>
-            <YStack space="$2" alignItems="center" justifyContent="center" padding="$2">
+            <YStack gap="$2" alignItems="center" justifyContent="center" padding="$2">
                 {withFilters && (
-                <XGroup space="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
+                <XGroup gap="$4" flex={1} alignItems="center" justifyContent="center" width="100%">
                     <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
                     <View flex={1} maxWidth="300px">
                         <CustomSelect

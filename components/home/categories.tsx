@@ -1,6 +1,7 @@
-import { Card, H5, SizableText, YStack, XStack, Separator } from "tamagui";
+import { Card, H5, SizableText, YStack, XStack, Separator, Button } from "tamagui";
 import React from "react";
 import { useState } from "react";
+import { Pressable } from "react-native";
 
 
 interface Category {
@@ -24,8 +25,7 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
     };
 
     return (
-        <YStack space="$4" justifyContent="center" alignItems="center">
-        <H5>Discover</H5>
+        <YStack space="$4" justifyContent="center" alignItems="center" zIndex={1000}>
         <XStack space="$3">
             {categories.map((category, index) => (
                 <XStack key={category.title} space="$2" alignItems="center" justifyContent="center">
