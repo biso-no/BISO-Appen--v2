@@ -62,11 +62,11 @@ export function ProfileCard() {
                         start={[0, 0]}
                         end={[1, 1]}
                     />
-                    <YStack padding={isSmallScreen ? "$3" : "$4"} space="$4">
+                    <YStack padding={isSmallScreen ? "$3" : "$4"} gap="$4">
                         {/* Profile Info Section */}
-                        <XStack space="$4" alignItems="center">
+                        <XStack gap="$4" alignItems="center">
                             <ImagePopover />
-                            <YStack space="$2" flex={1}>
+                            <YStack gap="$2" flex={1}>
                                 <H4 
                                     fontSize={isSmallScreen ? "$4" : "$6"}
                                     color={isDarkMode ? "white" : "black"}
@@ -101,11 +101,11 @@ export function ProfileCard() {
                                 >
                                     <XStack 
                                         padding="$3" 
-                                        space="$3" 
+                                        gap="$3" 
                                         alignItems="center" 
                                         justifyContent="space-between"
                                     >
-                                        <XStack space="$2" alignItems="center">
+                                        <XStack gap="$2" alignItems="center">
                                             <MaterialCommunityIcons 
                                                 name="crown" 
                                                 size={24} 
@@ -119,7 +119,7 @@ export function ProfileCard() {
                                                 >
                                                    Member -  {membership.name}
                                                 </SizableText>
-                                                <XStack space="$1" alignItems="center">
+                                                <XStack gap="$1" alignItems="center">
                                                     <MaterialCommunityIcons 
                                                         name="calendar" 
                                                         size={14} 

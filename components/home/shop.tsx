@@ -91,8 +91,8 @@ function ProductSkeleton({ compact }: { compact: boolean }) {
                     animate
                 />
             </Card.Header>
-            <Card.Footer padding="$3" space="$2">
-                <YStack space="$2" width="100%">
+            <Card.Footer padding="$3" gap="$2">
+                <YStack gap="$2" width="100%">
                     <ShimmerView height={20} width="80%" animate />
                     <ShimmerView height={20} width="60%" animate />
                     <XStack justifyContent="space-between" alignItems="center">
@@ -194,7 +194,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                 <MyStack 
                     justifyContent="center" 
                     alignItems="center" 
-                    space="$2"
+                    gap="$2"
                     padding="$8"
                     backgroundColor={"transparent"}
                 >
@@ -247,8 +247,8 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                                 />
                             </Card.Header>
 
-                            <Card.Footer padding="$3" space="$2">
-                                <YStack space="$2">
+                            <Card.Footer padding="$3" gap="$2">
+                                <YStack gap="$2">
                                     <H6 
                                         color="$gray12"
                                         numberOfLines={2}
@@ -289,7 +289,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
     };
 
     return (
-        <YStack space="$4">
+        <YStack gap="$4">
             {!hideAllButton && (
                 
             <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$2">

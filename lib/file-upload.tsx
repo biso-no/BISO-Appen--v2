@@ -243,7 +243,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'timing', duration: 500 }}
           >
-            <YStack space="$4" alignItems="center">
+            <YStack gap="$4" alignItems="center">
               {ocrResults.length > 0 ? (
                 <>
                   <Text 
@@ -257,7 +257,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                       currency: 'NOK'
                     })}
                   </Text>
-                  <XStack space="$2" alignItems="center">
+                  <XStack gap="$2" alignItems="center">
                     <Receipt size={16} color="$gray11" />
                     <Text fontSize={16} color="$gray11">
                       {ocrResults.length} {ocrResults.length === 1 ? 'Document' : 'Documents'}
@@ -265,7 +265,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                   </XStack>
                 </>
               ) : (
-                <YStack space="$4" alignItems="center">
+                <YStack gap="$4" alignItems="center">
                   <Receipt size={32} color="$gray11" />
                   <Text fontSize={16} color="$gray11" textAlign="center">
                     Add your first document
@@ -282,7 +282,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                 pressStyle={{ scale: 0.97 }}
                 animation="bouncy"
               >
-                <XStack space="$2" alignItems="center">
+                <XStack gap="$2" alignItems="center">
                   <Plus size={20} />
                   <Text fontWeight="500">
                     Add Document
@@ -295,7 +295,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
 
         <AnimatePresence>
           {ocrResults.length > 0 && (
-            <YStack space="$3">
+            <YStack gap="$3">
               <Text fontSize={18} fontWeight="600" color="$gray12" marginBottom={8}>
                 Documents
               </Text>
@@ -313,14 +313,14 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                     y: -10,
                   }}
                 >
-                  <XStack space="$4" alignItems="center">
+                  <XStack gap="$4" alignItems="center">
                     <Image
                       source={{ uri: document.url }}
                       width={56}
                       height={56}
                       borderRadius={12}
                     />
-                    <YStack flex={1} space="$1">
+                    <YStack flex={1} gap="$1">
                       <Text 
                         fontSize={18}
                         fontWeight="600"
@@ -331,14 +331,14 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                           currency: 'NOK'
                         })}
                       </Text>
-                      <XStack space="$2" alignItems="center">
+                      <XStack gap="$2" alignItems="center">
                         <Calendar size={14} color="$gray11" />
                         <Text fontSize={14} color="$gray11">
                           {formatDate(document.date)}
                         </Text>
                       </XStack>
                       {document.description && (
-                        <XStack space="$2" alignItems="center">
+                        <XStack gap="$2" alignItems="center">
                           <FileText size={14} color="$gray10" />
                           <Text 
                             fontSize={14}
@@ -383,7 +383,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
         <Sheet.Overlay />
         <Sheet.Frame padding="$4">
           <Sheet.Handle />
-          <YStack space="$4" marginTop="$4">
+          <YStack gap="$4" marginTop="$4">
             <Button
               size="$5"
               theme="blue"
@@ -421,7 +421,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
         <Sheet.Frame padding="$4">
           <Sheet.Handle />
           {selectedDocument && (
-            <YStack space="$2">
+            <YStack gap="$2">
               <Text fontSize={20} fontWeight="600">Edit Document</Text>
               
               <EditField>
@@ -460,7 +460,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
                 />
               </EditField>
 
-              <XStack space="$3" marginTop="$4">
+              <XStack gap="$3" marginTop="$4">
                 <Button
                   flex={1}
                   theme="gray"

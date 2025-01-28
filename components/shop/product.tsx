@@ -66,9 +66,9 @@ export function ProductDetails({productId}: {productId: string}) {
 
     return (
         <ScrollView>
-        <YStack space="$4" padding="$4">
+        <YStack gap="$4" padding="$4">
             {product && (
-                <YStack space="$4">
+                <YStack gap="$4">
                     {product.product.images?.length > 0 &&
                             <Image
                                 source={{ uri: product.product.images[0] }}
@@ -80,7 +80,7 @@ export function ProductDetails({productId}: {productId: string}) {
                     }
                     {product.product.images?.length > 1 && (
                         <ScrollView horizontal>
-                        <XStack space="$4">
+                        <XStack gap="$4">
                             {product.product.images.slice(1).map((image: string) => (
                                 <Image
                                     source={{ uri: image }}
@@ -94,7 +94,7 @@ export function ProductDetails({productId}: {productId: string}) {
                         </ScrollView>
                     )}
                 <XStack justifyContent="space-between">
-                    <YGroup space="$2">
+                    <YGroup gap="$2">
                     <Text fontSize={30} fontWeight={"bold"}>{product.product.name}</Text>
                     <RenderHtml 
                     source={{ html: product?.product.short_description }} 
@@ -102,19 +102,19 @@ export function ProductDetails({productId}: {productId: string}) {
                     tagsStyles={htmlStyles}
                         />
                     </YGroup>
-                    <YGroup space="$2">
+                    <YGroup gap="$2">
                     <Text fontSize={20}>{product.product.price !== product.product.sale_price ? product.product.price + " kr" : product.product.sale_price + " kr"}</Text>
                     {product.product.sale_price && product.product.price !== product.product.sale_price && <Text color="gray" textDecorationLine="line-through" fontSize={20}>{product.product.price + " kr"}</Text>}
                     </YGroup>
                 </XStack>
                 </YStack>
             )}
-                <YStack space="$4" padding="$4">
-                    <XStack space="$4" alignItems="center" justifyContent="center">
+                <YStack gap="$4" padding="$4">
+                    <XStack gap="$4" alignItems="center" justifyContent="center">
                         
                     </XStack>
                     {product.product.description && (
-                    <YStack space="$4">
+                    <YStack gap="$4">
                     <Separator />
                     <Text fontSize={20} fontWeight={"bold"}>Description</Text>
                     <RenderHtml 

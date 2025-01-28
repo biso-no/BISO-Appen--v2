@@ -70,7 +70,7 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
           );
         })}
       </ScrollView>
-      <XStack alignItems="center" paddingTop={16} space="$2">
+      <XStack alignItems="center" paddingTop={16} gap="$2">
         <Input
           flex={1}
           value={newMessage}

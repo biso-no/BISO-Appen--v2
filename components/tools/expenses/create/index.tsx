@@ -11,7 +11,7 @@ export function Create() {
     }
 
     return (
-        <YStack space="$5" alignItems="center" justifyContent="center">
+        <YStack gap="$5" alignItems="center" justifyContent="center">
             <Stepper
                 steps={[
                     {

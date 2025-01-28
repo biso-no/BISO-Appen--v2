@@ -188,7 +188,7 @@ export function MultiStepForm() {
     } 
 
     return (
-        <MyStack space="$4" padding="$4">
+        <MyStack gap="$4" padding="$4">
           {currentStep === 1 && (
             <ScrollView>
               <H6 fontWeight="bold">Payment Details</H6>
@@ -274,7 +274,7 @@ export function MultiStepForm() {
     
           {currentStep === 4 && (
             <YStack>
-              <YGroup space="$4">
+              <YGroup gap="$4">
                 <YGroup.Item>
                   <Switch value={forEvent} onValueChange={() => setForEvent(!forEvent)} label='Is this expense related to a specific event?' size="$4" />
                 </YGroup.Item>
@@ -322,7 +322,7 @@ export function MultiStepForm() {
             <OverviewScreen formData={formData} />
           )}
     
-    <XStack space="$4">
+    <XStack gap="$4">
       {currentStep > 1 && <Button variant="outlined" position='absolute' left={0} bottom={0} onPress={handlePrevStep}>Back</Button>}
       {submitButtonDisabled && currentStep === 5 ? (
         <Text color="red" position='absolute' right={0} bottom={0}>

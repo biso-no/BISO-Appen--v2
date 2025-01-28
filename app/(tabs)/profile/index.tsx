@@ -291,7 +291,7 @@ const ProfileScreen = () => {
   function RadioGroupItemWithLabel({ size, value, label }: { size: string; value: string; label: string }) {
     const id = `radiogroup-${value}`;
     return (
-      <XStack width={300} alignItems="center" space="$4">
+      <XStack width={300} alignItems="center" gap="$4">
         <RadioGroup.Item value={value} id={id} size={size}>
           <RadioGroup.Indicator />
         </RadioGroup.Item>
@@ -433,8 +433,8 @@ const ProfileScreen = () => {
 
       case 'payment':
         return (
-          <YStack space="$4">
-            <YStack space="$2">
+          <YStack gap="$4">
+            <YStack gap="$2">
               <Label>Account Type</Label>
               <XStack gap="$2">
                 <Button
@@ -455,7 +455,7 @@ const ProfileScreen = () => {
             </YStack>
 
             {bankType === 'norwegian' ? (
-              <YStack space="$4">
+              <YStack gap="$4">
                 <ProfileField 
                   label="Bank Account" 
                   value={paymentDetails.bank_account}
@@ -469,7 +469,7 @@ const ProfileScreen = () => {
                 </Button>
               </YStack>
             ) : (
-              <YStack space="$4">
+              <YStack gap="$4">
                 <ProfileField 
                   label="IBAN" 
                   value={paymentDetails.bank_account}
@@ -607,7 +607,7 @@ const ProfileScreen = () => {
                     >
                       Member - {membership.name}
                     </SizableText>
-                    <XStack space="$1" alignItems="center">
+                    <XStack gap="$1" alignItems="center">
                       <MaterialCommunityIcons 
                         name="calendar" 
                         size={14} 
@@ -721,10 +721,10 @@ const ProfileScreen = () => {
       >
         <Sheet.Frame padding="$4">
           <Sheet.Handle />
-          <YStack space="$4">
+          <YStack gap="$4">
             <H4>Edit Payment Details</H4>
             {bankType === 'norwegian' ? (
-              <YStack space="$4">
+              <YStack gap="$4">
                 <Label>Norwegian Bank Account</Label>
                 <Input
                   value={paymentDetails.bank_account}
@@ -737,7 +737,7 @@ const ProfileScreen = () => {
                 />
               </YStack>
             ) : (
-              <YStack space="$4">
+              <YStack gap="$4">
                 <Label>IBAN</Label>
                 <Input
                   value={paymentDetails.bank_account}
@@ -786,7 +786,7 @@ const ProfileScreen = () => {
           exitStyle={{ opacity: 0 }} 
         />
         <Sheet.Handle />
-        <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" space="$5">
+        <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
           <H2>Select Membership</H2>
           <RadioGroup
             aria-labelledby="Select a membership"
@@ -798,7 +798,7 @@ const ProfileScreen = () => {
               setSelectedMembership(membership);
             }}
           >
-            <YStack width={300} alignItems="center" space="$2">
+            <YStack width={300} alignItems="center" gap="$2">
               {membershipOptions?.documents?.map((option) => {
                 const label = `${option.name} - ${option.price} kr`;
                 return (
@@ -819,7 +819,7 @@ const ProfileScreen = () => {
             name="paymentMethod"
             onValueChange={setSelectedPaymentMethod}
           >
-            <YStack width={300} alignItems="center" space="$2">
+            <YStack width={300} alignItems="center" gap="$2">
               {paymentMethods.map((method) => (
                 <RadioGroupItemWithLabel 
                   key={method.value} 

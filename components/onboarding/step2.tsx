@@ -102,7 +102,7 @@ export function Step2({ onNext }: Step2Props) {
   };
     
   return (
-    <MyStack justifyContent="center" alignItems="center" space="$4" width="100%">
+    <MyStack justifyContent="center" alignItems="center" gap="$4" width="100%">
     <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <CampusSelector onSelect={handleCampusChange} initialCampus={initialCampus} />
         <View style={{ flex: 1 }}>{campus && <DepartmentSelector

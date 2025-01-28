@@ -31,7 +31,7 @@ export default function OAuthStatusScreen() {
 
     if (status === "error") {
         return (
-            <YStack space="$4" padding="$4">
+            <YStack gap="$4" padding="$4">
                 <H1>Error!</H1>
                 <Paragraph>An error occurred while signing in with BISO.</Paragraph>
                 <Button onPress={() => router.push("/")}>Go to Home</Button>
@@ -41,7 +41,7 @@ export default function OAuthStatusScreen() {
 
     if (loading) {
         return (
-            <YStack space="$4" padding="$4">
+            <YStack gap="$4" padding="$4">
                 <H1>Loading...</H1>
                 <Spinner size="large" />
             </YStack>
@@ -49,7 +49,7 @@ export default function OAuthStatusScreen() {
     }
 
     return (
-        <YStack space="$4" padding="$4">
+        <YStack gap="$4" padding="$4">
             <H1>Success!</H1>
             <Paragraph>You have successfully signed in with BISO.</Paragraph>
             <Button onPress={() => router.push("/profile")}>Go to Profile</Button>

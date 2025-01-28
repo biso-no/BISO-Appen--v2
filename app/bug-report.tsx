@@ -53,9 +53,9 @@ export default function BugReportScreen() {
 
     return (
         <MyStack>
-            <YStack space="$4" alignItems="center" justifyContent="center" padding="$4">
+            <YStack gap="$4" alignItems="center" justifyContent="center" padding="$4">
                 <H3>Report a Bug</H3>
-                <YGroup space="$2"></YGroup>
+                <YGroup gap="$2"></YGroup>
                 <Label htmlFor="description">Description</Label>
                 <Input
                     id="description"
@@ -70,9 +70,9 @@ export default function BugReportScreen() {
                 <Button onPress={handlePickFiles} theme="primary">
                     <Text>Upload Image</Text>
                 </Button>
-                <YStack space="$2">
+                <YStack gap="$2">
                     {images.map((image, index) => (
-                        <XStack key={index} alignItems="center" space="$2">
+                        <XStack key={index} alignItems="center" gap="$2">
                             <Image source={{ uri: image.uri }} width={50} height={50} />
                             <Text>{image.name}</Text>
                         </XStack>

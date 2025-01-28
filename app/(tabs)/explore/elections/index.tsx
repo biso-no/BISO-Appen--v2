@@ -50,7 +50,7 @@ export default function ElectionsScreen() {
                 <XStack gap="$4" alignItems="center" width="100%" justifyContent="space-between" padding="$2">
                     <XGroup gap="$4" alignItems="center" justifyContent="center">
                         {icon}
-                        <YGroup space="$2">
+                        <YGroup gap="$2">
                             <H4>{election.name}</H4>
                             <Text>{election.date ? getFormattedDateFromString(election.date) : "No date specified"}</Text>
                         </YGroup>
@@ -87,7 +87,7 @@ export default function ElectionsScreen() {
                 {startedElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Ongoing Elections</H4>
-                        <YGroup space="$4">
+                        <YGroup gap="$4">
                             {startedElections.map((election) =>
                                 renderElectionCard(election, <Clock size={20} color="green" />)
                             )}
@@ -97,7 +97,7 @@ export default function ElectionsScreen() {
                 {upcomingElections.length > 0 && (
                     <YStack gap="$4">
                         <H4>Upcoming Elections</H4>
-                        <YGroup space="$4">
+                        <YGroup gap="$4">
                             {upcomingElections.map((election) =>
                                 renderElectionCard(election, <CheckCircle size={20} color="yellow" />)
                             )}

@@ -33,7 +33,7 @@ export const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) =>
   }, [otp])
 
   return (
-    <XStack space="$2">
+    <XStack gap="$2">
       {otp.map((digit, index) => (
         <Input
           key={index}

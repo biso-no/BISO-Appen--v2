@@ -27,9 +27,9 @@ export function FeaturedCard(props: NewsProps) {
             />
         </DefaultCard.Header>
         <DefaultCard.Footer padded>
-            <YStack space="$1">
+            <YStack gap="$1">
           <H5>{props.title}</H5>
-          <XStack space="$3">
+          <XStack gap="$3">
             {props.tags?.map((tag) => (
               <Button key={tag} size="$3" bordered>
                 {tag}
