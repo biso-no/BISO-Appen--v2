@@ -1,58 +1,59 @@
-import { MotiView, useAnimationState } from 'moti';
-import { GestureHandlerRootView, PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { useState } from 'react';
-import { YStack } from 'tamagui';
+import { MotiView } from 'moti';
 import { View, StyleSheet } from 'react-native';
 
 interface FlipCardProps {
   frontContent: React.ReactNode;
   backContent: React.ReactNode;
+  isFlipped?: boolean;
 }
 
-export function FlipCard({ frontContent, backContent }: FlipCardProps) {
-  const [flipped, setFlipped] = useState(false);
-
-  const animationState = useAnimationState({
-    from: {
-      rotateY: '0deg',
-    },
-    flipped: {
-      rotateY: '180deg',
-    },
-  });
-
-  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
-    const { translationX } = event.nativeEvent;
-    if (translationX > 50 || translationX < -50) {
-      setFlipped(!flipped);
-      animationState.transitionTo(flipped ? 'from' : 'flipped');
-    }
-  };
-
+export function FlipCard({ frontContent, backContent, isFlipped = false }: FlipCardProps) {
   return (
-    <GestureHandlerRootView>
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
-        <MotiView
-          state={animationState}
-          style={styles.card}
-          transition={{
-            rotateY: {
-              type: 'timing',
-              duration: 500,
-            },
-          }}
-        >
-          {flipped ? backContent : frontContent}
-        </MotiView>
-      </PanGestureHandler>
-    </GestureHandlerRootView>
+    <View style={styles.container}>
+      <MotiView
+        animate={{
+          opacity: isFlipped ? 0 : 1,
+          scale: isFlipped ? 0.9 : 1,
+        }}
+        transition={{
+          type: 'timing',
+          duration: 300,
+        }}
+        style={[
+          styles.content,
+          { display: isFlipped ? 'none' : 'flex' }
+        ]}
+      >
+        {frontContent}
+      </MotiView>
+
+      <MotiView
+        animate={{
+          opacity: isFlipped ? 1 : 0,
+          scale: isFlipped ? 1 : 0.9,
+        }}
+        transition={{
+          type: 'timing',
+          duration: 300,
+        }}
+        style={[
+          styles.content,
+          { display: isFlipped ? 'flex' : 'none' }
+        ]}
+      >
+        {backContent}
+      </MotiView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backfaceVisibility: 'hidden',
+  container: {
     width: '100%',
-    height: '100%',
+    position: 'relative',
   },
+  content: {
+    width: '100%',
+    position: 'relative',
+  }
 });

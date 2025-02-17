@@ -413,6 +413,9 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={{
+          paddingBottom: 100 // Add padding at the bottom for the tab bar
+        }}
       >
         <YStack gap="$4">
           <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>

@@ -11,13 +11,15 @@ import {
   ScrollView,
   XStack,
   YStack,
-  useTheme
+  useTheme,
+  Image
 } from "tamagui";
 import { ChevronDown, ChevronUp, MapPin } from "@tamagui/lucide-icons";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { databases } from "@/lib/appwrite";
 import { Models, Query } from "react-native-appwrite";
 import { useCampus } from "@/lib/hooks/useCampus";
+import { useColorScheme } from 'react-native';
 
 interface CampusPopoverProps {
   maxHeight?: number;
@@ -39,6 +41,13 @@ export default function CampusPopover({
   const [error, setError] = useState<string | null>(null);
 
   const theme = useTheme();
+
+  const colorScheme = useColorScheme();
+
+  const logos = {
+    light: require('@/assets/logo-light.png'),
+    dark: require('@/assets/logo-dark.png')
+  };
 
   const handleCampusChange = useCallback(async (newCampus: Models.Document) => {
     try {
@@ -109,7 +118,10 @@ export default function CampusPopover({
           }}
         >
           <XStack gap="$2" alignItems="center">
-            <MapPin size={16} color={theme?.gray11?.get()} />
+            <Image
+              source={logos[colorScheme === 'dark' ? 'dark' : 'light']}
+              style={{ width: 36, height: 36 }}
+            />
             <Text>{buttonText}</Text>
             <ChevronDown />
           </XStack>
@@ -127,7 +139,7 @@ export default function CampusPopover({
           <Sheet.Frame padding="$4">
             <Sheet.ScrollView>
               <YStack gap="$4">
-                <Text fontSize={18} fontWeight="bold">Select Campus</Text>
+                <Text fontSize={22} fontWeight="bold">Select Campus</Text>
                 <CampusList />
               </YStack>
             </Sheet.ScrollView>
