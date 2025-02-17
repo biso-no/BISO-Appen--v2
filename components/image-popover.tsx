@@ -146,7 +146,7 @@ export function ImagePopover() {
                     },
                 ]}
             >
-                <YGroup space="$4">
+                <YGroup gap="$4">
                     <Button onPress={handleCaptureImage} disabled={capturing}>
                         <Text>Capture Image</Text>
                     </Button>

@@ -124,8 +124,8 @@ export default function DepartmentsScreen() {
         onPress={() => router.push(`/explore/units/${item.$id}`)}
       >
         <Card.Header padded>
-          <XStack space="$3" alignItems="center" justifyContent="space-between" width="100%">
-            <XStack space="$3" alignItems="center" flex={1}>
+          <XStack gap="$3" alignItems="center" justifyContent="space-between" width="100%">
+            <XStack gap="$3" alignItems="center" flex={1}>
               {item.logo && (
               <Image
                 source={{ uri: item.logo }}
@@ -135,7 +135,7 @@ export default function DepartmentsScreen() {
                 borderRadius="$2"
               />
               )}
-              <YStack flex={1} space="$1">
+              <YStack flex={1} gap="$1">
                 <H3 numberOfLines={1} ellipsizeMode="tail">{item.Name}</H3>
                 {item.description && (
                     <RenderHTML 
@@ -176,8 +176,8 @@ export default function DepartmentsScreen() {
   }, 300);
 
   return (
-      <MyStack space="$4" padding="$4">
-        <YStack space="$2">
+      <MyStack gap="$4" padding="$4">
+        <YStack gap="$2">
           <Paragraph>Explore the various departments at {campus?.name}</Paragraph>
 
           {/* Search Input with onSubmitEditing */}

@@ -85,10 +85,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
           },
         ]}
       >
-        <MyStack justifyContent='center' alignItems='center' space='$4' padding='$4' width='100%'>
+        <MyStack justifyContent='center' alignItems='center' gap='$4' padding='$4' width='100%'>
           <Step step={steps[currentStep]} />
         </MyStack>
-        <YStack space="$4" alignItems="center">
+        <YStack gap="$4" alignItems="center">
           {currentStep > 0 && (
             <Button onPress={moveToPreviousStep}>
               Back
@@ -111,7 +111,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
 }
 
 const Step = ({ step }: { step: Step }) => (
-  <YStack justifyContent='center' alignItems='center' space='$4'>
+  <YStack justifyContent='center' alignItems='center' gap='$4'>
     <Text style={styles.stepLabel}>{step.label}</Text>
     {step.content}
   </YStack>

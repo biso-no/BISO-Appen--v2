@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'BISO',
   owner: 'bi_student_organisation',
   newArchEnabled: true,
-  version: "0.96.0",
+  version: "0.98.0",
   orientation: 'portrait',
   icon: "./assets/icon-notrans.png",
   scheme: 'biso',

@@ -64,7 +64,7 @@ export default function NewsScreen() {
 
     return (
         <ScrollView>
-        <YStack space="$4" padding="$4">
+        <YStack gap="$4" padding="$4">
             <MotiView
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -77,7 +77,7 @@ export default function NewsScreen() {
                             width="100%"
                             borderRadius="$10"
                         />
-                        <YStack space="$1">
+                        <YStack gap="$1">
                         <H6>{post.title}</H6>
                             <XStack justifyContent="space-between"> 
                             <Paragraph>{capitalizeFirstLetter(getCampusName(post.campus_id))}</Paragraph>

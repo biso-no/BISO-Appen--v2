@@ -15,8 +15,8 @@ export function UsefulLinks() {
             title: <Text fontSize="$5">Ecosystem</Text>,
             defaultOpen: true,
             content: (
-                <YStack space="$4">
-                    <XStack justifyContent="center" space="$4">
+                <YStack gap="$4">
+                    <XStack justifyContent="center" gap="$4">
                         <Button
                             width={"$12"} // Ensure all buttons have the same width
                             height={"$6"} // Ensure all buttons have the same height
@@ -38,7 +38,7 @@ export function UsefulLinks() {
                             <Text fontSize="$4">Volunteer</Text>
                         </Button>
                     </XStack>
-                    <XStack justifyContent="center" space="$4">
+                    <XStack justifyContent="center" gap="$4">
                         <Button
                             width={"$12"} // Same width as above
                             height={"$6"} // Same height as above

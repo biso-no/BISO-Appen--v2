@@ -26,7 +26,7 @@ export default function NewsScreen() {
 
     if (!news || news.total === 0) {
         return (
-            <MyStack justifyContent="center" alignItems="center" space="$2">
+            <MyStack justifyContent="center" alignItems="center" gap="$2">
                 <Frown size={48} />
                 <H6>No news available</H6>
             </MyStack>
@@ -37,10 +37,10 @@ export default function NewsScreen() {
     const hasSeparator = news?.documents.length > 1;
 
     return (
-        <ScrollView space="$4" padding="$3">
-            <YGroup space="$4">
+        <ScrollView gap="$4" padding="$3">
+            <YGroup gap="$4">
                 {news?.documents.map((news, index) => (
-                    <YStack key={index} space="$4">
+                    <YStack key={index} gap="$4">
                     <Card
                         key={index}
                         chromeless
@@ -55,7 +55,7 @@ export default function NewsScreen() {
                             />
                         </Card.Header>
                         <Card.Footer>
-                            <YStack space="$1">
+                            <YStack gap="$1">
                                 <XStack justifyContent="space-between">
                                     <Paragraph>{capitalizeFirstLetter(news.campus.name)}</Paragraph>
                                     <Paragraph>{getFormattedDateFromString(news.$createdAt)}</Paragraph>

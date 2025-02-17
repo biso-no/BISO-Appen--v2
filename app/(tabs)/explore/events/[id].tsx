@@ -76,7 +76,7 @@ export default function EventsScreen() {
                     </Card.Header>
                     )}
                     <Card.Footer>
-                        <YStack space="$1">
+                        <YStack gap="$1">
                             <H6>{event.title}</H6>
                             <XStack justifyContent="space-between"> 
                                 <Paragraph>{capitalizeFirstLetter(event.campus.name)} </Paragraph>
@@ -86,7 +86,7 @@ export default function EventsScreen() {
                     </Card.Footer>
                 </Card>
                 {event.description && (
-                    <MyStack space="$3">
+                    <MyStack gap="$3">
                         <H6>Description</H6>
                         <RenderHTML
                             source={{ html: event.description }}

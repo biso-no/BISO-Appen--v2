@@ -55,7 +55,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
   [selectedDepartments]);
 
   return (
-    <YStack space="$4" flex={1}>
+    <YStack gap="$4" flex={1}>
       {/* Header */}
       <XStack justifyContent="space-between" alignItems="center">
         <H4>Follow Units</H4>
@@ -64,7 +64,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
           paddingHorizontal="$3" 
           paddingVertical="$2" 
           borderRadius="$4"
-          space="$2"
+          gap="$2"
           alignItems="center"
         >
           <Info size={16} />
@@ -76,7 +76,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
 
       {/* Search */}
       <Card bordered padding="$2">
-        <XStack space="$2" alignItems="center">
+        <XStack gap="$2" alignItems="center">
           <Search size={20} opacity={0.5} />
           <Input
             placeholder="Search units..."
@@ -101,7 +101,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
 
       {/* Selected Units */}
       {selectedDepartments.length > 0 && (
-        <YStack space="$2">
+        <YStack gap="$2">
           <Text color="$gray11">Selected units:</Text>
           <XStack flexWrap="wrap" gap="$2">
             {selectedDepartments.map((dept) => (
@@ -121,7 +121,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
 
       {/* Units List */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack space="$2">
+        <YStack gap="$2">
           {loading ? (
             <Card padding="$4" alignItems="center">
               <Spinner size="large" />

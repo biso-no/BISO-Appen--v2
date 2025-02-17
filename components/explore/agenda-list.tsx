@@ -1,210 +1,299 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { StyleSheet, ImageSourcePropType } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Models, Query } from 'react-native-appwrite';
-import { ExpandableCalendar, AgendaList, CalendarProvider, WeekCalendar } from 'react-native-calendars';
-import { useTheme, Card, H5, H3, XStack, YStack, Image, Separator } from 'tamagui';
-import { databases } from '@/lib/appwrite';
-import { format, parseISO } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { RefreshControl, useColorScheme } from 'react-native';
+import { router } from 'expo-router';
+import { 
+  YStack, 
+  XStack, 
+  ScrollView, 
+  Text,
+  Card,
+  H3,
+  H4,
+  Image,
+  Paragraph,
+  Separator,
+  Stack,
+  useTheme
+} from 'tamagui';
+import { MotiView } from 'moti';
+import { Calendar, MapPin, Clock } from '@tamagui/lucide-icons';
+import { formatDate, parseISO, isToday, isTomorrow, isThisWeek, isThisMonth, format, addMonths } from 'date-fns';
+import axios from 'axios';
 import { useCampus } from '@/lib/hooks/useCampus';
-import { ChevronLeft, ChevronRight } from '@tamagui/lucide-icons';
+import RenderHTML from 'react-native-render-html';
+import { LinearGradient } from '@tamagui/linear-gradient';
 
-const getFormattedDateFromString = (dateString: string): string => {
-  try {
-    const date = parseISO(dateString);
-    return format(date, 'yyyy-MM-dd'); // or any desired format
-  } catch (error) {
-    console.error('Error formatting date:', dateString, error);
-    return 'Invalid date';
-  }
-};
+interface Event {
+  id: number;
+  title: string;
+  description: string;
+  excerpt: string;
+  start_date: string;
+  end_date: string;
+  venue: {
+    name: string;
+    city: string;
+  };
+  cost: string;
+  all_day: boolean;
+  thumbnail: {
+    url: string;
+    width: number;
+    height: number;
+  };
+}
 
-const AgendaItem = ({ item }: { item: Models.Document }) => {
-  const { push } = useRouter();
-
-  const formattedDate = getFormattedDateFromString(item.$createdAt);
+const LoadingCard = () => (
+  <MotiView
+    from={{ opacity: 0.4 }}
+    animate={{ opacity: 0.8 }}
+    transition={{
+      type: 'timing',
+      duration: 1000,
+      loop: true
+    }}
+  >
+    <Stack
+      backgroundColor="$gray2"
+      borderRadius="$4"
+      height={200}
+      marginVertical="$2"
+    />
+  </MotiView>
+);
+const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
+  const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const textColor = colorScheme === 'dark' ? 'white' : 'black';
+  const date = parseISO(event.start_date);
 
   return (
-    <Card chromeless padding="$4" marginBottom="$2" onPress={() => push("/explore/events/" + item.$id)} width={400}>
-      <Card.Header height={130}>
-        <Image source={{ uri: item?.image }} alt="image" height={200} width="100%" borderRadius="$2" />
-      </Card.Header>
-      <Card.Footer>
-        <YStack space="$1">
-          <H5>{item?.title} - {item?.campus}</H5>
-          <XStack justifyContent="space-between">
-            <H3>{formattedDate}</H3>
-          </XStack>
-        </YStack>
-      </Card.Footer>
-    </Card>
+    <MotiView
+      from={{ opacity: 0, translateY: 50 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ delay: index * 100, type: 'timing', duration: 500 }}
+    >
+      <Card
+        elevation={2}
+        marginVertical="$2"
+        marginHorizontal="$3"
+        overflow="hidden"
+        onPress={() => router.push(`/explore/events/${event.id}`)}
+      >
+        <Card.Header>
+          <Image
+            source={{ uri: event.thumbnail?.url }}
+            alt={event.title}
+            height={180}
+            width="100%"
+            borderRadius="$2"
+          />
+          <LinearGradient
+            start={[0, 0]}
+            end={[0, 1]}
+            colors={['transparent', 'rgba(0,0,0,0.3)']}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 100,
+            }}
+          />
+        </Card.Header>
+        
+        <Card.Footer padding="$4">
+          <YStack gap="$2">
+            <H3>{event.title}</H3>
+            
+            <XStack gap="$4" alignItems="center" flexWrap="wrap">
+              <XStack gap="$2" alignItems="center">
+                <Clock size={14} color={theme.color?.val} />
+                <Text fontSize={12} opacity={0.7}>
+                  {format(date, 'EEE, MMM d • HH:mm')}
+                </Text>
+              </XStack>
+              
+              {event.venue?.name && (
+                <XStack gap="$2" alignItems="center">
+                  <MapPin size={14} color={theme.color?.val} />
+                  <Text fontSize={12} opacity={0.7}>
+                    {event.venue.name}
+                  </Text>
+                </XStack>
+              )}
+              
+              {event.cost && (
+                <Text fontSize={12} opacity={0.7}>
+                  {event.cost}
+                </Text>
+              )}
+            </XStack>
+            
+            <RenderHTML
+              source={{ html: event.excerpt }}
+              contentWidth={300}
+              tagsStyles={{
+                body: { 
+                  fontSize: 14, 
+                  lineHeight: 20, 
+                  color: textColor,
+                },
+              }}
+            />
+          </YStack>
+        </Card.Footer>
+      </Card>
+    </MotiView>
   );
 };
 
-interface Props {
-  weekView?: boolean;
-  leftArrowIcon?: ImageSourcePropType;
-  rightArrowIcon?: ImageSourcePropType;
-  onDateChanged?: (date: string, updateSource: string) => void;
-  onMonthChange?: (date: { dateString: string }) => void;
-  calendarTheme?: object;
-  todayButtonTheme?: object;
-  initialDate?: string;
-  scrollToNextEvent?: boolean;
-  dayFormat?: string;
-  calendarStyle?: object;
-  headerStyle?: object;
-}
+const EventsSection = ({ title, events }: { title: string; events: Event[] }) => {
+  if (events.length === 0) return null;
 
-export function AgendaCalendar({
-  weekView = false,
-  leftArrowIcon,
-  rightArrowIcon,
-  onDateChanged,
-  onMonthChange,
-  calendarTheme,
-  todayButtonTheme,
-  initialDate,
-  scrollToNextEvent,
-  dayFormat,
-  calendarStyle,
-  headerStyle,
-}: Props) {
-  const [events, setEvents] = useState<Models.Document[]>([]);
-  const [markedDates, setMarkedDates] = useState<Record<string, { marked: boolean }>>({});
-  const [selectedDate, setSelectedDate] = useState<string>(initialDate || new Date().toISOString());
-  const cachedEvents = useRef<{ [date: string]: Models.Document[] }>({});
-  const theme = useTheme();
-  const backgroundColor = theme?.background?.val;
-  const primaryColor = theme?.color?.val
+  return (
+    <YStack gap="$2" marginTop="$4">
+      <H4 paddingHorizontal="$3">{title}</H4>
+      {events.map((event, index) => (
+        <AnimatedCard key={event.id} event={event} index={index} />
+      ))}
+      <Separator marginTop="$2" />
+    </YStack>
+  );
+};
 
-const { push } = useRouter();
+export function EventsList() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { campus } = useCampus();
+  const theme = useTheme();
 
-  async function fetchEvents(date: string) {
-
-    let query = [
-      Query.select(['title', 'image', '$createdAt', '$id']),
-      Query.limit(25),
-    ];
-
-    if (campus?.$id) {
-      query.push(Query.equal('campus_id', campus.$id));
-    }
+  const fetchEvents = async () => {
     try {
-      const fetchedEvents = await databases.listDocuments('app', 'event', query);
-      console.log('Fetched events:', fetchedEvents);
-      cachedEvents.current[date] = fetchedEvents.documents;
-      setEvents(fetchedEvents.documents);
+      setIsLoading(true);
+      
+      let url = 'https://biso.no/wp-json/biso/v1/events';
+      
+      const params: Record<string, string | number> = {
+        per_page: 25
+      };
+  
+      if (campus?.name) {
+        params.organizer = 'biso-' + campus.name.toLowerCase();
+      }
+  
+      const response = await axios.get(url, { params });
+      
+      // Transform and filter the events
+      const today = new Date();
+      const threeMonthsFromNow = addMonths(today, 3);
+      
+      const filteredEvents = response.data
+        .filter((event: Event) => {
+          const eventDate = parseISO(event.start_date);
+          return eventDate >= today && eventDate <= threeMonthsFromNow;
+        });
+
+      setEvents(filteredEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
-      setEvents([]);
-    }
-  }
-
-  useEffect(() => {
-    const initialFormattedDate = getFormattedDateFromString(selectedDate);
-    if (!cachedEvents.current[initialFormattedDate]) {
-      fetchEvents(initialFormattedDate);
-    } else {
-      setEvents(cachedEvents.current[initialFormattedDate]);
-    }
-  }, [selectedDate]);
-
-  const renderItem = useCallback(({ item }: { item: Models.Document }) => {
-    return <AgendaItem item={item} />;
-  }, []);
-
-  const handleDateChanged = (date: string) => {
-    const formattedDate = getFormattedDateFromString(date);
-    setSelectedDate(formattedDate);
-    if (onDateChanged) {
-      onDateChanged(date, 'user'); // Assuming 'user' as the update source
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Define the type for the grouped events
-  interface GroupedEvents {
-    [date: string]: Models.Document[];
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchEvents();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, [campus]);
+
+  // Helper function to categorize events
+  const categorizeEvents = () => {
+    const today = new Date();
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const endOfTomorrow = new Date(tomorrow);
+    endOfTomorrow.setHours(23, 59, 59, 999);
+    
+    return {
+      today: events.filter(event => {
+        const eventDate = parseISO(event.start_date);
+        return eventDate >= today && eventDate <= endOfToday;
+      }),
+      tomorrow: events.filter(event => {
+        const eventDate = parseISO(event.start_date);
+        return eventDate > endOfToday && eventDate <= endOfTomorrow;
+      }),
+      thisWeek: events.filter(event => {
+        const eventDate = parseISO(event.start_date);
+        return isThisWeek(eventDate) && eventDate > endOfTomorrow;
+      }),
+      upcoming: events.filter(event => {
+        const eventDate = parseISO(event.start_date);
+        return !isThisWeek(eventDate) && eventDate > today;
+      })
+    };
+  };
+
+  if (isLoading) {
+    return (
+      <YStack padding="$4" gap="$4">
+        {[1, 2, 3].map((_, index) => (
+          <LoadingCard key={index} />
+        ))}
+      </YStack>
+    );
   }
 
-  // Group events by date
-  const groupedEvents: GroupedEvents = events.reduce((acc: GroupedEvents, event: Models.Document) => {
-    const date = getFormattedDateFromString(event.$createdAt);
-    if (date !== 'Invalid date') {
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(event);
-    } else {
-      console.error('Invalid date for event:', event);
-    }
-    return acc;
-  }, {});
-
-  const sections = Object.keys(groupedEvents).map(date => ({
-    title: date,
-    data: groupedEvents[date]
-  }));
+  const { today, tomorrow, thisWeek, upcoming } = categorizeEvents();
 
   return (
-    <CalendarProvider
-      date={selectedDate}
-      onDateChanged={handleDateChanged}
-      onMonthChange={onMonthChange}
-      showTodayButton
-      theme={{
-        selectedDayTextColor: "green",
-        backgroundColor: backgroundColor,
-      }}
-      style={{
-        backgroundColor: backgroundColor,
-      }}
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      showsVerticalScrollIndicator={false}
     >
-      {weekView ? (
-        <WeekCalendar firstDay={1} markedDates={markedDates} />
-      ) : (
-        <ExpandableCalendar
-          firstDay={1}
-          markedDates={markedDates}
-          
-          leftArrowImageSource={leftArrowIcon}
-          rightArrowImageSource={rightArrowIcon}
-
-          theme={{
-            backgroundColor: backgroundColor,
-            calendarBackground: backgroundColor,
-          }}
-          style={{
-            backgroundColor: backgroundColor,
-            
-          }}
-          calendarStyle={{
-            backgroundColor: backgroundColor,
-            
-          }}
-          headerStyle={{
-            backgroundColor: backgroundColor
-          }}
-          renderArrow={(direction) => direction === 'right' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        />
-      )}
-      {events.length > 0 ? (
-        <AgendaList
-          sections={sections}
-          renderItem={renderItem}
-          scrollToNextEvent={scrollToNextEvent}
-          sectionStyle={{ backgroundColor: backgroundColor }}
-          dayFormat={dayFormat}
-          ItemSeparatorComponent={Separator}
-          refreshing={false}
-          onRefresh={() => fetchEvents(new Date().toISOString())}
-        />
-      ) : (
-        <YStack space="$4" alignItems="center" justifyContent="center">
-          <H5>No events found</H5>
-        </YStack>
-      )}
-    </CalendarProvider>
+      <YStack paddingVertical="$4">
+        {events.length === 0 ? (
+          <YStack 
+            gap="$4" 
+            alignItems="center" 
+            justifyContent="center" 
+            paddingTop="$8"
+          >
+            <Calendar size={48} color={theme.color?.val} />
+            <H4>No upcoming events</H4>
+            <Paragraph color="$gray11" textAlign="center">
+              Check back later for new events
+            </Paragraph>
+          </YStack>
+        ) : (
+          <>
+            {today.length > 0 && (
+              <EventsSection title="Today" events={today} />
+            )}
+            {tomorrow.length > 0 && (
+              <EventsSection title="Tomorrow" events={tomorrow} />
+            )}
+            {thisWeek.length > 0 && (
+              <EventsSection title="This Week" events={thisWeek} />
+            )}
+            {upcoming.length > 0 && (
+              <EventsSection title="Upcoming" events={upcoming} />
+            )}
+          </>
+        )}
+      </YStack>
+    </ScrollView>
   );
 }

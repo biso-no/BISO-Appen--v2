@@ -132,7 +132,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     >
       <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
       <Sheet.Handle />
-      <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" space="$5">
+      <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
         <H2>Select Membership</H2>
         <RadioGroup
           aria-labelledby="Select a membership"
@@ -142,7 +142,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
             setSelectedMembership(membership);
           }}
         >
-          <YStack width={300} alignItems="center" space="$2">
+          <YStack width={300} alignItems="center" gap="$2">
             {membershipOptions?.documents?.map((option) => {
               const label = `${option.name} - ${option.price} kr`;
               return (
@@ -158,7 +158,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
           name="paymentMethod"
           onValueChange={setSelectedPaymentMethod}
         >
-          <YStack width={300} alignItems="center" space="$2">
+          <YStack width={300} alignItems="center" gap="$2">
             {paymentMethods.map((method) => (
               <RadioGroupItemWithLabel key={method.value} size={method.size} value={method.value} label={method.label} />
             ))}
@@ -181,7 +181,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
 function RadioGroupItemWithLabel({ size, value, label }: { size: string; value: string; label: string }) {
   const id = `radiogroup-${value}`;
   return (
-    <XStack width={300} alignItems="center" space="$4">
+    <XStack width={300} alignItems="center" gap="$4">
       <RadioGroup.Item value={value} id={id} size={size}>
         <RadioGroup.Indicator />
       </RadioGroup.Item>

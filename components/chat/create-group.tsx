@@ -94,7 +94,7 @@ export function CreateChatGroup() {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <YStack space="$4" padding="$4">
+      <YStack gap="$4" padding="$4">
         <YGroup>
           <YGroup.Item>
         <Label>Group Name</Label>

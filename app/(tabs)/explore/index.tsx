@@ -32,6 +32,7 @@ import { databases } from '@/lib/appwrite'
 import axios from 'axios'
 import { useAuth } from '@/components/context/auth-provider'
 import { useColorScheme } from 'react-native'
+import { format, parseISO } from 'date-fns'
 
 interface Event {
   id: number;
@@ -159,15 +160,15 @@ export default function ExploreScreen() {
       const transformedEvents = response.data.map((event: any) => ({
         id: event.id,
         title: event.title,
-        content: event.content,
+        content: event.description,
         excerpt: event.excerpt,
-        date: event.date,
+        date: event.start_date,         // Changed from date to start_date
         end_date: event.end_date,
-        venue: event.venue,
-        url: event.url,
-        featured_image: event.featured_image
+        venue: event.venue?.name,
+        url: event.website,
+        featured_image: event.thumbnail?.url  // Changed to use thumbnail.url
       }));
-  
+      console.log("Event date:", transformedEvents)
       setEvents(transformedEvents);
     } catch (err) {
       setError('Failed to load events');
@@ -250,7 +251,7 @@ export default function ExploreScreen() {
                 borderRadius={16}
                 resizeMode="cover"
               />
-              <YStack padding="$4" space="$2">
+              <YStack padding="$4" gap="$2">
                 <Text 
                   fontSize={18} 
                   fontWeight="bold" 
@@ -358,7 +359,7 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
           width="100%"
         >
           <XStack 
-            space="$4" 
+            gap="$4" 
             alignItems="flex-start"
             flex={1}
             flexWrap="nowrap"
@@ -412,8 +413,11 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={{
+          paddingBottom: 100 // Add padding at the bottom for the tab bar
+        }}
       >
-        <YStack space="$4">
+        <YStack gap="$4">
           <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
           {error ? (
             <Stack
@@ -448,9 +452,9 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
           )}
         </YStack>
 
-        <YStack space="$4" marginTop="$6" marginBottom="$8">
+        <YStack gap="$4" marginTop="$6" marginBottom="$8">
           <Text fontSize={18} fontWeight="bold" color="$color">Services</Text>
-          <YStack space="$3">
+          <YStack gap="$3">
             {categories.map(category => (
               <CategoryCard key={category.id} category={category} />
             ))}

@@ -79,7 +79,7 @@ export default function ExpenseScreen() {
                         />
                     </Card.Header>
                     <Card.Footer>
-                        <YStack space="$2">
+                        <YStack gap="$2">
                             <H6>{expense?.description}</H6>
                             <XStack justifyContent="space-between"> 
                                 <Paragraph>{capitalizeFirstLetter(expense?.campus.name)}</Paragraph>
@@ -102,7 +102,7 @@ export default function ExpenseScreen() {
                     </Card.Footer>
                 </Card>
                 {expense?.expenseAttachments.length > 1 && (
-                    <YStack space="$3">
+                    <YStack gap="$3">
                         <H6>Attachments</H6>
                         {expense.expenseAttachments.slice(1).map((attachment: Models.Document, index: number) => (
                             <Card
@@ -124,7 +124,7 @@ export default function ExpenseScreen() {
                                     />
                                 </Card.Header>
                                 <Card.Footer>
-                                    <YStack space="$1">
+                                    <YStack gap="$1">
                                         <Paragraph>{attachment.description}</Paragraph>
                                         <XStack justifyContent="space-between"> 
                                             <Paragraph>{getFormattedDateFromString(attachment.date)}</Paragraph>

@@ -19,7 +19,7 @@ import { CampusProvider } from '@/lib/hooks/useCampus';
 import { ModalProvider } from '@/components/context/membership-modal-provider';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
-
+import { LogBox } from 'react-native';
 
 
 
@@ -37,7 +37,11 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-
+LogBox.ignoreLogs([
+  'Warning: TRenderEngineProvider: Support for defaultProps',
+  'Warning: MemoizedTNodeRenderer: Support for defaultProps',
+  'Warning: TNodeChildrenRenderer: Support for defaultProps'
+]);
 
 export default function RootLayout() {
   

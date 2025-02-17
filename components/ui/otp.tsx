@@ -5,12 +5,35 @@ import { Input, XStack, getTokens, useTheme } from 'tamagui'
 interface OTPInputProps {
   length?: number
   onComplete?: (code: string) => void
+  size?: 'small' | 'medium' | 'large'
 }
 
-export const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) => {
+export const OTPInput: React.FC<OTPInputProps> = ({ 
+  length = 6, 
+  onComplete,
+  size = 'medium'
+}) => {
   const [otp, setOTP] = useState<string[]>(Array(length).fill(''))
   const inputRefs = useRef<(TextInput | null)[]>([])
   const theme = useTheme()
+
+  const sizes = {
+    small: {
+      width: 35,
+      height: 35,
+      fontSize: 16,
+    },
+    medium: {
+      width: 40,
+      height: 40,
+      fontSize: 18,
+    },
+    large: {
+      width: 50,
+      height: 50,
+      fontSize: 20,
+    },
+  }
 
   const handleChange = useCallback((value: string, index: number) => {
     const newOTP = [...otp]
@@ -33,7 +56,7 @@ export const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) =>
   }, [otp])
 
   return (
-    <XStack space="$2">
+    <XStack gap="$1.5" justifyContent="center">
       {otp.map((digit, index) => (
         <Input
           key={index}
@@ -44,9 +67,9 @@ export const OTPInput: React.FC<OTPInputProps> = ({ length = 6, onComplete }) =>
           keyboardType="number-pad"
           maxLength={1}
           textAlign="center"
-          width={50}
-          height={50}
-          fontSize={20}
+          width={sizes[size].width}
+          height={sizes[size].height}
+          fontSize={sizes[size].fontSize}
           borderWidth={1}
           borderColor="$borderColor"
           borderRadius="$2"

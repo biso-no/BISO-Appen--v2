@@ -10,7 +10,7 @@ export default function DepartmentsScreen() {
     return (
         <ScrollView>
         <MyStack>
-            <YStack space="$4" alignItems="center" justifyContent="center">
+            <YStack gap="$4" alignItems="center" justifyContent="center">
                 <H3>Coming soon</H3>
             </YStack>
         </MyStack>

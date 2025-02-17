@@ -41,7 +41,7 @@ export const MySheet = ({
     >
       <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
       <Sheet.Handle />
-      <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" space="$5">
+      <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
         {children}
       </Sheet.Frame>
     </Sheet>
