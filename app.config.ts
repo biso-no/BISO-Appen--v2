@@ -45,6 +45,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/ic_foreground.png",
       backgroundImage: "./assets/ic_background.png",
     },
+    permissions: [
+      "com.google.android.gms.permission.AD_ID"
+    ],
   },
   web: {
     bundler: 'metro',
