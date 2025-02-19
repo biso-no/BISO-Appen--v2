@@ -30,7 +30,7 @@ const AgendaItem = ({ item }: { item: Models.Document }) => {
         <Image source={{ uri: item?.image }} alt="image" height={200} width="100%" borderRadius="$2" />
       </Card.Header>
       <Card.Footer>
-        <YStack space="$1">
+        <YStack gap="$1">
           <H5>{item?.title} - {item?.campus}</H5>
           <XStack justifyContent="space-between">
             <H3>{formattedDate}</H3>
@@ -201,7 +201,7 @@ const { push } = useRouter();
           onRefresh={() => fetchEvents(new Date().toISOString())}
         />
       ) : (
-        <YStack space="$4" alignItems="center" justifyContent="center">
+        <YStack gap="$4" alignItems="center" justifyContent="center">
           <H5>No events found</H5>
         </YStack>
       )}

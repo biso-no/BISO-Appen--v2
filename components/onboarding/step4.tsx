@@ -23,7 +23,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
 
   return (
     <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <YStack space="$4" width="$16">
+      <YStack gap="$4" width="$16">
         <Input size="$4">
           <Input.Label htmlFor="phone">Phone</Input.Label>
           <Input.Box>

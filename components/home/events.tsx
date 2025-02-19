@@ -50,7 +50,7 @@ export function Events() {
 
     if (!events || events.length === 0) {
         return (
-            <MyStack justifyContent="center" alignItems="center" space="$2" backgroundColor={"transparent"}>
+            <MyStack justifyContent="center" alignItems="center" gap="$2" backgroundColor={"transparent"}>
               <H6>Stay tuned!</H6>
             </MyStack>
           );
@@ -58,11 +58,11 @@ export function Events() {
         
 
     return (
-        <YStack space="$4" justifyContent="center" alignItems="center">
+        <YStack gap="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
             <Button>See all</Button>
             </XStack>
-            <XStack space="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
+            <XStack gap="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {events.map((event) => (
                 <Card
                 key={event.id}
@@ -88,13 +88,13 @@ export function Events() {
                             )}
                         </Card.Header>
                         <Card.Footer>
-                        <YStack space="$1">
+                        <YStack gap="$1">
                             <XStack justifyContent="space-between">
                             <Paragraph>{capitalizeFirstLetter(mapCampus(event.campus_id))}</Paragraph>
 
                             </XStack>
                             <H6>{event.title}</H6>
-                            <XStack space="$2" alignItems="center" justifyContent="space-between">
+                            <XStack gap="$2" alignItems="center" justifyContent="space-between">
                             </XStack>
                         </YStack>
                         </Card.Footer>

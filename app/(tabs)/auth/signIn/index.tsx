@@ -93,7 +93,7 @@ export default function LoginScreen() {
                   exit={{ opacity: 0 }}
                   style={{ display: step === 1 ? "flex" : "none" }}
               >
-                <YStack space="$4" maxWidth="100%">
+                <YStack gap="$4" maxWidth="100%">
             <Text fontSize="$4" marginBottom="$2">An email has been sent to {email}</Text>
               <Input
                 placeholder="Enter OTP"
@@ -106,7 +106,7 @@ export default function LoginScreen() {
                 size="$4"
                 ref={refs[0]}
                 />
-             <XGroup justifyContent='center' space="$4">
+             <XGroup justifyContent='center' gap="$4">
              <Button onPress={handleGoBack}>
               Back
              </Button>

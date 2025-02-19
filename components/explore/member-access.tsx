@@ -32,7 +32,7 @@ export function MemberAccess() {
         {
             value: "member-access",
             title: (
-                <XStack space="$2" alignItems="center" justifyContent="center">
+                <XStack gap="$2" alignItems="center" justifyContent="center">
                     <Text fontSize="$5">Member Access</Text>
                     {!isBisoMember && (
                         <>
@@ -44,17 +44,17 @@ export function MemberAccess() {
             disabled: disabled,
             defaultOpen: open,
             content: (
-                <YStack space="$4">
-                    <XStack space="$4">
+                <YStack gap="$4">
+                    <XStack gap="$4">
 
                         <Button height={"$5"} onPress={() => push("/explore/elections")} icon={<Vote size={20} />}>
-                            <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
+                            <XStack gap="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Elections</Text>
                         </Button>
                     </XStack>
-                    <XStack space="$4">
+                    <XStack gap="$4">
                         <Button height={"$5"} onPress={() => push("/explore/benefits")} icon={<Gift size={20} />}>
-                            <XStack space="$2" alignItems="center" justifyContent="center"></XStack>
+                            <XStack gap="$2" alignItems="center" justifyContent="center"></XStack>
                             <Text fontSize="$4">Benefits</Text>
                         </Button>
                     </XStack>

@@ -33,8 +33,8 @@ export function Discover() {
     const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState<Category>(categories[0]);
     return (
-        <YStack justifyContent="center" alignItems="center" space="$4" padding="$4">
-            <XStack space="$4">
+        <YStack justifyContent="center" alignItems="center" gap="$4" padding="$4">
+            <XStack gap="$4">
             <Categories
                 categories={categories}
                 selectedCategory={selectedCategory}
@@ -44,7 +44,7 @@ export function Discover() {
             {selectedCategory.title === "Events" && <Events />}
             {selectedCategory.title === "News" && <News />}
             {selectedCategory.title === "Work" && (
-                <YStack space="$4" padding="$4" width="100%">
+                <YStack gap="$4" padding="$4" width="100%">
                     <Button onPress={() => router.push("/explore/volunteer")}>View all</Button>
                     <VolunteerList limit={15} />
                 </YStack>

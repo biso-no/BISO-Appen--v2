@@ -25,10 +25,10 @@ export function Categories({ categories, selectedCategory, setSelectedCategory }
     };
 
     return (
-        <YStack space="$4" justifyContent="center" alignItems="center" zIndex={1000}>
-        <XStack space="$3">
+        <YStack gap="$4" justifyContent="center" alignItems="center" zIndex={1000}>
+        <XStack gap="$3">
             {categories.map((category, index) => (
-                <XStack key={category.title} space="$2" alignItems="center" justifyContent="center">
+                <XStack key={category.title} gap="$2" alignItems="center" justifyContent="center">
                 <Card
                     key={category.title}
                     chromeless={selectedCategoryIndex === index ? false : true}

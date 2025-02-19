@@ -73,7 +73,7 @@ export default function VolunteerScreen() {
             exit={{ opacity: 0 }}
         >
         <ScrollView>
-        <YStack space="$4" padding="$4">
+        <YStack gap="$4" padding="$4">
             <RenderHTML
                 source={{ html: job?.title }}
                 contentWidth={width - 40}

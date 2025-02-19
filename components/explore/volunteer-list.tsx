@@ -97,7 +97,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
 
     if (loading) {
         return (
-            <YStack flex={1} justifyContent="center" alignItems="center" space="$2">
+            <YStack flex={1} justifyContent="center" alignItems="center" gap="$2">
                 <Spinner size="large" color="$color9" />
                 <Text color="$color11">Loading opportunities...</Text>
             </YStack>
@@ -114,7 +114,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                 <YStack 
                     justifyContent="center" 
                     alignItems="center" 
-                    space="$4"
+                    gap="$4"
                     padding="$8"
                 >
                     <HandHeart size={48} color={theme.color8.get()} />
@@ -143,9 +143,9 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'timing', duration: 500 }}
         >
-            <YStack space="$4" padding="$4">
+            <YStack gap="$4" padding="$4">
                 {screen && (
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <H2 
                             animation="lazy"
                             enterStyle={{ opacity: 0, scale: 0.9 }}
@@ -161,7 +161,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                 )}
 
                 <AnimatePresence>
-                    <YStack space="$4">
+                    <YStack gap="$4">
                         {jobs.map((job, index) => (
                             <JobCard
                                 key={job.id}
@@ -187,8 +187,8 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                     }}
                                 />
                                 
-                                <Card.Header padding="$3" space="$2">
-                                    <YStack space="$3">
+                                <Card.Header padding="$3" gap="$2">
+                                    <YStack gap="$3">
                                         <XStack justifyContent="space-between" alignItems="center">
                                             <StatusBadge>
                                                 <Briefcase 
@@ -218,7 +218,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                             </LocationBadge>
                                         </XStack>
 
-                                        <XStack space="$2" alignItems="center">
+                                        <XStack gap="$2" alignItems="center">
                                             <RenderHTML
                                                 source={{ html: job.title }}
                                                 contentWidth={width - 100}
@@ -235,7 +235,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                     borderTopColor="$borderColor"
                                 >
                                     <XStack justifyContent="space-between" alignItems="center">
-                                        <XStack space="$2" alignItems="center">
+                                        <XStack gap="$2" alignItems="center">
                                             <Clock 
                                                 size={14} 
                                                 color={theme.color11.get()} 

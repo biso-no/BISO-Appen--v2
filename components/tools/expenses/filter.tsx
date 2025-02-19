@@ -54,9 +54,9 @@ export function ExpenseFilter({ onFilterChange, filtersConfig }: ExpenseFilterPr
           borderRadius="$2"
           backgroundColor="$background"
         >
-          <Sheet.ScrollView flex={1} space="$4">
+          <Sheet.ScrollView flex={1} gap="$4">
             {filtersConfig.map((filter) => (
-              <XGroup key={filter.filterType} space="$4">
+              <XGroup key={filter.filterType} gap="$4">
                 <Label>{filter.label}</Label>
                 <CustomSelect
                   items={filter.options}

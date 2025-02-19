@@ -20,7 +20,8 @@ import {
   Briefcase,
   Bell,
   Lock,
-  ChevronRight 
+  ChevronRight,
+  Info
 } from '@tamagui/lucide-icons'
 import { MotiView } from 'moti'
 import { Link, useRouter } from 'expo-router'
@@ -87,12 +88,28 @@ const categories: ExploreCategory[] = [
     link: '/explore/events'
   },
   {
+    id: 'major-events',
+    title: 'Major Events',
+    description: 'Our signature events that shape student life',
+    icon: Ticket,
+    color: 'blue',
+    link: '/explore/major-events'
+  },
+  {
     id: 'shop',
     title: 'BISO Shop',
     description: 'Official merchandise and more',
     icon: ShoppingBag,
     color: 'pink',
     link: '/explore/products'
+  },
+  {
+    id: 'benefits',
+    title: 'Member Benefits',
+    description: 'Exclusive perks for BISO members',
+    icon: Lock,
+    color: 'yellow',
+    link: '/explore/benefits'
   },
   {
     id: 'reimbursements',
@@ -110,6 +127,14 @@ const categories: ExploreCategory[] = [
     icon: Briefcase,
     color: 'orange',
     link: '/explore/volunteer'
+  },
+  {
+    id: 'about',
+    title: 'About BISO',
+    description: 'Learn about your student union',
+    icon: Info,
+    color: 'red',
+    link: '/explore/about'
   }
 ]
 export default function ExploreScreen() {
@@ -237,7 +262,7 @@ export default function ExploreScreen() {
                 borderRadius={16}
                 resizeMode="cover"
               />
-              <YStack padding="$4" space="$2">
+              <YStack padding="$4" gap="$2">
                 <Text fontSize={18} fontWeight="bold" numberOfLines={1}>
                   {event.title}
                 </Text>
@@ -302,7 +327,7 @@ export default function ExploreScreen() {
             width="100%"
           >
             <XStack 
-              space="$4" 
+              gap="$4" 
               alignItems="flex-start"
               flex={1}
               flexWrap="nowrap"
@@ -376,7 +401,7 @@ export default function ExploreScreen() {
         </Stack>
         */}
         {/* Featured Events */}
-        <YStack space="$4">
+        <YStack gap="$4">
           <Text fontSize={18} fontWeight="bold">Featured Events</Text>
           {error ? (
             <Stack
@@ -413,9 +438,9 @@ export default function ExploreScreen() {
         </YStack>
 
         {/* Services */}
-        <YStack space="$4" marginTop="$6" marginBottom="$8">
+        <YStack gap="$4" marginTop="$6" marginBottom="$8">
           <Text fontSize={18} fontWeight="bold">Services</Text>
-          <YStack space="$3">
+          <YStack gap="$3">
             {categories.map(category => (
               <CategoryCard key={category.id} category={category} />
             ))}

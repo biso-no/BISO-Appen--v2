@@ -64,12 +64,12 @@ export default function VolunteerScreen() {
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500 }}
       >
-        <YStack space="$4" padding="$4">
+        <YStack gap="$4" padding="$4">
           <H2>Available Positions</H2>
           <Paragraph>Explore volunteer opportunities at {campus?.name}</Paragraph>
           
           {jobs.length > 0 ? (
-            <YStack space="$4">
+            <YStack gap="$4">
             {jobs.map((job, index) => (
               <Card 
                 key={job.id} 
@@ -82,7 +82,7 @@ export default function VolunteerScreen() {
                 onPress={() => router.push(`/explore/volunteer/${job.id}`)}
               >
                 <Card.Header padded>
-                  <XStack space="$2" alignItems="center">
+                  <XStack gap="$2" alignItems="center">
                     <Briefcase size={20} color={theme?.color?.val} />
                     <RenderHTML
                       source={{ html: job.title }}
@@ -103,7 +103,7 @@ export default function VolunteerScreen() {
             ))}
           </YStack>
           )  : (
-            <Card padding="$4" alignItems="center" space="$4">
+            <Card padding="$4" alignItems="center" gap="$4">
               <Text fontSize={24} color={textColor} textAlign="center">
                 No jobs available at the moment
               </Text>

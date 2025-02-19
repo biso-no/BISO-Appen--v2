@@ -54,14 +54,14 @@ export function News() {
 
       if (!news || news.total === 0 || loading) {
         return (
-          <MyStack justifyContent="center" alignItems="center" space="$2">
+          <MyStack justifyContent="center" alignItems="center" gap="$2">
             <H6>Stay tuned!</H6>
           </MyStack>
         );
       }
 
     return (
-        <YStack justifyContent="center" alignItems="center" space="$2">
+        <YStack justifyContent="center" alignItems="center" gap="$2">
             <Button bordered transparent onPress={() => router.push("/explore/news")}>See all</Button>
             {news?.documents.map((news, index) => (
                 <View key={index}>
@@ -81,7 +81,7 @@ export function News() {
                         />
                     </Card.Header>
                     <Card.Footer>
-                        <YStack space="$1">
+                        <YStack gap="$1">
                         <H6>{news.title}</H6>
                             <XStack justifyContent="space-between"> 
                             

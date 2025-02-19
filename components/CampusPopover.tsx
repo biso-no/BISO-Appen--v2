@@ -72,7 +72,7 @@ export default function CampusPopover({
     : 'Select Campus';
 
   const CampusList = () => (
-    <YGroup space="$2">
+    <YGroup gap="$2">
       {campuses?.documents.map((campusItem, index) => (
         <YGroup.Item key={campusItem.$id}>
           <Button
@@ -108,7 +108,7 @@ export default function CampusPopover({
             height: buttonHeight,
           }}
         >
-          <XStack space="$2" alignItems="center">
+          <XStack gap="$2" alignItems="center">
             <MapPin size={16} color={theme?.gray11?.get()} />
             <Text>{buttonText}</Text>
             <ChevronDown />
@@ -126,7 +126,7 @@ export default function CampusPopover({
           <Sheet.Overlay />
           <Sheet.Frame padding="$4">
             <Sheet.ScrollView>
-              <YStack space="$4">
+              <YStack gap="$4">
                 <Text fontSize={18} fontWeight="bold">Select Campus</Text>
                 <CampusList />
               </YStack>
