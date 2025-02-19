@@ -97,7 +97,7 @@ const htmlStyles = {
           width={100}
           height={100}
           borderRadius={16}
-          resizeMode="contain"
+          objectFit="contain"
         />
         <Text fontWeight="bold" fontSize={24} marginTop={8}>
           {department.Name}

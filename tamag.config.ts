@@ -11,6 +11,18 @@ const extendedTokens = {
   ...tokens,
   color: {
     ...tokens.color,
+    // Buddy Week brand colors
+    buddyPrimary: '#521B66',
+    buddyLight: '#FBEBFF',
+    buddyDark: '#3B1349',
+    buddyAccent: '#8A2DAD',
+    
+    // Career Days brand colors
+    careerPrimary: '#FBDC75',
+    careerSecondary: '#E4B64C',
+    careerBgDark: '#102A41',
+    careerBgLight: '#30647C',
+    
     // Blue spectrum
     blue1: '#f0f4ff',
     blue2: '#e1e9ff',
@@ -80,6 +92,18 @@ const extendedThemes = {
   ...themes,
   light: {
     ...themes.light,
+    // Buddy Week brand colors
+    buddyPrimary: '#521B66',
+    buddyLight: '#FBEBFF',
+    buddyDark: '#3B1349',
+    buddyAccent: '#8A2DAD',
+    
+    // Career Days brand colors
+    careerPrimary: '#FBDC75',
+    careerSecondary: '#E4B64C',
+    careerBgDark: '#102A41',
+    careerBgLight: '#30647C',
+    
     blue1: '#f0f4ff',
     blue2: '#e1e9ff',
     blue3: '#c3d4ff',
@@ -104,6 +128,18 @@ const extendedThemes = {
   },
   dark: {
     ...themes.dark,
+    // Buddy Week brand colors (adjusted for dark mode)
+    buddyPrimary: '#8A2DAD',
+    buddyLight: '#521B66',
+    buddyDark: '#FBEBFF',
+    buddyAccent: '#9D3CC4',
+    
+    // Career Days brand colors (adjusted for dark mode)
+    careerPrimary: '#E4B64C',
+    careerSecondary: '#FBDC75',
+    careerBgDark: '#30647C',
+    careerBgLight: '#102A41',
+    
     blue1: '#0037d0',
     blue2: '#0f4dff',
     blue3: '#2d64ff',

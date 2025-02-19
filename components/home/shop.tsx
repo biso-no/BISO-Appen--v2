@@ -231,7 +231,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                                     alt={product.name}
                                     height={200}
                                     width="100%"
-                                    resizeMode="cover"
+                                    objectFit="cover"
                                 />
                                 <LinearGradient
                                     start={[0, 0]}
