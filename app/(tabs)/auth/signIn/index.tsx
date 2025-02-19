@@ -147,45 +147,6 @@ export default function LoginScreen() {
             justifyContent="center"
             paddingBottom="$7"
           >
-<<<<<<< HEAD
-            <Text fontSize="$4" marginBottom="$2">Enter your email address</Text>
-            <Input
-              placeholder="Email"
-              backgroundColor={"transparent"}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              marginBottom="$4"
-            />
-            <Button onPress={handleEmailSubmit}>Send code</Button>
-          </MotiView>
-                  <MotiView
-                  key="otp"
-                  from={{ opacity: 0 }}
-                  animate={{ opacity: step === 1 ? 1 : 0 }}
-                  exit={{ opacity: 0 }}
-                  style={{ display: step === 1 ? "flex" : "none" }}
-              >
-                <YStack gap="$4" maxWidth="100%">
-            <Text fontSize="$4" marginBottom="$2">An email has been sent to {email}</Text>
-              <Input
-                placeholder="Enter OTP"
-                backgroundColor={"transparent"}
-                value={otp}
-                onChangeText={setOtp}
-                keyboardType="number-pad"
-                autoCapitalize="none"
-                marginBottom="$4"
-                size="$4"
-                ref={refs[0]}
-                />
-             <XGroup justifyContent='center' gap="$4">
-             <Button onPress={handleGoBack}>
-              Back
-             </Button>
-            </XGroup>
-=======
             <AnimatePresence>
               {!isKeyboardVisible && (
                 <MotiView
@@ -448,7 +409,6 @@ export default function LoginScreen() {
                 </MotiView>
               </AnimatePresence>
             )}
->>>>>>> origin/main
           </YStack>
         </ScrollView>
       </MyStack>
