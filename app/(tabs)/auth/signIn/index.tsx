@@ -1,79 +1,153 @@
 import React, { RefObject, useEffect, useRef, useState } from 'react';
-import { Button, Input, Text, YStack, XGroup } from 'tamagui';
-import { signIn, triggerFunction, verifyOtp } from '@/lib/appwrite';
+import { Button, Input, Text, YStack, XStack, H1, H2, Sheet, View } from 'tamagui';
+import { signIn, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
-import { OTPInput as OTP } from '@/components/ui/otp';
-import { TextInput } from 'react-native';
 import { MyStack } from '@/components/ui/MyStack';
-import { MotiView } from 'moti';
+import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/auth-provider';
+import { LinearGradient } from 'tamagui/linear-gradient';
+import { Mail, Lock, ArrowLeft } from '@tamagui/lucide-icons';
+import { FlipCard } from '@/components/ui/FlipCard';
+import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView, TextInput } from 'react-native';
+import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Define at the top of your file
 const OTP_LENGTH = 6;
 
+// Company Colors
+const COLORS = {
+  primary: '#001731',
+  secondary: '#3DA9E0',
+  // Norwegian Business School Colors
+  strongBlue: '#002341',
+  defaultBlue: '#01417B',
+  accentBlue: '#1A77E9',
+  subtleBlue: '#E6F2FA',
+  mutedBlue: '#F2F9FC',
+  strongGold: '#BD9E16',
+  defaultGold: '#F7D64A',
+  accentGold: '#FFE98C',
+  subtleGold: '#ffefa8',
+  mutedGold: '#fffae3',
+};
+
+const blurhash =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export default function LoginScreen() {
   const [step, setStep] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [userId, setUserId] = useState('');
   const [errorMessages, setErrorMessages] = useState<string[]>();
-
-  const { refetchUser, profile, data } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const { width } = useWindowDimensions();
+  const [otp, setOtp] = useState('');
+  const insets = useSafeAreaInsets();
 
   const refs: RefObject<TextInput>[] = Array.from({ length: OTP_LENGTH }, () => useRef<TextInput>(null));
+
+  const { refetchUser } = useAuth();
   const { push } = useRouter();
 
-  const handleEmailSubmit = async () => {
-    // Here you would typically send the OTP to the user's email
-    const response = await signIn(email);
-    if (response) {
-      setStep(1);
-      setUserId(response);
-    }
-  }
+  useEffect(() => {
+    const keyboardWillShow = Platform.OS === 'ios' 
+      ? Keyboard.addListener('keyboardWillShow', () => setIsKeyboardVisible(true))
+      : Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
+      
+    const keyboardWillHide = Platform.OS === 'ios'
+      ? Keyboard.addListener('keyboardWillHide', () => setIsKeyboardVisible(false))
+      : Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
 
-  const handleGoBack = async () => {
-    setStep(0);
-  }
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
+
+  // Add effect to handle card flip when step changes
+  useEffect(() => {
+    setIsFlipped(step === 1);
+  }, [step]);
+
+  const handleEmailSubmit = async () => {
+    if (!email) {
+      setErrorMessages(['Please enter your email address']);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await signIn(email);
+      if (response) {
+        setUserId(response);
+        setStep(1); // This will trigger the flip animation through the useEffect
+      }
+    } catch (error) {
+      setErrorMessages(['Failed to send verification code. Please try again.']);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    setStep(0); // This will trigger the flip animation through the useEffect
+  };
 
   const handleOtpSubmit = async (code: string) => {
     if (!code) {
-      setErrorMessages(["Please enter a valid OTP."]);
+      setErrorMessages(['Please enter a valid verification code']);
       return;
     }
-  
+    setIsLoading(true);
     try {
       const response = await verifyOtp(userId, code);
       if (response) {
-        console.log("User successfully verified");
-        push('/')
+        push('/');
         refetchUser();
-      } else {
-        console.log("User not verified");
       }
     } catch (error) {
-      console.error("Error during OTP submission: ", error);
-      setErrorMessages(["An unexpected error occurred. Please try again."]);
+      setErrorMessages(['Invalid verification code. Please try again.']);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  //If 6 digits are entered, attempt to submit the OTP
-  useEffect(() => {
-    if (otp.length === OTP_LENGTH) {
-      handleOtpSubmit(otp);
-    }
-  }, [otp]);
 
   return (
-    <MyStack flex={1} justifyContent="center" alignItems="center" padding="$4">
-          <MotiView
-            key="email"
-            from={{ opacity: 0 }}
-            animate={{ opacity: step === 0 ? 1 : 0 }}
-            exit={{ opacity: 0 }}
-            style={{ display: step === 0 ? "flex" : "none" }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 40}
+    >
+      <MyStack flex={1} backgroundColor={COLORS.primary}>
+        <LinearGradient
+          start={[0, 0]}
+          end={[1, 1]}
+          fullscreen
+          colors={[
+            COLORS.primary,
+            COLORS.strongBlue,
+            COLORS.defaultBlue,
+          ]}
+          locations={[0, 0.5, 1]}
+          opacity={0.95}
+        />
+        
+        <ScrollView 
+          contentContainerStyle={{ 
+            flexGrow: 1,
+            justifyContent: 'center',
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <YStack 
+            flex={1} 
+            gap="$4" 
+            justifyContent="center"
+            paddingBottom="$7"
           >
+<<<<<<< HEAD
             <Text fontSize="$4" marginBottom="$2">Enter your email address</Text>
             <Input
               placeholder="Email"
@@ -111,8 +185,273 @@ export default function LoginScreen() {
               Back
              </Button>
             </XGroup>
+=======
+            <AnimatePresence>
+              {!isKeyboardVisible && (
+                <MotiView
+                  from={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: 'timing', duration: 200 }}
+                  style={{ zIndex: 2 }}
+                >
+                  <Image
+                    source={require('@/assets/logo-dark.png')}
+                    style={{ 
+                      width: width * 0.4, 
+                      height: width * 0.4, 
+                      alignSelf: 'center',
+                    }}
+                    placeholder={blurhash}
+                    contentFit="contain"
+                    transition={1000}
+                  />
+                </MotiView>
+              )}
+            </AnimatePresence>
+
+            <YStack style={{ zIndex: 1 }}>
+              <FlipCard
+                isFlipped={isFlipped}
+                frontContent={
+                  <YStack 
+                    gap="$4" 
+                    padding="$4" 
+                    backgroundColor={COLORS.mutedBlue}
+                    borderRadius="$6"
+                    shadowColor={COLORS.primary}
+                    shadowOffset={{ width: 0, height: 4 }}
+                    shadowOpacity={0.15}
+                    shadowRadius={16}
+                    elevation={8}
+                  >
+                    <H1
+                      textAlign="center"
+                      color={COLORS.primary}
+                      fontWeight="900"
+                      fontSize={32}
+                      letterSpacing={-0.5}
+                    >
+                      Welcome Back
+                    </H1>
+                    <H2
+                      textAlign="center"
+                      color={COLORS.defaultBlue}
+                      fontSize={18}
+                      fontWeight="600"
+                      letterSpacing={-0.2}
+                    >
+                      Sign in to continue
+                    </H2>
+
+                    <YStack gap="$4" marginTop="$6">
+                      <XStack
+                        backgroundColor="white"
+                        borderRadius="$4"
+                        borderWidth={1}
+                        borderColor={COLORS.subtleBlue}
+                        padding="$3"
+                        alignItems="center"
+                      >
+                        <Mail size={20} color={COLORS.secondary} />
+                        <Input
+                          flex={1}
+                          marginLeft="$2"
+                          placeholder="Enter your email"
+                          backgroundColor="transparent"
+                          borderWidth={0}
+                          value={email}
+                          onChangeText={setEmail}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          color={COLORS.primary}
+                          placeholderTextColor={COLORS.defaultBlue}
+                          fontSize={16}
+                          fontWeight="500"
+                        />
+                      </XStack>
+
+                      <Button
+                        backgroundColor={COLORS.secondary}
+                        color="white"
+                        size="$5"
+                        fontWeight="700"
+                        onPress={handleEmailSubmit}
+                        pressStyle={{ 
+                          backgroundColor: COLORS.accentBlue,
+                          scale: 0.98,
+                        }}
+                        disabled={isLoading}
+                        borderRadius="$4"
+                        shadowColor={COLORS.primary}
+                        shadowOffset={{ width: 0, height: 2 }}
+                        shadowOpacity={0.2}
+                        shadowRadius={4}
+                        elevation={5}
+                      >
+                        <Text color="white" fontSize={16} fontWeight="700">
+                          {isLoading ? 'Sending Code...' : 'Continue with Email'}
+                        </Text>
+                      </Button>
+
+                      <Text 
+                        fontSize="$2" 
+                        textAlign="center" 
+                        opacity={0.7}
+                        color={COLORS.defaultBlue}
+                      >
+                        By continuing, you agree to our{' '}
+                        <Text
+                          color={COLORS.accentBlue}
+                          onPress={() => push('https://biso.no/en/privacy-policy/')}
+                          fontWeight="500"
+                        >
+                          Privacy Policy
+                        </Text>
+                      </Text>
+                    </YStack>
+                  </YStack>
+                }
+                backContent={
+                  <YStack 
+                    gap="$4" 
+                    padding="$4"
+                    backgroundColor={COLORS.mutedBlue}
+                    borderRadius="$6"
+                    shadowColor={COLORS.primary}
+                    shadowOffset={{ width: 0, height: 4 }}
+                    shadowOpacity={0.15}
+                    shadowRadius={16}
+                    elevation={8}
+                  >
+                    <XStack alignItems="center" gap="$2">
+                      <Button
+                        icon={ArrowLeft}
+                        backgroundColor="transparent"
+                        onPress={handleBack}
+                        color={COLORS.primary}
+                        pressStyle={{ scale: 0.95 }}
+                      />
+                      <XStack 
+                        flex={1} 
+                        backgroundColor="$gray2" 
+                        padding="$2" 
+                        borderRadius="$4"
+                        alignItems="center"
+                      >
+                        <Mail size={16} color={COLORS.defaultBlue} />
+                        <Text 
+                          fontSize={14} 
+                          color={COLORS.defaultBlue}
+                          fontWeight="500"
+                          numberOfLines={1}
+                          ellipsizeMode="middle"
+                          marginLeft="$2"
+                        >
+                          {email}
+                        </Text>
+                      </XStack>
+                    </XStack>
+
+                    <H2
+                      textAlign="center"
+                      color={COLORS.primary}
+                      fontSize={24}
+                      fontWeight="800"
+                      letterSpacing={-0.3}
+                    >
+                      Enter Verification Code
+                    </H2>
+
+                    <YStack gap="$4" alignItems="center" marginTop="$4">
+                      <XStack
+                        backgroundColor="white"
+                        borderRadius="$4"
+                        padding="$3"
+                        borderWidth={1}
+                        borderColor={COLORS.subtleBlue}
+                        width="100%"
+                        justifyContent="center"
+                      >
+                        <Input
+                          flex={1}
+                          placeholder="Enter verification code"
+                          value={otp}
+                          onChangeText={setOtp}
+                          keyboardType="number-pad"
+                          maxLength={OTP_LENGTH}
+                          textAlign="center"
+                          fontSize={20}
+                          backgroundColor="transparent"
+                          borderWidth={0}
+                          color={COLORS.primary}
+                        />
+                      </XStack>
+
+                      <Button
+                        backgroundColor={COLORS.secondary}
+                        color="white"
+                        size="$5"
+                        fontWeight="700"
+                        onPress={() => handleOtpSubmit(otp)}
+                        pressStyle={{ 
+                          backgroundColor: COLORS.accentBlue,
+                          scale: 0.98,
+                        }}
+                        disabled={isLoading || otp.length !== OTP_LENGTH}
+                        borderRadius="$4"
+                        width="100%"
+                      >
+                        <Text color="white" fontSize={16} fontWeight="700">
+                          {isLoading ? 'Verifying...' : 'Verify Code'}
+                        </Text>
+                      </Button>
+
+                      <Lock size={24} color={COLORS.secondary} />
+                      <Text
+                        textAlign="center"
+                        color={COLORS.defaultBlue}
+                        fontSize={14}
+                        fontWeight="500"
+                        letterSpacing={-0.1}
+                        paddingHorizontal="$4"
+                      >
+                        We sent a verification code to your email
+                      </Text>
+                    </YStack>
+                  </YStack>
+                }
+              />
+            </YStack>
+
+            {errorMessages && errorMessages.length > 0 && (
+              <AnimatePresence>
+                <MotiView
+                  from={{ opacity: 0, translateY: 10 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: 10 }}
+                  transition={{ type: 'timing', duration: 300 }}
+                >
+                  {errorMessages.map((error, index) => (
+                    <Text
+                      key={index}
+                      color={COLORS.subtleBlue}
+                      textAlign="center"
+                      fontSize={14}
+                      fontWeight="600"
+                      marginTop="$2"
+                      letterSpacing={-0.1}
+                    >
+                      {error}
+                    </Text>
+                  ))}
+                </MotiView>
+              </AnimatePresence>
+            )}
+>>>>>>> origin/main
           </YStack>
-          </MotiView>
-    </MyStack>
+        </ScrollView>
+      </MyStack>
+    </KeyboardAvoidingView>
   );
 }

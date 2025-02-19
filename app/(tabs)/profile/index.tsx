@@ -21,6 +21,7 @@ import { BILoginButton } from '@/components/bi-login-button';
 import { ImagePopover } from '@/components/image-popover';
 import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { Image } from 'tamagui';
 
 // Type definitions
 type ProfileSection = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
@@ -592,11 +593,19 @@ const ProfileScreen = () => {
                 alignItems="center" 
                 justifyContent="space-between"
               >
+<<<<<<< HEAD
                 <XStack gap="$2" alignItems="center">
                   <MaterialCommunityIcons 
                     name="crown" 
                     size={24} 
                     color={getMembershipColor()} 
+=======
+                <XStack gap="$4" alignItems="center">
+                  <Image 
+                    source={require('@/assets/logo-light.png')} 
+                    width={40}
+                    height={40}
+>>>>>>> origin/main
                   />
                   <YStack>
                     <SizableText 
@@ -618,6 +627,7 @@ const ProfileScreen = () => {
                     </XStack>
                   </YStack>
                 </XStack>
+                {!membership && (
                 <Button
                   size="$3"
                   icon={<MaterialCommunityIcons 
@@ -630,6 +640,7 @@ const ProfileScreen = () => {
                   backgroundColor={getMembershipColor()}
                   opacity={0.8}
                 />
+                )}
               </XStack>
             </Card>
           </YStack>

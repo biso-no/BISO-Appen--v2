@@ -8,7 +8,8 @@ import {
   Input, 
   ScrollView, 
   Button, 
-  Image 
+  Image,
+  useTheme
 } from 'tamagui'
 import { 
   Search, 
@@ -21,7 +22,8 @@ import {
   Bell,
   Lock,
   ChevronRight,
-  Info
+  Users,
+  Info 
 } from '@tamagui/lucide-icons'
 import { MotiView } from 'moti'
 import { Link, useRouter } from 'expo-router'
@@ -30,6 +32,8 @@ import { useCampus } from '@/lib/hooks/useCampus'
 import { databases } from '@/lib/appwrite'
 import axios from 'axios'
 import { useAuth } from '@/components/context/auth-provider'
+import { useColorScheme } from 'react-native'
+import { format, parseISO } from 'date-fns'
 
 interface Event {
   id: number;
@@ -44,29 +48,28 @@ interface Event {
 }
 
 interface WordPressEvent {
-    id: number;
-    date: string;
-    slug: string;
-    status: string;
-    description: string;
-    link: string;
-    image: {
-        url: string;
-    }
-    title: {
-      rendered: string;
-    };
-    content: {
-      rendered: string;
-    };
-    _embedded?: {
-      'wp:featuredmedia'?: Array<{
-        source_url: string;
-      }>;
-    };
-    organizer_name: string;
+  id: number;
+  date: string;
+  slug: string;
+  status: string;
+  description: string;
+  link: string;
+  image: {
+    url: string;
   }
-  
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+  };
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string;
+    }>;
+  };
+  organizer_name: string;
+}
 
 type ExploreCategory = {
   id: string
@@ -104,14 +107,6 @@ const categories: ExploreCategory[] = [
     link: '/explore/products'
   },
   {
-    id: 'benefits',
-    title: 'Member Benefits',
-    description: 'Exclusive perks for BISO members',
-    icon: Lock,
-    color: 'yellow',
-    link: '/explore/benefits'
-  },
-  {
     id: 'reimbursements',
     title: 'Reimbursements',
     description: 'Submit and track expenses',
@@ -137,6 +132,7 @@ const categories: ExploreCategory[] = [
     link: '/explore/about'
   }
 ]
+
 export default function ExploreScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -146,6 +142,8 @@ export default function ExploreScreen() {
   const { campus } = useCampus()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     loadEvents()
@@ -168,19 +166,18 @@ export default function ExploreScreen() {
   
       const response = await axios.get(url, { params });
       
-      // Transform the events to match the Event interface
       const transformedEvents = response.data.map((event: any) => ({
         id: event.id,
         title: event.title,
-        content: event.content,
+        content: event.description,
         excerpt: event.excerpt,
-        date: event.date,
+        date: event.start_date,         // Changed from date to start_date
         end_date: event.end_date,
-        venue: event.venue,
-        url: event.url,
-        featured_image: event.featured_image
+        venue: event.venue?.name,
+        url: event.website,
+        featured_image: event.thumbnail?.url  // Changed to use thumbnail.url
       }));
-  
+      console.log("Event date:", transformedEvents)
       setEvents(transformedEvents);
     } catch (err) {
       setError('Failed to load events');
@@ -207,7 +204,7 @@ export default function ExploreScreen() {
       }}
     >
       <Stack
-        backgroundColor="$gray2"
+        backgroundColor="$backgroundHover"
         borderRadius="$4"
         height={250}
         marginVertical="$2"
@@ -216,8 +213,8 @@ export default function ExploreScreen() {
   )
 
   const EventCard = ({ event }: { event: Event }) => {
-
     const router = useRouter()
+    
     const formatEventDate = (dateString: string) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-NO', {
@@ -252,7 +249,8 @@ export default function ExploreScreen() {
             <Stack
               backgroundColor="$background"
               borderRadius="$4"
-              borderColor="$gray5"
+              borderColor="$borderColor"
+              borderWidth={1}
               overflow="hidden"
               marginVertical="$2"
             >
@@ -262,15 +260,24 @@ export default function ExploreScreen() {
                 borderRadius={16}
                 resizeMode="cover"
               />
-              <YStack padding="$4" gap="$2">
+              <YStack padding="$4" space="$2">
                 <Text fontSize={18} fontWeight="bold" numberOfLines={1}>
                   {event.title}
                 </Text>
-                <Text fontSize={14} color="$gray11" numberOfLines={2}>
+                <Text 
+                  fontSize={14} 
+                  color="$color"
+                  opacity={0.7}
+                  numberOfLines={2}
+                >
                   {event.excerpt}
                 </Text>
                 <XStack justifyContent="space-between" alignItems="center">
-                  <Text fontSize={14} color="$gray11">
+                  <Text 
+                    fontSize={14} 
+                    color="$color" 
+                    opacity={0.7}
+                  >
                     {formatEventDate(event.date)}
                   </Text>
                   <Button
@@ -281,7 +288,7 @@ export default function ExploreScreen() {
                     pressStyle={{ scale: 0.97 }}
                     onPress={() => router.push(`/explore/events/${event.id}`)}
                   >
-                    View Details
+                    <Text color="white">View Details</Text>
                   </Button>
                 </XStack>
               </YStack>
@@ -292,14 +299,41 @@ export default function ExploreScreen() {
     );
   };
 
-  const CategoryCard = ({ category }: { category: ExploreCategory }) => {
-    const handlePress = () => {
-      if (category.requiresAuth && !user) {
-        setShowAuthDialog(true)
-        return
-      }
-      router.push(category.link as any)
+// CategoryCard component with improved contrast
+const CategoryCard = ({ category }: { category: ExploreCategory }) => {
+  const theme = useTheme()
+  const handlePress = () => {
+    if (category.requiresAuth && !user) {
+      setShowAuthDialog(true)
+      return
     }
+    router.push(category.link as any)
+  }
+
+  // Get correct background and border colors based on theme
+  const getBackgroundColor = () => {
+    return colorScheme === 'dark' 
+      ? `$${category.color}7` // Slightly lighter background in dark mode
+      : `$${category.color}1` // Lighter background in light mode
+  }
+
+  const getBorderColor = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}5` // More visible border in dark mode
+      : `$${category.color}3` // Subtle border in light mode
+  }
+
+  const getIconBackground = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}5` // More visible icon background in dark mode
+      : `$${category.color}2` // Subtle icon background in light mode
+  }
+
+  const getIconColor = () => {
+    return colorScheme === 'dark'
+      ? `$${category.color}11` // Brighter icon in dark mode
+      : `$${category.color}9`  // Standard icon color in light mode
+  }
 
     return (
       <Button
@@ -327,7 +361,7 @@ export default function ExploreScreen() {
             width="100%"
           >
             <XStack 
-              gap="$4" 
+              space="$4" 
               alignItems="flex-start"
               flex={1}
               flexWrap="nowrap"
@@ -401,7 +435,7 @@ export default function ExploreScreen() {
         </Stack>
         */}
         {/* Featured Events */}
-        <YStack gap="$4">
+        <YStack space="$4">
           <Text fontSize={18} fontWeight="bold">Featured Events</Text>
           {error ? (
             <Stack
@@ -409,16 +443,15 @@ export default function ExploreScreen() {
               padding="$4"
               borderRadius="$4"
               borderWidth={1}
-              borderColor="$red5"
+              borderColor="$red4"
             >
-              <Text color="$red11">{error}</Text>
+              <Text color="$red9">{error}</Text>
               <Button
                 marginTop="$2"
                 onPress={loadEvents}
-                backgroundColor="$red5"
-                color="white"
+                backgroundColor="$red8"
               >
-                Retry
+                <Text color="white">Retry</Text>
               </Button>
             </Stack>
           ) : isLoading ? (
@@ -427,7 +460,7 @@ export default function ExploreScreen() {
               <LoadingEventCard />
             </>
           ) : events.length === 0 ? (
-            <Text color="$gray11" textAlign="center" padding="$4">
+            <Text color="$color" opacity={0.7} textAlign="center" padding="$4">
               No events found
             </Text>
           ) : (
@@ -438,9 +471,9 @@ export default function ExploreScreen() {
         </YStack>
 
         {/* Services */}
-        <YStack gap="$4" marginTop="$6" marginBottom="$8">
+        <YStack space="$4" marginTop="$6" marginBottom="$8">
           <Text fontSize={18} fontWeight="bold">Services</Text>
-          <YStack gap="$3">
+          <YStack space="$3">
             {categories.map(category => (
               <CategoryCard key={category.id} category={category} />
             ))}
