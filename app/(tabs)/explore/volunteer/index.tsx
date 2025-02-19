@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { MotiView } from 'moti';
@@ -13,6 +13,7 @@ import {
   ScrollView, 
   Button,
   H2,
+  H3,
   Paragraph,
   Input,
   Sheet,
@@ -21,6 +22,9 @@ import {
   Separator,
   Stack,
   styled,
+  RadioGroup,
+  Label,
+  Switch,
 } from "tamagui";
 import { 
   Search, 
@@ -29,10 +33,13 @@ import {
   Calendar,
   Filter,
   Star,
-  ChevronRight
+  ChevronRight,
+  BookmarkPlus,
+  BookmarkCheck,
 } from "@tamagui/lucide-icons";
 import { useCampus } from "@/lib/hooks/useCampus";
-import { Models } from "react-native-appwrite";
+import { useSavedJobs } from "@/lib/hooks/useSavedJobs";
+import { JobPosition, JOB_CATEGORIES, JobCategory } from "@/types/job";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -47,7 +54,7 @@ const StyledStack = styled(Stack, {
 });
 
 interface JobCardProps {
-  job: Models.Document;
+  job: JobPosition;
   onPress: () => void;
   index: number;
 }
@@ -55,6 +62,24 @@ interface JobCardProps {
 function JobCard({ job, onPress, index }: JobCardProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
+  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs();
+  const [isSaving, setIsSaving] = useState(false);
+  const saved = isJobSaved(job.id);
+
+  const handleSaveToggle = async () => {
+    try {
+      setIsSaving(true);
+      if (saved) {
+        await unsaveJob(job.id);
+      } else {
+        await saveJob(job);
+      }
+    } catch (error) {
+      console.error('Failed to toggle save status:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <MotiView
@@ -144,15 +169,17 @@ function JobCard({ job, onPress, index }: JobCardProps) {
           )}
 
           <XStack gap="$2" marginTop="$2">
-            <Theme name="blue">
+            <Theme name={saved ? "blue" : "gray"}>
               <Button 
                 size="$3" 
-                icon={Star}
+                icon={saved ? BookmarkCheck : BookmarkPlus}
                 chromeless
-                backgroundColor="$blue2"
-                hoverStyle={{ backgroundColor: '$blue3' }}
+                backgroundColor={saved ? "$blue2" : "$gray2"}
+                hoverStyle={{ backgroundColor: saved ? '$blue3' : '$gray3' }}
+                onPress={handleSaveToggle}
+                disabled={isSaving}
               >
-                Save for Later
+                {saved ? "Saved" : "Save for Later"}
               </Button>
             </Theme>
           </XStack>
@@ -163,19 +190,50 @@ function JobCard({ job, onPress, index }: JobCardProps) {
 }
 
 export default function VolunteerScreen() {
-  const [jobs, setJobs] = useState<Models.Document[]>([]);
+  const [jobs, setJobs] = useState<JobPosition[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   
   const theme = useTheme();
   const { campus } = useCampus();
   const router = useRouter();
+  const { savedJobs, isLoading: isSavedJobsLoading } = useSavedJobs();
+
+  // Extract unique categories from jobs
+  const availableCategories = useMemo(() => {
+    const categories = new Set<string>();
+    categories.add("All"); // Always include "All" option
+
+    jobs.forEach(job => {
+      // Extract categories from job content or title
+      // This regex looks for common category indicators
+      const categoryMatches = job.content.match(/Category:|Position:|Role:|Type:/gi);
+      if (categoryMatches) {
+        const contentAfterCategory = job.content.split(categoryMatches[0])[1];
+        if (contentAfterCategory) {
+          const category = contentAfterCategory.split(/[.,\n]/)[0].trim();
+          if (category) {
+            categories.add(category);
+          }
+        }
+      }
+
+      // Also check the title for common category words
+      const titleWords = job.title.split(/[-–—]/);
+      if (titleWords.length > 1) {
+        categories.add(titleWords[0].trim());
+      }
+    });
+
+    return Array.from(categories);
+  }, [jobs]);
 
   const fetchJobs = useCallback(async (pageNumber: number, isInitial: boolean = false) => {
     try {
@@ -230,9 +288,13 @@ export default function VolunteerScreen() {
   }, [isLoadingMore, hasMore, page, fetchJobs]);
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || job.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || 
+      job.content.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      job.title.toLowerCase().includes(selectedCategory.toLowerCase());
+    const matchesSaved = showSavedOnly ? savedJobs.some(saved => saved.jobId === job.id) : true;
+    return matchesSearch && matchesCategory && matchesSaved;
   });
 
   return (
@@ -250,6 +312,77 @@ export default function VolunteerScreen() {
             Become a volunteer at campus BISO and create positive change
           </Paragraph>
         </YStack>
+
+        {/* Saved Jobs Section */}
+        {savedJobs.length > 0 && !showSavedOnly && (
+          <YStack gap="$4">
+            <XStack justifyContent="space-between" alignItems="center">
+              <H3 size="$6" fontWeight="600">Saved Positions</H3>
+              <Button
+                size="$3"
+                theme="blue"
+                chromeless
+                onPress={() => setShowSavedOnly(true)}
+              >
+                View All Saved
+              </Button>
+            </XStack>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <XStack gap="$3" paddingRight="$4">
+                {savedJobs.map((saved, index) => (
+                  <Card
+                    key={saved.jobId}
+                    bordered
+                    elevate
+                    size="$4"
+                    width={300}
+                    backgroundColor="$background"
+                    animation="bouncy"
+                    scale={0.98}
+                    hoverStyle={{ scale: 0.99 }}
+                    pressStyle={{ scale: 0.96 }}
+                    onPress={() => router.push(`/explore/volunteer/${saved.jobId}`)}
+                  >
+                    <YStack padding="$4" gap="$2">
+                      <XStack gap="$2" alignItems="center">
+                        <Theme name="blue">
+                          <Card 
+                            bordered 
+                            size="$2" 
+                            padding="$2"
+                            backgroundColor="$blue2"
+                          >
+                            <BookmarkCheck size={16} color={theme.blue10?.val} />
+                          </Card>
+                        </Theme>
+                        <SizableText size="$4" fontWeight="600" numberOfLines={2} flex={1}>
+                          {saved.title}
+                        </SizableText>
+                      </XStack>
+                      <XStack flexWrap="wrap" gap="$1">
+                        {saved.campus?.map((campus: string) => (
+                          <Button
+                            key={campus}
+                            size="$2"
+                            theme="gray"
+                            bordered
+                            icon={MapPin}
+                            chromeless
+                          >
+                            {campus}
+                          </Button>
+                        ))}
+                      </XStack>
+                      <SizableText size="$2" color="$gray11">
+                        Saved {new Date(saved.savedAt).toLocaleDateString()}
+                      </SizableText>
+                    </YStack>
+                  </Card>
+                ))}
+              </XStack>
+            </ScrollView>
+          </YStack>
+        )}
 
         {/* Search Bar */}
         <Card bordered elevate size="$2">
@@ -279,6 +412,19 @@ export default function VolunteerScreen() {
 
         {/* Job List */}
         <YStack gap="$4">
+          {showSavedOnly && (
+            <XStack justifyContent="space-between" alignItems="center">
+              <H3 size="$6" fontWeight="600">Saved Positions</H3>
+              <Button
+                size="$3"
+                theme="gray"
+                chromeless
+                onPress={() => setShowSavedOnly(false)}
+              >
+                Show All Positions
+              </Button>
+            </XStack>
+          )}
           {initialLoading ? (
             <YStack justifyContent="center" alignItems="center" minHeight={200}>
               <ActivityIndicator size="large" color={theme.blue10?.val || '#007AFF'} />
@@ -323,8 +469,11 @@ export default function VolunteerScreen() {
                   Try adjusting your search or filters to find more opportunities
                 </Paragraph>
               </YStack>
-              <Button theme="blue" onPress={() => setSearchQuery("")}>
-                Clear Search
+              <Button theme="blue" onPress={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+              }}>
+                Clear Filters
               </Button>
             </Card>
           )}
@@ -336,16 +485,58 @@ export default function VolunteerScreen() {
         modal
         open={isFilterOpen}
         onOpenChange={setIsFilterOpen}
-        snapPoints={[40]}
+        snapPoints={[85]}
         dismissOnSnapToBottom
+        zIndex={100_000}
+        animation="medium"
       >
-        <Sheet.Overlay />
-        <Sheet.Frame padding="$4">
-          <Sheet.Handle />
-          <YStack gap="$4">
-            <H2>Filters</H2>
-            {/* Add your filter options here */}
+        <Sheet.Overlay 
+          animation="lazy" 
+          enterStyle={{ opacity: 0 }} 
+          exitStyle={{ opacity: 0 }} 
+        />
+        <Sheet.Handle />
+        <Sheet.Frame padding="$4" justifyContent="center" gap="$5">
+          <H2>Filters</H2>
+          
+          {/* Saved Jobs Filter */}
+          <YStack gap="$2">
+            <Label>Saved Positions</Label>
+            <XStack alignItems="center" gap="$2">
+              <Switch
+                checked={showSavedOnly}
+                onCheckedChange={setShowSavedOnly}
+                size="$3"
+              >
+                <Switch.Thumb animation="bouncy" />
+              </Switch>
+              <SizableText>Show saved positions only</SizableText>
+            </XStack>
           </YStack>
+
+          <Separator />
+
+          {/* Category Filter */}
+          {availableCategories.length > 1 && (
+            <YStack gap="$2">
+              <Label>Category</Label>
+              <RadioGroup
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <YStack width={300} gap="$2">
+                  {availableCategories.map((category) => (
+                    <XStack key={category} alignItems="center" gap="$2">
+                      <RadioGroup.Item value={category} id={category} size="$4">
+                        <RadioGroup.Indicator />
+                      </RadioGroup.Item>
+                      <Label htmlFor={category}>{category}</Label>
+                    </XStack>
+                  ))}
+                </YStack>
+              </RadioGroup>
+            </YStack>
+          )}
         </Sheet.Frame>
       </Sheet>
     </ScrollView>

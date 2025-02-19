@@ -607,3 +607,77 @@ export async function createSession(userId: string, secret: string) {
 
     return session
 }
+
+export async function getSavedJobs() {
+  try {
+    const response = await databases.listDocuments(
+      'app',
+      'saved_jobs'
+    );
+    return response.documents;
+  } catch (error) {
+    console.error("Error fetching saved jobs:", error);
+    throw error;
+  }
+}
+
+export async function saveJob(userId: string, job: {
+  jobId: number;
+  title: string;
+  campus: string[];
+}) {
+
+    //Campus map. Campus passed to this function is an array of strings. available campuses are: oslo, bergen, trondheim, stavanger, national.
+    //We must map each with their respective campus_id. Oslo = 1, Bergen = 2, Trondheim = 3, Stavanger = 4, National = 5.
+    const campusMap = {
+        oslo: 1,
+        bergen: 2,
+        trondheim: 3,
+        stavanger: 4,
+        national: 5
+    }
+
+  try {
+    const response = await databases.createDocument(
+      'app',
+      'saved_jobs',
+      ID.unique(),
+      {
+        user: [userId],
+        jobId: job.jobId,
+        title: job.title,
+        campus: [job.campus.map(campus => campusMap[campus as keyof typeof campusMap])]
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error saving job:", error);
+    throw error;
+  }
+}
+
+export async function unsaveJob(userId: string, jobId: number) {
+  try {
+    // First find the document with matching userId and jobId
+    const response = await databases.listDocuments(
+      'app',
+      'saved_jobs',
+      [
+        Query.equal('userId', userId),
+        Query.equal('jobId', jobId)
+      ]
+    );
+
+    if (response.documents.length > 0) {
+      // Delete the found document
+      await databases.deleteDocument(
+        'app',
+        'saved_jobs',
+        response.documents[0].$id
+      );
+    }
+  } catch (error) {
+    console.error("Error unsaving job:", error);
+    throw error;
+  }
+}
