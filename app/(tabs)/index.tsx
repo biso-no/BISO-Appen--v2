@@ -41,6 +41,7 @@ import RenderHTML from 'react-native-render-html';
 import { formatDate, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { BlurView } from 'expo-blur';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { CampusHero } from '@/components/home/campus-hero';
 
 // Types remain the same as before
 interface Product {
@@ -439,6 +440,8 @@ export default function HomeScreen() {
 
 
         <YStack padding="$4" gap="$6">
+          <CampusHero />
+          
           <MotiScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -500,7 +503,7 @@ export default function HomeScreen() {
           </MotiScrollView>
 
           <AnimatePresence>
-            {(activeCategory === 'all' || activeCategory === 'events') && (
+            {(activeCategory === 'all' || activeCategory === 'events') && getRegularEvents().length > 0 && (
               <MotiView
                 key="events-section"
                 from={{ opacity: 0, scale: 0.95 }}
@@ -567,7 +570,7 @@ export default function HomeScreen() {
               </MotiView>
             )}
 
-            {(activeCategory === 'all' || activeCategory === 'products') && (
+            {(activeCategory === 'all' || activeCategory === 'products') && products.length > 0 && (
               <MotiView
                 key="products-section"
                 from={{ opacity: 0, scale: 0.95 }}
@@ -697,7 +700,7 @@ export default function HomeScreen() {
               </MotiView>
             )}
 
-            {(activeCategory === 'all' || activeCategory === 'jobs') && (
+            {(activeCategory === 'all' || activeCategory === 'jobs') && jobs.length > 0 && (
               <MotiView
                 key="jobs-section"
                 from={{ opacity: 0, scale: 0.95 }}

@@ -329,7 +329,7 @@ export default function TabLayout() {
         onPress={handlePress}
         style={[animatedStyle, { padding: 8 }]}
       >
-        <YStack alignItems="center" space="$1">
+        <YStack alignItems="center" gap="$1">
           <Animated.View style={[{ padding: 12, borderRadius: 16 }, isActive && {
             backgroundColor: Colors[colorScheme ?? 'light'].tint + '15',
           }]}>
