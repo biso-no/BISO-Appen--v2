@@ -9,7 +9,7 @@ import { Step4 } from '@/components/onboarding/step4';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MyStack } from '@/components/ui/MyStack';
 import { useCampus } from '@/lib/hooks/useCampus';
-import { StyleSheet, Dimensions, useColorScheme } from 'react-native';
+import { StyleSheet, Dimensions, useColorScheme, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -17,6 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PartyPopper, User, Building2, MapPin } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
+import { Models } from 'react-native-appwrite';
 
 enum Campus {
   Bergen = "bergen",
@@ -41,7 +42,7 @@ export default function Onboarding() {
     isVolunteer: false,
     departments: [],
   });
-  const { data, profile, isLoading, error, updateName, updateUserPrefs, updateProfile } = useAuth();
+  const { data, profile, isLoading, error, updateName, updateUserPrefs, updateProfile, setProfile } = useAuth();
   const [name, setName] = useState(profile?.name ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState(profile?.address ?? '');
@@ -55,9 +56,8 @@ export default function Onboarding() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { width, height } = Dimensions.get('window');
-
-  
-
+  const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(null);
+  const [selectedDepartments, setSelectedDepartments] = useState<Models.Document[]>([]);
   const router = useRouter();
 
   const { campus } = useCampus();
@@ -90,6 +90,30 @@ export default function Onboarding() {
     }
   };
 
+  const handleCampusChange = (campus: Models.Document | null) => {
+    setSelectedCampus(campus);
+    if (campus) {
+      updateUserPrefs('campus', campus.$id);
+    }
+  };
+
+  const handleDepartmentsChange = (department: Models.Document) => {
+    setSelectedDepartments(prev => {
+      const isSelected = prev.some(d => d.$id === department.$id);
+      const newDepartments = isSelected 
+        ? prev.filter(d => d.$id !== department.$id)
+        : [...prev, department];
+      
+      // Update preferences with department IDs
+      setPreferences(prev => ({
+        ...prev,
+        departments: newDepartments.map(d => d.$id)
+      }));
+      
+      return newDepartments;
+    });
+  };
+
   const steps = [
     {
       label: 'What is your name?',
@@ -102,9 +126,13 @@ export default function Onboarding() {
       icon: <User size={24} color="$primary" />
     },
     {
-      label: 'Select one or more departments to follow',
+      label: 'Select one or more departments to follow (Optional)',
       content: (
         <Step2 
+          selectedCampus={selectedCampus}
+          onCampusChange={handleCampusChange}
+          selectedDepartments={selectedDepartments}
+          onDepartmentsChange={handleDepartmentsChange}
         />
       ),
       icon: <Building2 size={24} color="$primary" />
@@ -141,12 +169,21 @@ export default function Onboarding() {
       const response = await databases.createDocument('app', 'user', data.$id, { 
         name,
         phone, 
-        address, 
+        address,
+        email: data.email,
         city, 
         zip: zipCode,
+        campus: selectedCampus?.$id,
+        departments: selectedDepartments.map(d => d.$id),
       });
+
+      await updateName(name);
       
       console.log('Profile created/updated successfully:', response);
+
+      if (response.$id) {
+        setProfile(response);
+      }
       
       // Wait for animation to complete before redirecting
       setTimeout(() => {
@@ -170,48 +207,54 @@ export default function Onboarding() {
           }
           style={styles.background}
         >
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 1000 }}
-            style={styles.container}
-          >
-            <YStack 
-              justifyContent="flex-start" 
-              alignItems="center" 
-              padding="$3"
-              paddingTop={insets.top + 8}
-              paddingBottom={Math.max(insets.bottom, 16)}
-              flex={1}
-              gap="$2"
-            >
-              <H1 
-                color="$primary" 
-                textAlign="center"
-                animation="quick"
-                enterStyle={{ scale: 0.9, opacity: 0 }}
-                fontSize={28}
-                fontWeight="bold"
-                marginBottom="$1"
+              <MotiView
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ type: 'timing', duration: 1000 }}
+                style={styles.motiContainer}
               >
-                Welcome Onboard
-              </H1>
-              
-              <YStack flex={1} width="100%" maxWidth={600} alignSelf="center">
-                <MultiStepForm steps={steps} onSubmit={handleSubmit} />
-              </YStack>
-              
-              {showConfetti && (
-                <ConfettiCannon
-                  count={200}
-                  origin={{ x: width / 2, y: 0 }}
-                  autoStart={true}
-                  fadeOut={true}
-                  ref={confettiRef}
-                />
-              )}
-            </YStack>
-          </MotiView>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={{ flex: 1 }}
+                >
+                  <YStack 
+                    flex={1}
+                    justifyContent="flex-start" 
+                    alignItems="center" 
+                    paddingTop={insets.top}
+                  >
+                    <H1 
+                      color="$primary" 
+                      textAlign="center"
+                      animation="quick"
+                      enterStyle={{ scale: 0.9, opacity: 0 }}
+                      fontSize={24}
+                      fontWeight="bold"
+                      marginBottom="$2"
+                      marginTop="$2"
+                    >
+                      Welcome Onboard
+                    </H1>
+                    
+                    <YStack flex={1} width="100%" maxWidth={600}>
+                      <MultiStepForm 
+                        steps={steps} 
+                        onSubmit={handleSubmit}
+                      />
+                    </YStack>
+                    
+                    {showConfetti && (
+                      <ConfettiCannon
+                        count={200}
+                        origin={{ x: width / 2, y: 0 }}
+                        autoStart={true}
+                        fadeOut={true}
+                        ref={confettiRef}
+                      />
+                    )}
+                  </YStack>
+                </KeyboardAvoidingView>
+              </MotiView>
         </LinearGradient>
       </Theme>
     </>
@@ -227,6 +270,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    height: '100%',
   },
+  scrollContent: {
+    flexGrow: 1,
+    width: '100%',
+  },
+  motiContainer: {
+    flex: 1,
+    width: '100%',
+  }
 });

@@ -2,7 +2,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, useWindowDimensions, Platform, RefreshControl, Pressable } from 'react-native';
 import { 
   H1, H2, H3, H4, Paragraph, YStack, XStack, Button, Image, Text, 
-  Card, Theme, useTheme, Sheet, Adapt, Dialog, Separator
+  Card, Theme, useTheme, Sheet, Adapt, Dialog, Separator,
+  View
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView, MotiScrollView, AnimatePresence, motify } from 'moti';
@@ -237,12 +238,14 @@ function BenefitsModal({
   const colorScheme = useColorScheme();
   const getIconColor = () => colorScheme === 'dark' ? `$${color}11` : `$${color}9`;
   
+  const snapPoints = [(items.length * 10)];
+
   return (
     <Sheet
       modal
       open={open}
       onOpenChange={(isOpen: boolean) => !isOpen && onClose()}
-      snapPoints={[85]}
+      snapPoints={snapPoints}
       position={0}
       dismissOnSnapToBottom
     >
@@ -308,7 +311,7 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
   const getIconColor = () => colorScheme === 'dark' ? `$${color}11` : `$${color}9`;
 
   return (
-    <>
+    <View>
       <MotiView
         from={{ opacity: 0, scale: 0.9, translateY: 20 }}
         animate={{ opacity: 1, scale: 1, translateY: 0 }}
@@ -373,7 +376,7 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
         icon={Icon}
         color={color}
       />
-    </>
+    </View>
   );
 }
 

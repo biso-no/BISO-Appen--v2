@@ -50,6 +50,7 @@ export interface AuthContextType {
   membership: Membership | null;
   followedDepartments: Models.Document[]
   onToggleDepartmentFollow: (department: Models.Document) => void
+  setProfile: (profile: Profile) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -234,22 +235,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [data?.$id]);
 
-  const isOnboardingPath = pathname === '/onboarding';
-
-  useEffect(() => {
-    if (!data?.$id || isOnboardingPath) return;
-
-    const unsubscribe = subScribeToProfile({
-      profileId: data.$id,
-      callback: (response: RealtimeResponseEvent<Models.Document>) => {
-        const payload = response.payload;
-        if (payload.$collectionId === 'user' && payload.$id === data.$id) {
-          fetchProfile();
-        }
-      },
-    });
-    return () => unsubscribe();
-  }, [data?.$id, fetchProfile, isOnboardingPath]);
 
   useEffect(() => {
     async function fetchBisoMembership() {
@@ -316,9 +301,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userDepartment,
     membership,
     followedDepartments,
-    onToggleDepartmentFollow
+    onToggleDepartmentFollow,
+    setProfile
   }), [
-    data, profile, isLoading, error, membershipExpiry, isBisoMember, studentId,
+    data, profile, isLoading, error, membershipExpiry, isBisoMember, studentId, setProfile,
     userCampus, userDepartment, refetchUser, updateName, updateUserPrefs, updateProfile, addStudentId, membership
   ]);
 

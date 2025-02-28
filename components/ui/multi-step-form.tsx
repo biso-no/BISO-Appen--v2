@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme } from 'react-native';
-import { YStack, Button, Text, View, H2, XStack, Circle, Theme, useTheme } from 'tamagui';
+import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme, KeyboardAvoidingView, Platform } from 'react-native';
+import { YStack, Button, Text, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
 import { MyStack } from './MyStack';
 import { MotiView } from 'moti';
 import { ChevronRight, ChevronLeft, Check } from '@tamagui/lucide-icons';
@@ -232,7 +232,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
   });
 
   return (
-    <View style={[styles.container]}>
+    <YStack flex={1}>
       {/* Progress indicator */}
       <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
         {steps.map((_, index) => (
@@ -278,44 +278,57 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         </View>
       </XStack>
 
-      {/* Content area with animations */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.contentContainer,
-          {
-            transform: [
-              { translateX },
-              { scale: scaleAnim }
-            ],
-            opacity: fadeAnim,
-          },
-        ]}
+      {/* Scrollable content area */}
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Theme name={isDark ? 'dark' : 'light'}>
-          <MotiView
-            from={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'timing', duration: 400 }}
-            style={styles.stepContainer}
-          >
-            <H2 
-              textAlign="center" 
-              marginBottom="$2" 
-              fontWeight="bold"
-              fontSize={isSmallDevice ? "$8" : "$8"}
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.contentContainer,
+            {
+              transform: [
+                { translateX },
+                { scale: scaleAnim }
+              ],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <Theme name={isDark ? 'dark' : 'light'}>
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'timing', duration: 400 }}
+              style={styles.stepContainer}
             >
-              {steps[currentStep].label}
-            </H2>
-            <View style={styles.contentWrapper}>
-              {steps[currentStep].content}
-            </View>
-          </MotiView>
-        </Theme>
-      </Animated.View>
+              <H2 
+                textAlign="center" 
+                marginBottom="$2" 
+                fontWeight="bold"
+                fontSize={isSmallDevice ? "$8" : "$8"}
+              >
+                {steps[currentStep].label}
+              </H2>
+              <View style={styles.contentWrapper}>
+                {steps[currentStep].content}
+              </View>
+            </MotiView>
+          </Theme>
+        </Animated.View>
+      </ScrollView>
 
       {/* Navigation buttons */}
-      <XStack justifyContent="space-between" paddingHorizontal="$4" marginTop="$3" marginBottom={insets.bottom + 8}>
+      <XStack 
+        justifyContent="space-between" 
+        paddingHorizontal="$4"
+        paddingVertical="$4"
+        borderTopWidth={1}
+        borderTopColor="$borderColor"
+      >
         <Button
           size={isSmallDevice ? "$3" : "$4"}
           circular
@@ -340,7 +353,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
           {currentStep < steps.length - 1 ? 'Next' : 'Complete'}
         </Button>
       </XStack>
-    </View>
+    </YStack>
   );
 }
 
@@ -389,4 +402,17 @@ const styles = StyleSheet.create({
   stepIndicatorContainer: {
     zIndex: 1,
   },
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    width: '100%',
+  },
+  motiContainer: {
+    flex: 1,
+    width: '100%',
+  }
 });

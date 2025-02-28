@@ -44,25 +44,15 @@ const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect, campus, initi
 
   return (
     <YStack>
-      {selectedCampus ? (
+      {campuses?.documents.map((campus) => (
         <StyledCard
-          key={selectedCampus.$id}
-          onPress={() => handleSelect(selectedCampus)}
-          backgroundColor={theme.gray2}
+          key={campus.$id}
+          onPress={() => handleSelect(campus)}
+          backgroundColor={selectedCampus?.$id === campus.$id ? theme.gray2 : theme.gray1}
         >
-          <Text>{capitalizeFirstLetter(selectedCampus.name)}</Text>
+          <Text>{capitalizeFirstLetter(campus.name)}</Text>
         </StyledCard>
-      ) : (
-        campuses?.documents.map((campus) => (
-          <StyledCard
-            key={campus.$id}
-            onPress={() => handleSelect(campus)}
-            backgroundColor={theme.gray1}
-          >
-            <Text>{capitalizeFirstLetter(campus.name)}</Text>
-          </StyledCard>
-        ))
-      )}
+      ))}
     </YStack>
   );
 };
