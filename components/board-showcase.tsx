@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWindowDimensions, useColorScheme, ScrollView, Pressable } from 'react-native';
 import {
   YStack,
@@ -15,54 +15,26 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Users, Mail, Phone, ChevronRight } from '@tamagui/lucide-icons';
+import { databases } from '@/lib/appwrite';
+import { Models, Query } from 'react-native-appwrite';
 
-// Types matching Microsoft Graph API user properties we'll need
-interface BoardMember {
-  id: string;
-  displayName: string;
-  jobTitle?: string;
-  mail: string;
-  mobilePhone?: string;
-  department?: string;
-  profilePhotoUrl?: string;
+// Types for team members
+interface TeamMember {
+  name: string;
+  role: string;
+  imageUrl: string;
+  email?: string;
+  phone?: string;
 }
 
 interface BoardShowcaseProps {
-  campus: string;
-  departmentId: string;
+  boardMembers: TeamMember[];
   title?: string;
+  isLoading?: boolean;
+  error?: string;
 }
 
-// Placeholder data - will be replaced with actual Graph API data
-const PLACEHOLDER_DATA: BoardMember[] = [
-  {
-    id: '1',
-    displayName: 'Marie Haga Eriksen',
-    jobTitle: 'President',
-    mail: 'president.oslo@biso.no',
-    mobilePhone: '+47 123 45 678',
-    department: 'Management',
-    profilePhotoUrl: 'https://i.pravatar.cc/150?img=1',
-  },
-  {
-    id: '2',
-    displayName: 'John Smith',
-    jobTitle: 'Vice President',
-    mail: 'vp.oslo@biso.no',
-    department: 'Management',
-    profilePhotoUrl: 'https://i.pravatar.cc/150?img=2',
-  },
-  {
-    id: '3',
-    displayName: 'Anna Johnson',
-    jobTitle: 'Secretary',
-    mail: 'secretary.oslo@biso.no',
-    department: 'Management',
-    profilePhotoUrl: 'https://i.pravatar.cc/150?img=3',
-  },
-];
-
-function BoardMemberCard({ member, index }: { member: BoardMember; index: number }) {
+function BoardMemberCard({ member, index }: { member: TeamMember; index: number }) {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
@@ -98,11 +70,11 @@ function BoardMemberCard({ member, index }: { member: BoardMember; index: number
             }}
           />
 
-          <YStack padding="$4" space="$3">
-            <XStack alignItems="center" space="$3">
+          <YStack padding="$4" gap="$3">
+            <XStack alignItems="center" gap="$3">
               <Avatar circular size="$6" elevate>
-                {member.profilePhotoUrl ? (
-                  <Avatar.Image src={member.profilePhotoUrl} />
+                {member.imageUrl ? (
+                  <Avatar.Image src={member.imageUrl} />
                 ) : (
                   <Avatar.Fallback 
                     backgroundColor={colorScheme === 'dark' ? '$blue5' : '$blue2'}
@@ -112,22 +84,22 @@ function BoardMemberCard({ member, index }: { member: BoardMember; index: number
                       fontSize="$6"
                       fontWeight="600"
                     >
-                      {member.displayName.charAt(0)}
+                      {member.name.charAt(0)}
                     </Text>
                   </Avatar.Fallback>
                 )}
               </Avatar>
 
-              <YStack flex={1} space="$1">
+              <YStack flex={1} gap="$1">
                 <Text 
                   fontSize="$5" 
                   fontWeight="600" 
                   color="$color"
                   numberOfLines={1}
                 >
-                  {member.displayName}
+                  {member.name}
                 </Text>
-                {member.jobTitle && (
+                {member.role && (
                   <Text 
                     fontSize="$3" 
                     color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
@@ -135,54 +107,58 @@ function BoardMemberCard({ member, index }: { member: BoardMember; index: number
                     numberOfLines={1}
                     opacity={0.9}
                   >
-                    {member.jobTitle}
+                    {member.role}
                   </Text>
                 )}
               </YStack>
             </XStack>
 
-            <YStack 
-              backgroundColor={colorScheme === 'dark' ? '$blue4' : '$blue2'} 
-              padding="$3"
-              borderRadius="$3"
-              space="$2"
-            >
-              <XStack space="$2" alignItems="center">
-                <Mail 
-                  size={14} 
-                  color={colorScheme === 'dark' ? '$blue11' : '$blue9'} 
-                />
-                <Text 
-                  flex={1}
-                  fontSize="$2" 
-                  color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
-                  fontWeight="500"
-                  numberOfLines={1}
-                  opacity={0.9}
-                >
-                  {member.mail}
-                </Text>
-              </XStack>
+            {(member.email || member.phone) && (
+              <YStack 
+                backgroundColor={colorScheme === 'dark' ? '$blue4' : '$blue2'} 
+                padding="$3"
+                borderRadius="$3"
+                gap="$2"
+              >
+                {member.email && (
+                  <XStack gap="$2" alignItems="center">
+                    <Mail 
+                      size={14} 
+                      color={colorScheme === 'dark' ? '$blue11' : '$blue9'} 
+                    />
+                    <Text 
+                      flex={1}
+                      fontSize="$2" 
+                      color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
+                      fontWeight="500"
+                      numberOfLines={1}
+                      opacity={0.9}
+                    >
+                      {member.email}
+                    </Text>
+                  </XStack>
+                )}
 
-              {member.mobilePhone && (
-                <XStack space="$2" alignItems="center">
-                  <Phone 
-                    size={14} 
-                    color={colorScheme === 'dark' ? '$blue11' : '$blue9'} 
-                  />
-                  <Text 
-                    flex={1}
-                    fontSize="$2" 
-                    color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
-                    fontWeight="500"
-                    numberOfLines={1}
-                    opacity={0.9}
-                  >
-                    {member.mobilePhone}
-                  </Text>
-                </XStack>
-              )}
-            </YStack>
+                {member.phone && (
+                  <XStack gap="$2" alignItems="center">
+                    <Phone 
+                      size={14} 
+                      color={colorScheme === 'dark' ? '$blue11' : '$blue9'} 
+                    />
+                    <Text 
+                      flex={1}
+                      fontSize="$2" 
+                      color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
+                      fontWeight="500"
+                      numberOfLines={1}
+                      opacity={0.9}
+                    >
+                      {member.phone}
+                    </Text>
+                  </XStack>
+                )}
+              </YStack>
+            )}
           </YStack>
         </YStack>
       </Pressable>
@@ -190,14 +166,14 @@ function BoardMemberCard({ member, index }: { member: BoardMember; index: number
   );
 }
 
-export function BoardShowcase({ campus, departmentId, title = 'Board Members' }: BoardShowcaseProps) {
-  const [isLoading] = useState(false);
-  const [error] = useState<string | null>(null);
+export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardShowcaseProps) {
+
   const colorScheme = useColorScheme();
+
 
   if (isLoading) {
     return (
-      <YStack padding="$4" alignItems="center" space="$4">
+      <YStack padding="$4" alignItems="center" gap="$4">
         <Text>Loading board members...</Text>
       </YStack>
     );
@@ -205,12 +181,12 @@ export function BoardShowcase({ campus, departmentId, title = 'Board Members' }:
 
   if (error) {
     return (
-      <YStack padding="$4" alignItems="center" space="$4">
+      <YStack padding="$4" alignItems="center" gap="$4">
         <Text color="$red10">{error}</Text>
         <Button
           themeInverse
           onPress={() => {
-            // Add retry logic here when implementing actual data fetching
+            // This will trigger the useEffect to run again
           }}
         >
           Retry
@@ -219,11 +195,19 @@ export function BoardShowcase({ campus, departmentId, title = 'Board Members' }:
     );
   }
 
+  if (boardMembers.length === 0) {
+    return (
+      <YStack padding="$4" alignItems="center">
+        <Text>No board members found</Text>
+      </YStack>
+    );
+  }
+
   return (
     <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
-      <YStack space="$2">
+      <YStack gap="$2">
         <XStack 
-          space="$3" 
+          gap="$3" 
           alignItems="center" 
           paddingHorizontal="$4"
           paddingVertical="$2"
@@ -254,9 +238,9 @@ export function BoardShowcase({ campus, departmentId, title = 'Board Members' }:
             gap: 12
           }}
         >
-          {PLACEHOLDER_DATA.map((member, index) => (
+          {boardMembers.map((member, index) => (
             <BoardMemberCard 
-              key={member.id} 
+              key={`${member.name}-${index}`}
               member={member} 
               index={index} 
             />

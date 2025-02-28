@@ -66,6 +66,7 @@
     "react-native": "0.76.5",
     "react-native-appwrite": "^0.6.0",
     "react-native-calendars": "^1.1307.0",
+    "react-native-confetti-cannon": "^1.5.2",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-mlkit-ocr": "^0.3.0",
     "react-native-modal-datetime-picker": "^18.0.0",

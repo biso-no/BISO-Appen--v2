@@ -4,6 +4,8 @@ import { Pressable, Animated, Platform } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { router } from "expo-router";
+import CompactWeather from "@/components/CompactWeather";
+import { Campus } from "@/lib/get-weather";
 
 type CampusId = "1" | "2" | "3" | "4";
 
@@ -16,6 +18,14 @@ const CAMPUS_NAMES: Record<CampusId, string> = {
     "2": "Bergen",
     "3": "Trondheim",
     "4": "Stavanger"
+};
+
+// Map campus IDs to Campus enum values
+const CAMPUS_ID_TO_ENUM: Record<CampusId, Campus> = {
+    "1": Campus.OSLO,
+    "2": Campus.BERGEN,
+    "3": Campus.TRONDHEIM,
+    "4": Campus.STAVANGER
 };
 
 const StyledCard = styled(Card, {
@@ -211,19 +221,31 @@ export function CampusHero() {
                                     transform: [{ scale: Animated.add(1, Animated.multiply(scaleAnim, -0.1)) }],
                                     opacity: Animated.add(1, Animated.multiply(scaleAnim, -0.2))
                                 }}>
-                                    <Text 
-                                        color="white" 
-                                        fontSize={14}
-                                        lineHeight={18}
-                                        fontWeight="400"
-                                        opacity={0.95}
-                                        shadowColor="black"
-                                        shadowOffset={{ width: 0, height: 1 }}
-                                        shadowOpacity={0.3}
-                                        shadowRadius={2}
+                                    <Stack 
+                                        flexDirection="row" 
+                                        justifyContent="space-between" 
+                                        alignItems="center"
                                     >
-                                        Tap to explore campus details
-                                    </Text>
+                                        <Text 
+                                            color="white" 
+                                            fontSize={14}
+                                            lineHeight={18}
+                                            fontWeight="400"
+                                            opacity={0.95}
+                                            shadowColor="black"
+                                            shadowOffset={{ width: 0, height: 1 }}
+                                            shadowOpacity={0.3}
+                                            shadowRadius={2}
+                                        >
+                                            Tap to explore campus details
+                                        </Text>
+                                        
+                                        {/* Weather component */}
+                                        <CompactWeather 
+                                            campus={CAMPUS_ID_TO_ENUM[campusId]} 
+                                            color="white" 
+                                        />
+                                    </Stack>
                                 </Animated.View>
                             </YStack>
                         </Animated.View>

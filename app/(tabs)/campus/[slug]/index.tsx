@@ -14,7 +14,8 @@ import Animated, {
   useSharedValue,
   interpolate,
   Extrapolate,
-  withSpring
+  withSpring,
+  Extrapolation
 } from 'react-native-reanimated';
 import { 
   ChevronRight, 
@@ -28,12 +29,16 @@ import {
   Gift,
   Building,
   X,
-  ExternalLink
+  ExternalLink,
+  ShoppingBag
 } from '@tamagui/lucide-icons';
 import { useColorScheme } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { BoardShowcase } from '@/components/board-showcase';
+import { databases } from '@/lib/appwrite';
+import { Models, Query } from 'react-native-appwrite';
+import { mapCampus, mapCampusNameToId } from '@/lib/utils/map-campus';
 
 interface TeamMember {
   name: string;
@@ -41,73 +46,22 @@ interface TeamMember {
   imageUrl: string;
 }
 
-interface CampusData {
+interface Campus extends Models.Document {
   name: string;
+  campusData: CampusData
+}
+
+interface CampusData extends Models.Document {
   description: string;
   studentBenefits: string[];
   businessBenefits: string[];
   careerAdvantages: string[];
   socialNetwork: string[];
   safety: string[];
-  location: {
-    address: string;
-    email: string;
-  };
-  team: TeamMember[];
+  location: string;
+  departmentBoard: TeamMember[];
 }
 
-// This would typically come from an API or CMS
-const CAMPUS_DATA: Record<string, CampusData> = {
-  oslo: {
-    name: 'BISO Oslo',
-    description: 'BISO Oslo er studentorganisasjonen ved Handelshøyskolen BI i Oslo, drevet av og for studenter.',
-    studentBenefits: [
-      'Bli med på store og små eventer',
-      '40% avslag på Fadderullan',
-      'Intervju-coaching med BISO HR',
-      'Relevant arbeidserfaring',
-      'Bli med i utvalg og få venner for livet'
-    ],
-    businessBenefits: [
-      'Business Hotspot - Stå i spotten i et halvt semester',
-      'Bedriftpresentasjoner',
-      'Stand på campus Oslo',
-      'BISO Oslos største eventer',
-      'Fagdager og faglige eventer',
-      'Og mye mer...'
-    ],
-    careerAdvantages: [
-      'Gratis bedriftspresentasjoner',
-      'Intervju-coaching med BISO HR',
-      'Arbeidslivsspesifikke kurs',
-      'Relevant arbeidserfaring',
-      'CV-portrettbilde med BISO Media'
-    ],
-    socialNetwork: [
-      'Bli med i våre undergrupper',
-      'Eventer på Campus',
-      'Delta på Winter Games',
-      '40% rabatt på Fadderullan'
-    ],
-    safety: [
-      'BISO HR hjelper deg å finne en undergruppe som passer deg',
-      'Styrker din stemme i politikken',
-      'Rabatter for medlemmer'
-    ],
-    location: {
-      address: 'Handelshøyskolen BI - campus Oslo, Nydalsveien 37, 0484',
-      email: 'president.oslo@biso.no'
-    },
-    team: [
-      {
-        name: 'Marie Haga Eriksen',
-        role: 'President',
-        imageUrl: '/path/to/image'
-      },
-      // Add other team members here
-    ]
-  }
-};
 
 // Add type for router paths
 type RouterPaths = {
@@ -116,6 +70,8 @@ type RouterPaths = {
   benefits: string;
   campus: string;
   contact: string;
+  products: string;
+  jobs: string;
 };
 
 // Add campus image mapping
@@ -133,21 +89,6 @@ function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: st
   const imageScale = useSharedValue(1);
   const imageTranslateY = useSharedValue(0);
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-      
-      // Add subtle parallax effect to the image
-      imageTranslateY.value = event.contentOffset.y * 0.5;
-      
-      // Scale effect on pull-to-refresh
-      if (event.contentOffset.y < 0) {
-        imageScale.value = withSpring(1 + Math.abs(event.contentOffset.y) / 500);
-      } else {
-        imageScale.value = withSpring(1);
-      }
-    },
-  });
 
   const headerStyle = useAnimatedStyle(() => {
     return {
@@ -157,7 +98,7 @@ function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: st
             scrollY.value,
             [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
             [HEADER_HEIGHT/2, 0, -HEADER_HEIGHT/3],
-            Extrapolate.CLAMP
+            Extrapolation.CLAMP
           ),
         },
       ],
@@ -184,7 +125,7 @@ function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: st
           source={CAMPUS_IMAGES[slug]}
           alt={`${campusData.name} campus`}
           style={{ width: '100%', height: '100%' }}
-          resizeMode="cover"
+          objectFit="cover"
         />
       </Animated.View>
       <LinearGradient
@@ -436,33 +377,260 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
   );
 }
 
+// Loading skeleton components
+function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: { 
+  width: number | string, 
+  height: number | string, 
+  borderRadius?: string,
+  delay?: number
+}) {
+  const colorScheme = useColorScheme();
+  const baseColor = colorScheme === 'dark' ? '$gray5' : '$gray3';
+  const highlightColor = colorScheme === 'dark' ? '$gray7' : '$gray1';
+  
+  return (
+    <MotiView
+      from={{ opacity: 0.4 }}
+      animate={{ opacity: 0.8 }}
+      transition={{
+        type: 'timing',
+        duration: 1000,
+        loop: true,
+        delay,
+        repeatReverse: true
+      }}
+    >
+      <YStack
+        width={width}
+        height={height}
+        backgroundColor={baseColor}
+        borderRadius={borderRadius}
+      />
+    </MotiView>
+  );
+}
+
+function SkeletonParallaxHeader() {
+  const { height: windowHeight } = useWindowDimensions();
+  const HEADER_HEIGHT = windowHeight * 0.45;
+  
+  return (
+    <YStack height={HEADER_HEIGHT} overflow="hidden">
+      <SkeletonBox width="100%" height="100%" borderRadius="$0" />
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: HEADER_HEIGHT,
+          padding: 20,
+          paddingBottom: 40,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <YStack gap="$2">
+          <SkeletonBox width={200} height={40} delay={100} />
+          <SkeletonBox width="80%" height={20} delay={200} />
+          <SkeletonBox width="60%" height={20} delay={300} />
+        </YStack>
+      </LinearGradient>
+    </YStack>
+  );
+}
+
+function SkeletonQuickActions() {
+  return (
+    <XStack 
+      padding="$4" 
+      gap="$4" 
+      backgroundColor="$background"
+      borderRadius="$4"
+      margin="$4"
+      marginTop="-$8"
+      elevation={5}
+      shadowColor="black"
+      shadowOffset={{ width: 0, height: 2 }}
+      shadowOpacity={0.25}
+      shadowRadius={8}
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <YStack key={i} flex={1} alignItems="center" gap="$2">
+          <SkeletonBox width={50} height={50} borderRadius="$5" delay={i * 100} />
+          <SkeletonBox width={40} height={12} delay={i * 100 + 50} />
+        </YStack>
+      ))}
+    </XStack>
+  );
+}
+
+function SkeletonBenefitCard({ delay = 0 }: { delay?: number }) {
+  return (
+    <YStack
+      backgroundColor="$background"
+      borderColor="$borderColor"
+      borderWidth={1}
+      borderRadius="$4"
+      padding="$4"
+      gap="$3"
+    >
+      <XStack gap="$3" alignItems="center">
+        <SkeletonBox width={36} height={36} borderRadius="$3" delay={delay} />
+        <SkeletonBox width={120} height={24} delay={delay + 100} />
+      </XStack>
+      
+      <YStack gap="$3">
+        {[0, 1, 2].map((i) => (
+          <XStack key={i} gap="$2" alignItems="center">
+            <SkeletonBox width={8} height={8} borderRadius="$circle" delay={delay + 200 + (i * 50)} />
+            <SkeletonBox width="90%" height={16} delay={delay + 200 + (i * 50)} />
+          </XStack>
+        ))}
+        <SkeletonBox width="50%" height={40} delay={delay + 400} />
+      </YStack>
+    </YStack>
+  );
+}
+
+function SkeletonBoardShowcase({ delay = 0 }: { delay?: number }) {
+  return (
+    <YStack gap="$4">
+      <XStack justifyContent="space-between" alignItems="center">
+        <SkeletonBox width={150} height={24} delay={delay} />
+        <SkeletonBox width={80} height={20} delay={delay + 50} />
+      </XStack>
+      
+      <XStack gap="$4" flexWrap="wrap">
+        {[0, 1, 2].map((i) => (
+          <YStack key={i} width={100} alignItems="center" gap="$2">
+            <SkeletonBox width={80} height={80} borderRadius="$circle" delay={delay + 100 + (i * 50)} />
+            <SkeletonBox width={70} height={16} delay={delay + 150 + (i * 50)} />
+            <SkeletonBox width={60} height={12} delay={delay + 200 + (i * 50)} />
+          </YStack>
+        ))}
+      </XStack>
+    </YStack>
+  );
+}
+
+function SkeletonContactCard({ delay = 0 }: { delay?: number }) {
+  return (
+    <YStack
+      backgroundColor="$background"
+      borderColor="$borderColor"
+      borderWidth={1}
+      borderRadius="$4"
+      padding="$4"
+    >
+      <XStack gap="$4" flexWrap="wrap">
+        <XStack flex={1} gap="$2" alignItems="center" minWidth={200}>
+          <SkeletonBox width={20} height={20} delay={delay} />
+          <SkeletonBox width="80%" height={16} delay={delay + 50} />
+        </XStack>
+        <XStack flex={1} gap="$2" alignItems="center" minWidth={200}>
+          <SkeletonBox width={20} height={20} delay={delay + 100} />
+          <SkeletonBox width="80%" height={16} delay={delay + 150} />
+        </XStack>
+      </XStack>
+    </YStack>
+  );
+}
+
+function CampusLoadingState() {
+  const { height: windowHeight } = useWindowDimensions();
+  
+  return (
+    <AnimatePresence>
+      <MotiScrollView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        contentContainerStyle={{
+          minHeight: windowHeight,
+          paddingBottom: 100
+        }}
+      >
+        <YStack flex={1}>
+          <SkeletonParallaxHeader />
+          <SkeletonQuickActions />
+          
+          <YStack padding="$4" gap="$4" flex={1}>
+            <SkeletonBenefitCard delay={200} />
+            <SkeletonBenefitCard delay={400} />
+            <SkeletonBenefitCard delay={600} />
+            <SkeletonBoardShowcase delay={800} />
+            <SkeletonContactCard delay={1000} />
+          </YStack>
+        </YStack>
+      </MotiScrollView>
+    </AnimatePresence>
+  );
+}
+
 export default function CampusPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const campusData = CAMPUS_DATA[slug as string];
   const theme = useTheme();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const { height: windowHeight } = useWindowDimensions();
-
   const { campus } = useCampus();
+  const [campusData, setCampusData] = useState<CampusData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Sync URL with campus context
   useEffect(() => {
-    if (campus) {
-      router.push(`/campus/${campus.name.toLowerCase()}`);
+    if (campus && campus.name.toLowerCase() !== slug?.toLowerCase()) {
+      router.replace(`/campus/${campus.name.toLowerCase()}` as any);
     }
   }, [campus]);
+
+  // Fetch campus data based on slug
+  useEffect(() => {
+    const fetchCampusData = async () => {
+      if (!slug) return;
+      
+      setIsLoading(true);
+      
+      // Get the campus ID from the slug name
+      const campusId = mapCampusNameToId(slug);
+      console.log("Campus ID for", slug, ":", campusId);
+      
+      try {
+        const campusData = await databases.getDocument('app', 'campus_data', campusId);
+        console.log("Campus data for", slug, ":", campusData);
+        setCampusData(campusData as CampusData);
+      } catch (error) {
+        console.error("Error fetching campus data:", error);
+      } finally {
+        // Add a small delay to ensure smooth transition
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      }
+    }
+    
+    fetchCampusData();
+  }, [slug]); // Only depend on slug changes
 
   const routerPaths: RouterPaths = {
     events: '/explore/events',
     join: '/explore/units',
     benefits: '/explore/benefits',
     campus: '/explore/campus',
-    contact: '/contact'
+    contact: '/contact',
+    products: '/explore/products',
+    jobs: '/explore/volunteer'
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    setIsLoading(true);
+    
+    // Simulate refetch
+    setTimeout(() => {
+      setRefreshing(false);
+      setIsLoading(false);
+    }, 1000);
   };
 
   const handleQuickAction = (action: keyof RouterPaths) => {
@@ -470,15 +638,39 @@ export default function CampusPage() {
     router.push(`${basePath}?campus=${slug}` as any);
   };
 
+  // Show loading state
+  if (isLoading) {
+    return <CampusLoadingState />;
+  }
+
+  // Show error state if campus data not found
   if (!campusData) {
     return (
       <SafeAreaView>
-        <YStack padding="$4">
-          <H1>Campus not found</H1>
+        <YStack padding="$4" alignItems="center" justifyContent="center" height="100%">
+          <MotiView
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 15 }}
+          >
+            <YStack alignItems="center" gap="$4">
+              <Building size={64} color="$gray9" />
+              <H1>Campus not found</H1>
+              <Paragraph textAlign="center">We couldn't find information for this campus.</Paragraph>
+              <Button
+                onPress={() => router.back()}
+                marginTop="$4"
+              >
+                Go Back
+              </Button>
+            </YStack>
+          </MotiView>
         </YStack>
       </SafeAreaView>
     );
   }
+
+  const location = JSON.parse(campusData?.location as string);
 
   return (
     <AnimatePresence>
@@ -524,16 +716,16 @@ export default function CampusPage() {
               onPress={() => handleQuickAction('join')}
             />
             <QuickActionButton 
-              icon={Gift} 
-              title="Benefits" 
+              icon={Briefcase} 
+              title="Positions" 
               color="pink"
-              onPress={() => handleQuickAction('benefits')}
+              onPress={() => handleQuickAction('jobs')}
             />
             <QuickActionButton 
-              icon={Building} 
-              title="Campus" 
+              icon={ShoppingBag} 
+              title="Products" 
               color="orange"
-              onPress={() => handleQuickAction('campus')}
+              onPress={() => handleQuickAction('products')}
             />
           </XStack>
 
@@ -565,7 +757,7 @@ export default function CampusPage() {
               color="pink"
               delay={600}
             />
-            <BoardShowcase campus={campusData.name} departmentId="1" title="Board Members" />
+            <BoardShowcase boardMembers={campusData.departmentBoard} title="Board Members" />
             {/* Contact Card */}
             <MotiView
               from={{ opacity: 0, scale: 0.9 }}
@@ -589,11 +781,11 @@ export default function CampusPage() {
                   <XStack gap="$4" flexWrap="wrap">
                     <XStack flex={1} gap="$2" alignItems="center" minWidth={200}>
                       <MapPin size={20} color={theme?.color?.get()} />
-                      <Text color="$color" flex={1}>{campusData.location.address}</Text>
+                      <Text color="$color" flex={1}>{location.address}</Text>
                     </XStack>
                     <XStack flex={1} gap="$2" alignItems="center" minWidth={200}>
                       <Mail size={20} color={theme?.color?.get()} />
-                      <Text color="$color" flex={1}>{campusData.location.email}</Text>
+                      <Text color="$color" flex={1}>{location.email}</Text>
                     </XStack>
                   </XStack>
                 </YStack>
