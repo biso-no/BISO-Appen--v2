@@ -16,6 +16,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PartyPopper, User, Building2, MapPin } from '@tamagui/lucide-icons';
+import { databases } from '@/lib/appwrite';
 
 enum Campus {
   Bergen = "bergen",
@@ -54,6 +55,8 @@ export default function Onboarding() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { width, height } = Dimensions.get('window');
+
+  
 
   const router = useRouter();
 
@@ -101,7 +104,8 @@ export default function Onboarding() {
     {
       label: 'Select one or more departments to follow',
       content: (
-        <Step2 />
+        <Step2 
+        />
       ),
       icon: <Building2 size={24} color="$primary" />
     },
@@ -127,9 +131,14 @@ export default function Onboarding() {
     // Show confetti animation
     setShowConfetti(true);
     
+    if (!data) {
+      console.error('User data not found');
+      return;
+    }
+
     try {
       // Create/Update profile with all collected information
-      const response = await updateProfile({ 
+      const response = await databases.createDocument('app', 'user', data.$id, { 
         name,
         phone, 
         address, 
