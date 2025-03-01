@@ -248,7 +248,7 @@ export default function LoginScreen() {
                       <Text color="white" fontSize={14} fontWeight="600">
                         {isLoading ? 'Sending...' : 
                          cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
-                         'Resend Magic Link'}
+                         'Resend Link'}
                       </Text>
                     </Button>
                   </YStack>
