@@ -44,35 +44,7 @@ export default function DepartmentsScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
 
-
   const memoizedDepartments = useMemo(() => departments, [departments]);
-
-  const searchDepartments = useCallback(async (search: string) => {
-    if (loading) return;
-    
-    setLoading(true);
-    try {
-      if (!search) {
-        fetchDepartments();
-        return;
-      }
-      const deps = await databases.listDocuments('app', 'departments', [
-        Query.search('Name', search),
-        Query.limit(20),
-      ]);
-      if (deps.documents.length === 0) {
-        setHasMore(false);
-      } else {
-        setDepartments(deps.documents);
-        setPage(1);
-      }
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [loading]);
-
 
   const fetchDepartments = useCallback(async () => {
     if (loading || !hasMore || !campus?.$id) return;
@@ -93,6 +65,32 @@ export default function DepartmentsScreen() {
     }
   }, [campus?.$id, page, loading, hasMore]);
 
+  const searchDepartments = useCallback(async (searchTerm: string) => {
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      if (!searchTerm) {
+        fetchDepartments();
+        return;
+      }
+      const deps = await databases.listDocuments('app', 'departments', [
+        Query.search('Name', searchTerm),
+        Query.limit(20),
+      ]);
+      if (deps.documents.length === 0) {
+        setHasMore(false);
+      } else {
+        setDepartments(deps.documents);
+        setPage(1);
+      }
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, fetchDepartments]);
+
   useEffect(() => {
     setPage(1);
     setDepartments([]);
@@ -100,20 +98,29 @@ export default function DepartmentsScreen() {
     fetchDepartments();
   }, [campus?.$id]);
 
-  const htmlStyles = {
+  const htmlStyles = useMemo(() => ({
     body: { 
       fontSize: 14, 
       color: theme?.color?.val,
       opacity: 0.8,
     },
-  };
+  }), [theme?.color?.val]);
 
-  const renderItem = ({ item, index }: { item: Models.Document, index: number }) => (
+  const onEndReached = useCallback(
+    debounce(() => {
+      if (!loading && hasMore) {
+        fetchDepartments();
+      }
+    }, 300),
+    [loading, hasMore, fetchDepartments]
+  );
+
+  const renderItem = useCallback(({ item }: { item: Models.Document }) => (
     <MotiView
       key={item.$id}
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: 'timing', duration: 500, delay: index * 100 }}
+      transition={{ type: 'timing', duration: 500, delay: 0 }}
     >
       <Card
         animation="bouncy"
@@ -151,7 +158,7 @@ export default function DepartmentsScreen() {
         </Card.Header>
       </Card>
     </MotiView>
-  );
+  ), [router, width, htmlStyles]);
 
   const renderFooter = () => {
     if (loading) {
@@ -169,32 +176,29 @@ export default function DepartmentsScreen() {
     return null;
   };
 
-  const onEndReached = debounce(() => {
-    if (!loading && hasMore) {
-      fetchDepartments();
-    }
-  }, 300);
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: 150,
+    offset: 150 * index,
+    index,
+  }), []);
 
   return (
-      <MyStack gap="$4" padding="$4">
-        <YStack gap="$2">
-          <Paragraph>Explore the various departments at {campus?.name}</Paragraph>
+    <MyStack gap="$4" padding="$4">
+      <YStack gap="$2">
+        <Paragraph>Explore the various departments at {campus?.name}</Paragraph>
 
-          {/* Search Input with onSubmitEditing */}
-          <Input
-            placeholder="Search for a department"
-            backgroundColor={"transparent"}
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-            marginBottom="$4"
-            onSubmitEditing={async () => {
-              console.log('Submitting search');
-              await searchDepartments(search);
-            }}
-          />
-        </YStack>
-
+        <Input
+          placeholder="Search for a department"
+          backgroundColor={"transparent"}
+          value={search}
+          onChangeText={setSearch}
+          autoCapitalize="none"
+          marginBottom="$4"
+          onSubmitEditing={async () => {
+            await searchDepartments(search);
+          }}
+        />
+      </YStack>
 
       <FlatList
         data={memoizedDepartments}
@@ -205,7 +209,12 @@ export default function DepartmentsScreen() {
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.5}
         scrollEventThrottle={16}
+        getItemLayout={getItemLayout}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={10}
       />
-            </MyStack>
+    </MyStack>
   );
 }

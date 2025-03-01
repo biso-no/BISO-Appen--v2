@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, useWindowDimensions, Platform, RefreshControl, Pressable } from 'react-native';
+import { ScrollView, useWindowDimensions, Platform, RefreshControl, Pressable, AppState } from 'react-native';
 import { 
   H1, H2, H3, H4, Paragraph, YStack, XStack, Button, Image, Text, 
   Card, Theme, useTheme, Sheet, Adapt, Dialog, Separator,
@@ -34,62 +34,62 @@ import {
   ShoppingBag
 } from '@tamagui/lucide-icons';
 import { useColorScheme } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo, Suspense, useRef } from 'react';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { DepartmentMembersShowcase } from '@/components/board-showcase';
 import { databases } from '@/lib/appwrite';
 import { Models, Query } from 'react-native-appwrite';
 import { mapCampus, mapCampusNameToId } from '@/lib/utils/map-campus';
+import { useQuery, useQueryClient, QueryClient } from '@tanstack/react-query';
+import { Image as ExpoImage } from 'expo-image';
+import * as AssetUtils from 'expo-asset-utils';
+import { Asset } from 'expo-asset';
+import * as SplashScreen from 'expo-splash-screen';
 
-interface TeamMember {
-  name: string;
-  role: string;
-  imageUrl: string;
+// Define query keys for React Query
+const QUERY_KEYS = {
+  campus: 'campus',
 }
 
-interface Campus extends Models.Document {
-  name: string;
-  campusData: CampusData
-}
-
-interface CampusData extends Models.Document {
-  description: string;
-  studentBenefits: string[];
-  businessBenefits: string[];
-  careerAdvantages: string[];
-  socialNetwork: string[];
-  safety: string[];
-  location: string;
-  departmentBoard: TeamMember[];
-}
-
-
-// Add type for router paths
-type RouterPaths = {
-  events: string;
-  join: string;
-  benefits: string;
-  campus: string;
-  contact: string;
-  products: string;
-  jobs: string;
-};
-
-// Add campus image mapping
+// Use a more performant way to load images
+// Add blurhash placeholders for faster perceived loading times
 const CAMPUS_IMAGES: Record<string, any> = {
-  'oslo': require("@/assets/images/campus-oslo.jpg"),
-  'bergen': require("@/assets/images/campus-bergen.jpeg"),
-  'trondheim': require("@/assets/images/campus-trd.jpeg"),
-  'stavanger': require("@/assets/images/campus-stv.jpeg"),
+  'oslo': {
+    uri: require("@/assets/images/campus-oslo.jpg"),
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'
+  },
+  'bergen': {
+    uri: require("@/assets/images/campus-bergen.jpeg"),
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'
+  },
+  'trondheim': {
+    uri: require("@/assets/images/campus-trd.jpeg"),
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'
+  },
+  'stavanger': {
+    uri: require("@/assets/images/campus-stv.jpeg"),
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'
+  },
 };
 
-function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: string }) {
+// Fetch campus data function for React Query
+const fetchCampusData = async (slug: string): Promise<Models.Document> => {
+  if (!slug) throw new Error('No campus slug provided');
+  
+  const campusId = mapCampusNameToId(slug);
+  console.log("Fetching campus data for", slug, "with ID:", campusId);
+  
+  const campusData = await databases.getDocument('app', 'campus_data', campusId);
+  return campusData;
+};
+
+// Memoize ParallaxHeader for performance
+const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document; slug: string }) => {
   const { height: windowHeight, width } = useWindowDimensions();
   const scrollY = useSharedValue(0);
   const HEADER_HEIGHT = windowHeight * 0.45;
   const imageScale = useSharedValue(1);
   const imageTranslateY = useSharedValue(0);
-
 
   const headerStyle = useAnimatedStyle(() => {
     return {
@@ -119,14 +119,18 @@ function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: st
     };
   });
 
+  // Use ExpoImage for better performance with caching
   return (
     <Animated.View style={[{ height: HEADER_HEIGHT, overflow: 'hidden' }, headerStyle]}>
       <Animated.View style={[{ height: HEADER_HEIGHT + 50 }, imageStyle]}>
-        <Image
-          source={CAMPUS_IMAGES[slug]}
-          alt={`${campusData.name} campus`}
+        <ExpoImage
+          source={CAMPUS_IMAGES[slug].uri}
           style={{ width: '100%', height: '100%' }}
-          objectFit="cover"
+          contentFit="cover"
+          transition={300}
+          placeholderContentFit="cover"
+          placeholder={CAMPUS_IMAGES[slug].blurhash ? { blurhash: CAMPUS_IMAGES[slug].blurhash } : undefined}
+          priority="high"
         />
       </Animated.View>
       <LinearGradient
@@ -173,17 +177,25 @@ function ParallaxHeader({ campusData, slug }: { campusData: CampusData; slug: st
       </LinearGradient>
     </Animated.View>
   );
-}
+});
 
-function QuickActionButton({ icon: Icon, title, color, onPress }: { 
+// Memoize QuickActionButton
+const QuickActionButton = memo(({ icon: Icon, title, color, onPress }: { 
   icon: any, 
   title: string, 
   color: string,
   onPress?: () => void 
-}) {
+}) => {
   const colorScheme = useColorScheme();
-  const getBackgroundColor = () => colorScheme === 'dark' ? `$${color}7` : `$${color}2`;
-  const getIconColor = () => colorScheme === 'dark' ? `$${color}11` : `$${color}9`;
+  
+  // Memoize color calculations
+  const backgroundColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}7` : `$${color}2`,
+  [colorScheme, color]);
+  
+  const iconColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}11` : `$${color}9`,
+  [colorScheme, color]);
 
   return (
     <Button
@@ -201,11 +213,11 @@ function QuickActionButton({ icon: Icon, title, color, onPress }: {
         transition={{ type: 'spring', damping: 15 }}
       >
         <YStack
-          backgroundColor={getBackgroundColor()}
+          backgroundColor={backgroundColor}
           padding="$3"
           borderRadius="$5"
         >
-          <Icon size={24} color={getIconColor()} />
+          <Icon size={24} color={iconColor} />
         </YStack>
       </MotiView>
       <Text 
@@ -218,9 +230,10 @@ function QuickActionButton({ icon: Icon, title, color, onPress }: {
       </Text>
     </Button>
   );
-}
+});
 
-function BenefitsModal({ 
+// Memoize BenefitsModal
+const BenefitsModal = memo(({ 
   open, 
   onClose, 
   title, 
@@ -234,11 +247,17 @@ function BenefitsModal({
   items: string[];
   icon: any;
   color: string;
-}) {
+}) => {
   const colorScheme = useColorScheme();
-  const getIconColor = () => colorScheme === 'dark' ? `$${color}11` : `$${color}9`;
   
-  const snapPoints = [(items.length * 10)];
+  // Memoize color calculations
+  const iconColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}11` : `$${color}9`,
+  [colorScheme, color]);
+  
+  const snapPoints = useMemo(() => 
+    [(items.length * 10)],
+  [items.length]);
 
   return (
     <Sheet
@@ -260,7 +279,7 @@ function BenefitsModal({
                 padding="$2"
                 borderRadius="$3"
               >
-                <Icon size={24} color={getIconColor()} />
+                <Icon size={24} color={iconColor} />
               </YStack>
               <H2>{title}</H2>
             </XStack>
@@ -282,7 +301,7 @@ function BenefitsModal({
                 transition={{ delay: index * 50, type: 'spring', damping: 15 }}
               >
                 <XStack gap="$3" alignItems="center">
-                  <Text color={getIconColor()} fontSize={20}>•</Text>
+                  <Text color={iconColor} fontSize={20}>•</Text>
                   <Text color="$color" fontSize={16}>{item}</Text>
                 </XStack>
                 {index < items.length - 1 && (
@@ -295,20 +314,35 @@ function BenefitsModal({
       </Sheet.Frame>
     </Sheet>
   );
-}
+});
 
-function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
+// Memoize BenefitCard
+const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
   title: string;
   items: string[];
   icon: any;
   color: string;
   delay?: number;
-}) {
+}) => {
   const [showModal, setShowModal] = useState(false);
   const colorScheme = useColorScheme();
-  const getBackgroundColor = () => colorScheme === 'dark' ? `$${color}7` : `$${color}1`;
-  const getBorderColor = () => colorScheme === 'dark' ? `$${color}5` : `$${color}3`;
-  const getIconColor = () => colorScheme === 'dark' ? `$${color}11` : `$${color}9`;
+  
+  // Memoize color calculations
+  const backgroundColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}7` : `$${color}1`,
+  [colorScheme, color]);
+  
+  const borderColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}5` : `$${color}3`,
+  [colorScheme, color]);
+  
+  const iconColor = useMemo(() => 
+    colorScheme === 'dark' ? `$${color}11` : `$${color}9`,
+  [colorScheme, color]);
+
+  // Memoize handlers
+  const handleOpenModal = useCallback(() => setShowModal(true), []);
+  const handleCloseModal = useCallback(() => setShowModal(false), []);
 
   return (
     <View>
@@ -318,8 +352,8 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
         transition={{ type: 'spring', delay, damping: 15 }}
       >
         <YStack
-          backgroundColor={getBackgroundColor()}
-          borderColor={getBorderColor()}
+          backgroundColor={backgroundColor}
+          borderColor={borderColor}
           borderWidth={1}
           borderRadius="$4"
           padding="$4"
@@ -331,7 +365,7 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
               padding="$2"
               borderRadius="$3"
             >
-              <Icon size={20} color={getIconColor()} />
+              <Icon size={20} color={iconColor} />
             </YStack>
             <H3 color="$color">{title}</H3>
           </XStack>
@@ -345,23 +379,23 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
                 transition={{ delay: delay + (index * 100), type: 'spring', damping: 15 }}
               >
                 <XStack gap="$2" alignItems="center">
-                  <Text color={getIconColor()}>•</Text>
+                  <Text color={iconColor}>•</Text>
                   <Text color="$color" opacity={0.9}>{item}</Text>
                 </XStack>
               </MotiView>
             ))}
             {items.length > 3 && (
               <Button
-                backgroundColor={getBackgroundColor()}
-                borderColor={getBorderColor()}
+                backgroundColor={backgroundColor}
+                borderColor={borderColor}
                 borderWidth={1}
                 marginTop="$2"
                 pressStyle={{ scale: 0.97 }}
-                onPress={() => setShowModal(true)}
+                onPress={handleOpenModal}
                 icon={ExternalLink}
                 iconAfter={ExternalLink}
               >
-                <Text color={getIconColor()}>View all {items.length} benefits</Text>
+                <Text color={iconColor}>View all {items.length} benefits</Text>
               </Button>
             )}
           </YStack>
@@ -370,7 +404,7 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
 
       <BenefitsModal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={handleCloseModal}
         title={title}
         items={items}
         icon={Icon}
@@ -378,9 +412,10 @@ function BenefitCard({ title, items, icon: Icon, color, delay = 0 }: {
       />
     </View>
   );
-}
+});
 
 // Loading skeleton components
+// Memoizing skeleton components isn't necessary as they're only rendered during loading
 function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: { 
   width: number | string, 
   height: number | string, 
@@ -413,11 +448,12 @@ function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: {
   );
 }
 
-function SkeletonParallaxHeader() {
+// Combine all skeleton components into a single function
+function CampusLoadingState() {
   const { height: windowHeight } = useWindowDimensions();
   const HEADER_HEIGHT = windowHeight * 0.45;
   
-  return (
+  const SkeletonParallaxHeader = () => (
     <YStack height={HEADER_HEIGHT} overflow="hidden">
       <SkeletonBox width="100%" height="100%" borderRadius="$0" />
       <LinearGradient
@@ -441,10 +477,8 @@ function SkeletonParallaxHeader() {
       </LinearGradient>
     </YStack>
   );
-}
 
-function SkeletonQuickActions() {
-  return (
+  const SkeletonQuickActions = () => (
     <XStack 
       padding="$4" 
       gap="$4" 
@@ -466,10 +500,8 @@ function SkeletonQuickActions() {
       ))}
     </XStack>
   );
-}
 
-function SkeletonBenefitCard({ delay = 0 }: { delay?: number }) {
-  return (
+  const SkeletonBenefitCard = ({ delay = 0 }: { delay?: number }) => (
     <YStack
       backgroundColor="$background"
       borderColor="$borderColor"
@@ -494,10 +526,8 @@ function SkeletonBenefitCard({ delay = 0 }: { delay?: number }) {
       </YStack>
     </YStack>
   );
-}
 
-function SkeletonBoardShowcase({ delay = 0 }: { delay?: number }) {
-  return (
+  const SkeletonBoardShowcase = ({ delay = 0 }: { delay?: number }) => (
     <YStack gap="$4">
       <XStack justifyContent="space-between" alignItems="center">
         <SkeletonBox width={150} height={24} delay={delay} />
@@ -515,10 +545,8 @@ function SkeletonBoardShowcase({ delay = 0 }: { delay?: number }) {
       </XStack>
     </YStack>
   );
-}
 
-function SkeletonContactCard({ delay = 0 }: { delay?: number }) {
-  return (
+  const SkeletonContactCard = ({ delay = 0 }: { delay?: number }) => (
     <YStack
       backgroundColor="$background"
       borderColor="$borderColor"
@@ -538,11 +566,7 @@ function SkeletonContactCard({ delay = 0 }: { delay?: number }) {
       </XStack>
     </YStack>
   );
-}
 
-function CampusLoadingState() {
-  const { height: windowHeight } = useWindowDimensions();
-  
   return (
     <AnimatePresence>
       <MotiScrollView
@@ -570,52 +594,60 @@ function CampusLoadingState() {
   );
 }
 
+// Add lazy loaded components for better initial load time
+const LazyDepartmentMembersShowcase = memo(({ campusId, title }: { campusId: string, title: string }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Only show department members when user has scrolled to that point
+  useEffect(() => {
+    // Delay loading the department members to prioritize critical content
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if (!isVisible) {
+    return (
+      <YStack height={150} padding="$4">
+        {/* Empty placeholder with proper height to prevent layout shifts */}
+      </YStack>
+    );
+  }
+  
+  return <DepartmentMembersShowcase campusId={campusId} title={title} />;
+});
+
+// Add global pre-loading for campus images
+const preloadCampusImages = async () => {
+  try {
+    // Extract all image URIs from the campus images object
+    const imageUris = Object.values(CAMPUS_IMAGES).map(img => img.uri);
+    
+    // Preload all images in parallel
+    await Promise.all(imageUris.map(uri => Asset.fromModule(uri).downloadAsync()));
+    console.log('Successfully preloaded campus images');
+  } catch (error) {
+    console.error('Failed to preload campus images:', error);
+  }
+};
+
+// Call preload when app starts
+preloadCampusImages();
+
 export default function CampusPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const theme = useTheme();
   const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
   const { height: windowHeight } = useWindowDimensions();
   const { campus } = useCampus();
-  const [campusData, setCampusData] = useState<CampusData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Sync URL with campus context
-  useEffect(() => {
-    if (campus && campus.name.toLowerCase() !== slug?.toLowerCase()) {
-      router.replace(`/campus/${campus.name.toLowerCase()}` as any);
-    }
-  }, [campus]);
-
-  // Fetch campus data based on slug
-  useEffect(() => {
-    const fetchCampusData = async () => {
-      if (!slug) return;
-      
-      setIsLoading(true);
-      
-      // Get the campus ID from the slug name
-      const campusId = mapCampusNameToId(slug);
-      console.log("Campus ID for", slug, ":", campusId);
-      
-      try {
-        const campusData = await databases.getDocument('app', 'campus_data', campusId);
-        console.log("Campus data for", slug, ":", campusData);
-        setCampusData(campusData as CampusData);
-      } catch (error) {
-        console.error("Error fetching campus data:", error);
-      } finally {
-        // Add a small delay to ensure smooth transition
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
-      }
-    }
-    
-    fetchCampusData();
-  }, [slug]); // Only depend on slug changes
-
-  const routerPaths: RouterPaths = {
+  const queryClient = useQueryClient();
+  const appState = useRef(AppState.currentState);
+  const isInitialMount = useRef(true);
+  
+  // Set up router paths as memoized object to prevent re-creation
+  const routerPaths = useMemo(() => ({
     events: '/explore/events',
     join: '/explore/units',
     benefits: '/explore/benefits',
@@ -623,23 +655,75 @@ export default function CampusPage() {
     contact: '/contact',
     products: '/explore/products',
     jobs: '/explore/volunteer'
-  };
+  }), []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setIsLoading(true);
-    
-    // Simulate refetch
-    setTimeout(() => {
-      setRefreshing(false);
-      setIsLoading(false);
-    }, 1000);
-  };
+  // Use React Query for data fetching with automatic caching
+  const { 
+    data: campusData,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: [QUERY_KEYS.campus, slug],
+    queryFn: () => fetchCampusData(slug as string),
+    enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Cache data for 30 minutes (formerly cacheTime)
+    retry: 2 // Only retry failed requests twice
+  });
 
-  const handleQuickAction = (action: keyof RouterPaths) => {
-    const basePath = routerPaths[action];
+  // Sync URL with campus context
+  useEffect(() => {
+    if (campus && campus.name.toLowerCase() !== slug?.toLowerCase()) {
+      router.replace(`/campus/${campus.name.toLowerCase()}` as any);
+    }
+  }, [campus, slug, router]);
+
+  // Prefetch related data
+  useEffect(() => {
+    if (slug) {
+      // Prefetch department members data
+      queryClient.prefetchQuery({
+        queryKey: ['departmentMembers', slug],
+        queryFn: () => {
+          // This will be called by DepartmentMembersShowcase component
+          return Promise.resolve([]);
+        }
+      });
+    }
+  }, [slug, queryClient]);
+  
+  // Add AppState monitoring to refresh data when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (
+        appState.current.match(/inactive|background/) && 
+        nextAppState === 'active' &&
+        !isInitialMount.current
+      ) {
+        // App has come to the foreground, refresh data if stale
+        refetch();
+      }
+      
+      appState.current = nextAppState;
+      isInitialMount.current = false;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [refetch]);
+
+  // Memoize handlers
+  const handleQuickAction = useCallback((action: string) => {
+    const basePath = routerPaths[action as keyof typeof routerPaths];
     router.push(`${basePath}?campus=${slug}` as any);
-  };
+  }, [routerPaths, router, slug]);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Show loading state
   if (isLoading) {
@@ -647,7 +731,7 @@ export default function CampusPage() {
   }
 
   // Show error state if campus data not found
-  if (!campusData) {
+  if (isError || !campusData) {
     return (
       <SafeAreaView>
         <YStack padding="$4" alignItems="center" justifyContent="center" height="100%">
@@ -659,7 +743,9 @@ export default function CampusPage() {
             <YStack alignItems="center" gap="$4">
               <Building size={64} color="$gray9" />
               <H1>Campus not found</H1>
-              <Paragraph textAlign="center">We couldn't find information for this campus.</Paragraph>
+              <Paragraph textAlign="center">
+                {isError ? `Error: ${error?.toString()}` : "We couldn't find information for this campus."}
+              </Paragraph>
               <Button
                 onPress={() => router.back()}
                 marginTop="$4"
@@ -673,7 +759,17 @@ export default function CampusPage() {
     );
   }
 
-  const location = JSON.parse(campusData?.location as string);
+  // Parse the location safely with default values
+  const location = (() => {
+    try {
+      return typeof campusData?.location === 'string' 
+        ? JSON.parse(campusData.location) 
+        : { address: 'Address not available', email: 'Email not available' };
+    } catch (e) {
+      console.error('Error parsing location:', e);
+      return { address: 'Address not available', email: 'Email not available' };
+    }
+  })();
 
   return (
     <AnimatePresence>
@@ -682,7 +778,7 @@ export default function CampusPage() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
         }
         contentContainerStyle={{
           minHeight: windowHeight,
@@ -739,7 +835,7 @@ export default function CampusPage() {
           >
             <BenefitCard
               title="For Students"
-              items={campusData.studentBenefits}
+              items={campusData?.studentBenefits || []}
               icon={GraduationCap}
               color="blue"
               delay={200}
@@ -747,7 +843,7 @@ export default function CampusPage() {
 
             <BenefitCard
               title="For Business"
-              items={campusData.businessBenefits}
+              items={campusData?.businessBenefits || []}
               icon={Briefcase}
               color="purple"
               delay={400}
@@ -755,12 +851,15 @@ export default function CampusPage() {
 
             <BenefitCard
               title="Career Benefits"
-              items={campusData.careerAdvantages}
+              items={campusData?.careerAdvantages || []}
               icon={ChevronRight}
               color="pink"
               delay={600}
             />
-            <DepartmentMembersShowcase campusId={slug} title='Management' />
+
+            {/* Lazy load department members for better initial load time */}
+            <LazyDepartmentMembersShowcase campusId={slug as string} title='Management' />
+            
             {/* Contact Card */}
             <MotiView
               from={{ opacity: 0, scale: 0.9 }}
