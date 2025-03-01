@@ -7,9 +7,6 @@ import { MotiView } from 'moti';
 export default function ProductScreen() {
     const params = useLocalSearchParams();
 
-    useEffect(() => {
-        console.log("Params: ", params);
-    }, []);
 
     if (!params.id) {
         return null;

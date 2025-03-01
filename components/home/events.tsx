@@ -34,7 +34,6 @@ export function Events() {
 
             const fetchedEvents = await databases.listDocuments('app', 'event', query);
             setEvents(fetchedEvents.documents);
-            console.log(fetchedEvents);
         }
         fetchEvents();
     }, [campus]);

@@ -58,7 +58,6 @@ export function FeaturedPostsCarousel() {
           filters,
         ]);
         setFeaturedPosts(featured);
-        console.log('Featured Posts: ', featured);
       } catch (error) {
         console.error('Error fetching featured posts: ', error);
       }
@@ -75,7 +74,6 @@ export function FeaturedPostsCarousel() {
   const currentPost = featuredPosts.documents[postIndex];
 
   if (!currentPost) {
-    console.log('Current post is undefined');
     return null;
   }
 

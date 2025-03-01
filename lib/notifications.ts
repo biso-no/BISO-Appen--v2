@@ -43,8 +43,6 @@ async function registerForPushNotificationsAsync(userId: string): Promise<string
       }
       token = (await Notifications.getDevicePushTokenAsync()).data;
       const expoToken = await Notifications.getExpoPushTokenAsync();
-      console.log(`Expo token: ${expoToken.data}`);
-      console.log(token);
     } catch (e) {
       token = `${e}`;
     }

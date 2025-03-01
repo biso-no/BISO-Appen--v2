@@ -168,7 +168,6 @@ export default function ExploreScreen() {
         url: event.website,
         featured_image: event.thumbnail?.url  // Changed to use thumbnail.url
       }));
-      console.log("Event date:", transformedEvents)
       setEvents(transformedEvents);
     } catch (err) {
       setError('Failed to load events');

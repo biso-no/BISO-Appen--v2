@@ -295,11 +295,8 @@ export default function VolunteerScreen() {
       setError(null);
 
       const apiUrl = `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=${ITEMS_PER_PAGE}&page=${pageNumber}&campus=${campus?.name}`;
-      console.log("Fetching jobs from:", apiUrl);
       
       const response = await axios.get(apiUrl);
-      console.log("Jobs API response:", response.status, response.statusText);
-      console.log("Jobs data count:", response.data?.length || 0);
       
       // Check if response.data is an array
       if (!Array.isArray(response.data)) {
@@ -310,16 +307,6 @@ export default function VolunteerScreen() {
       
       const newJobs = response.data;
       
-      // Log some sample job data to help debug
-      if (newJobs.length > 0) {
-        console.log("Sample job data:", {
-          id: newJobs[0].id,
-          title: newJobs[0].title,
-          type: newJobs[0].type,
-          interests: newJobs[0].interests,
-          campus: newJobs[0].campus
-        });
-      }
       
       if (isInitial) {
         setJobs(newJobs);
@@ -360,7 +347,6 @@ export default function VolunteerScreen() {
   const extractCategoriesAndInterests = useCallback((jobData: Models.Document[]) => {
     if (!jobData || jobData.length === 0) return;
     
-    console.log("Extracting categories and interests from", jobData.length, "jobs");
     
     // Extract types (categories) with frequency count
     const typesCount: Record<string, number> = {};
@@ -413,8 +399,6 @@ export default function VolunteerScreen() {
       frequency: jobData.length
     });
     
-    console.log("Setting categories:", typeCategories.length, "categories");
-    console.log("Setting interests:", uniqueInterests.size, "interests");
     
     setCategories(typeCategories.length > 1 ? typeCategories : defaultCategories);
     setInterests(Array.from(uniqueInterests));

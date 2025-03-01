@@ -70,7 +70,6 @@ export function ImagePopover() {
                 const imageUrl = storage.getFileView('avatars', result.$id);
                 setImage(imageUrl.href); // Ensure you set the image URL after getting the correct URL
                 await updateDocument('user', user.$id, { avatar: imageUrl });
-                console.log('File uploaded successfully', result);
             }
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -110,12 +109,6 @@ export function ImagePopover() {
     if (!user) {
         return null;
     }
-
-    useEffect(() => {
-        if (image) {
-            console.log('Image URL:', image);
-        }
-    }, [image]);
 
     return (
         <Popover size="$5">

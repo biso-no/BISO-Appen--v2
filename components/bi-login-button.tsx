@@ -58,12 +58,6 @@ export function BILoginButton() {
         redirectUri,
     }, discovery);
 
-    // Only log discovery info once when component mounts
-    useEffect(() => {
-        if (discovery) {
-            console.log('Auth discovery completed');
-        }
-    }, [discovery]);
 
     useEffect(() => {
         if (request && discovery) {

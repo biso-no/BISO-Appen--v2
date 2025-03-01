@@ -29,7 +29,6 @@ import {
 import { useAuth } from '@/components/context/core/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
-import { ChatProvider } from '@/lib/ChatContext';
 import { router, Tabs } from 'expo-router';
 import { useNavigationState } from '@react-navigation/native';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
@@ -369,7 +368,7 @@ export default function TabLayout() {
   }
 
   return (
-    <ChatProvider data={user}>
+    <>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <View style={StyleSheet.absoluteFill}>
         <LinearGradient
@@ -462,6 +461,6 @@ export default function TabLayout() {
       >
         {generateScreens()}
       </Tabs>
-    </ChatProvider>
+    </>
   );
 }

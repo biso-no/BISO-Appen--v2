@@ -22,7 +22,6 @@ export default function OAuthStatusScreen() {
     useEffect(() => {
         if (status === "success" && user && secret) {
             createSession(user.$id, secret[0]).then(response => {
-                console.log(response);
                 setLoading(false);
             });
         }

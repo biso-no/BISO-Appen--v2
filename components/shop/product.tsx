@@ -29,22 +29,17 @@ export function ProductDetails({productId}: {productId: string}) {
     const { width } = useWindowDimensions();
     const theme = useTheme();
     const textColor = theme?.color?.val;
-    useEffect(() => {
-        console.log(productId);
-      }, [productId]);
 
     useEffect(() => {
         if (!productId) {
             return;
         }
       const response = async () => {
-        console.log("Product ID: ", productId);
         const body = {
             productId: productId
         }
         const response = await functions.createExecution('webshop_product', productId, false)
 
-        console.log("This is product: ", response.responseBody);
         const data = JSON.parse(response.responseBody) as Product
         setProduct(data);
       }

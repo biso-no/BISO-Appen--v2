@@ -21,7 +21,6 @@ export function useCurrentSession(electionId: string, userId: string) {
         Query.and([Query.equal('electionId', electionId), Query.equal('status', 'ongoing')]),
         Query.limit(1),
       ])
-      console.log("Response: ", response);
       if (response.documents.length > 0) {
         const session = response.documents[0]
         return {

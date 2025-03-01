@@ -181,7 +181,6 @@ export default function Onboarding() {
 
       await actions.updateName(name);
       
-      console.log('Profile created/updated successfully:', response);
 
       if (response.$id) {
         profileActions.updateProfile(response);

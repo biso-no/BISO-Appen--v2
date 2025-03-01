@@ -20,9 +20,6 @@ export default function VolunteerScreen() {
     const { campus } = useCampus();
     const jobId = params.id;
 
-    useEffect(() => {
-        console.log("Job ID:", jobId);
-    }, [jobId]);
 
     const textColor = theme?.color?.val;
 
@@ -46,7 +43,6 @@ export default function VolunteerScreen() {
         setLoading(true);
         axios.get('https://biso.no//wp-json/custom/v1/jobs/?includeExpired=true&job_id=' + jobId)
             .then((response) => {
-                console.log("Response:", response);
                 setJob(response.data[0]);
                 setLoading(false); // Move this here to ensure it runs after data is fetched
             })

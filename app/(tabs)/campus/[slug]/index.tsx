@@ -77,9 +77,9 @@ const fetchCampusData = async (slug: string): Promise<Models.Document> => {
   if (!slug) throw new Error('No campus slug provided');
   
   const campusId = mapCampusNameToId(slug);
-  console.log("Fetching campus data for", slug, "with ID:", campusId);
   
   const campusData = await databases.getDocument('app', 'campus_data', campusId);
+  console.log("Campus Data: ", campusData);
   return campusData;
 };
 
@@ -627,7 +627,6 @@ const preloadCampusImages = async () => {
     
     // Preload all images in parallel
     await Promise.all(imageUris.map(uri => Asset.fromModule(uri).downloadAsync()));
-    console.log('Successfully preloaded campus images');
   } catch (error) {
     console.error('Failed to preload campus images:', error);
   }

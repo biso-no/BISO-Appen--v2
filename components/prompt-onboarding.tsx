@@ -21,7 +21,6 @@ export function PromptOnboarding() {
             async function getPromptOnboarding() {
                 //If there is a value in Async storage, or it is set to true, then we dont need to prompt the user as they have already been asked. 
                 const promptOnboarding = user?.prefs.promptOnboarding;
-                console.log("Prompt onboarding: ", promptOnboarding);
             }
             getPromptOnboarding();
         }

@@ -37,8 +37,8 @@ import { HomeEvents } from '@/components/home/home-events';
 import { HomeProducts } from '@/components/home/home-products';
 import { HomeJobs } from '@/components/home/home-jobs';
 import type { Job } from '@/types/jobs';
-import { FloatingHeader } from '@/components/home/floating-header';
 import CampusWeather from '@/components/CampusWeather';
+import { useScreenPerformance } from '@/lib/performance';
 
 // Types remain the same as before
 interface Product {
@@ -118,7 +118,9 @@ export default function HomeScreen() {
   const [scrollY, setScrollY] = useState(0);
 
   const { width } = useWindowDimensions();
-
+  
+  // Monitor performance of this screen
+  useScreenPerformance('HomeScreen');
 
   useEffect(() => {
     loadAllData();
@@ -233,7 +235,8 @@ export default function HomeScreen() {
       .slice(0, 3);
   }, [events, getFeaturedEvent]);
 
-  const renderHeroSection = () => {
+  // Memoize the hero section to prevent unnecessary re-renders
+  const HeroSection = React.memo(() => {
     const featuredEvent = getFeaturedEvent();
     if (!featuredEvent) return null;
 
@@ -340,7 +343,12 @@ export default function HomeScreen() {
         </MotiView>
       </HeroCard>
     );
-  };
+  });
+
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    const scrollPosition = event.nativeEvent.contentOffset.y;
+    setScrollY(scrollPosition);
+  }, []);
 
   return (
     <>
@@ -352,19 +360,21 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         scrollEventThrottle={16}
+        onScroll={handleScroll}
         contentContainerStyle={{
           paddingBottom: 100,
         }}
+        removeClippedSubviews={Platform.OS === 'android'}
+        keyboardShouldPersistTaps="handled"
       >
-        {renderHeroSection()}
-
+        <HeroSection />
 
         <YStack padding="$4" gap="$6">
           <CampusHero />
           <HomeCategories
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-          categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            categories={categories}
           />
 
           <AnimatePresence>
@@ -391,12 +401,6 @@ export default function HomeScreen() {
           </AnimatePresence>
         </YStack>
       </ScrollView>
-
-      <AnimatePresence>
-        {scrollY > 200 && (
-          <FloatingHeader />
-        )}
-      </AnimatePresence>
     </>
   );
 }

@@ -98,15 +98,12 @@ export interface Event {
 export const getEvents = async (campus?: string) => {
     const { data } = await axios.get('https://biso.no/wp-json/tribe/events/v1/events');
     
-    console.log("Events: ", data)
 
     // Remove quotes from campus
     campus = campus?.replace(/"/g, '');
 
     return data.events.filter((event: Event) => {
         const campusWithPrenoun = "BISO " + campus;
-        console.log("Campus: ", campusWithPrenoun)
-        console.log("Event organizer: ", event.organizer)
         return event.organizer[0].organizer === campusWithPrenoun;
     })
     .map((event: Event) => {

@@ -101,11 +101,8 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         const result = await WebBrowser.openAuthSessionAsync(url, '/profile');
         
         if (result.type === 'success') {
-          // Handle successful purchase
-          console.log("Purchase successful");
           setOpen(false);
         } else {
-          // Handle cancelled or failed purchase
           setError("Purchase was not completed. Please try again.");
         }
       }

@@ -420,7 +420,6 @@ const ProfileScreen = () => {
         const result = await WebBrowser.openAuthSessionAsync(url, '/profile');
         
         if (result.type === 'success') {
-          console.log("Purchase successful");
           setIsMembershipOpen(false);
         } else {
           setMembershipError("Purchase was not completed. Please try again.");
