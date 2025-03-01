@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useWindowDimensions, useColorScheme, ScrollView, Pressable } from 'react-native';
+import { useWindowDimensions, useColorScheme, ScrollView, Pressable, Linking } from 'react-native';
 import {
   YStack,
   XStack,
@@ -14,31 +14,53 @@ import {
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { Users, Mail, Phone, ChevronRight } from '@tamagui/lucide-icons';
-import { databases } from '@/lib/appwrite';
-import { Models, Query } from 'react-native-appwrite';
+import { Users, Mail, Phone, ChevronRight, MapPin } from '@tamagui/lucide-icons';
+import { functions } from '@/lib/appwrite';
+import { useCampus } from '@/lib/hooks/useCampus';
 
-// Types for team members
-interface TeamMember {
+// Types for department members from M365
+interface DepartmentMember {
   name: string;
+  email: string;
+  phone: string;
   role: string;
-  imageUrl: string;
-  email?: string;
-  phone?: string;
+  officeLocation: string;
+  profilePhotoUrl?: string;
 }
 
-interface BoardShowcaseProps {
-  boardMembers: TeamMember[];
-  title?: string;
-  isLoading?: boolean;
+interface DepartmentMembersResponse {
+  success: boolean;
+  members: DepartmentMember[];
+  count: number;
+  departmentName: string;
+  campus: string;
+  message?: string;
   error?: string;
 }
 
-function BoardMemberCard({ member, index }: { member: TeamMember; index: number }) {
+interface DepartmentMembersShowcaseProps {
+  campusId: string;
+  departmentId?: string;
+  title?: string;
+}
+
+function MemberCard({ member, index }: { member: DepartmentMember; index: number }) {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(width - 32, 300);
+
+  const handleEmailPress = () => {
+    if (member.email) {
+      Linking.openURL(`mailto:${member.email}`);
+    }
+  };
+
+  const handlePhonePress = () => {
+    if (member.phone) {
+      Linking.openURL(`tel:${member.phone}`);
+    }
+  };
 
   return (
     <MotiView
@@ -73,8 +95,8 @@ function BoardMemberCard({ member, index }: { member: TeamMember; index: number 
           <YStack padding="$4" gap="$3">
             <XStack alignItems="center" gap="$3">
               <Avatar circular size="$6" elevate>
-                {member.imageUrl ? (
-                  <Avatar.Image src={member.imageUrl} />
+                {member.profilePhotoUrl ? (
+                  <Avatar.Image src={member.profilePhotoUrl} />
                 ) : (
                   <Avatar.Fallback 
                     backgroundColor={colorScheme === 'dark' ? '$blue5' : '$blue2'}
@@ -113,14 +135,33 @@ function BoardMemberCard({ member, index }: { member: TeamMember; index: number 
               </YStack>
             </XStack>
 
-            {(member.email || member.phone) && (
-              <YStack 
-                backgroundColor={colorScheme === 'dark' ? '$blue4' : '$blue2'} 
-                padding="$3"
-                borderRadius="$3"
-                gap="$2"
-              >
-                {member.email && (
+            <YStack 
+              backgroundColor={colorScheme === 'dark' ? '$blue4' : '$blue2'} 
+              padding="$3"
+              borderRadius="$3"
+              gap="$2"
+            >
+              {member.officeLocation && (
+                <XStack gap="$2" alignItems="center">
+                  <MapPin 
+                    size={14} 
+                    color={colorScheme === 'dark' ? '$blue11' : '$blue9'} 
+                  />
+                  <Text 
+                    flex={1}
+                    fontSize="$2" 
+                    color={colorScheme === 'dark' ? '$blue11' : '$blue9'}
+                    fontWeight="500"
+                    numberOfLines={1}
+                    opacity={0.9}
+                  >
+                    {member.officeLocation}
+                  </Text>
+                </XStack>
+              )}
+
+              {member.email && (
+                <Pressable onPress={handleEmailPress}>
                   <XStack gap="$2" alignItems="center">
                     <Mail 
                       size={14} 
@@ -137,9 +178,11 @@ function BoardMemberCard({ member, index }: { member: TeamMember; index: number 
                       {member.email}
                     </Text>
                   </XStack>
-                )}
+                </Pressable>
+              )}
 
-                {member.phone && (
+              {member.phone && (
+                <Pressable onPress={handlePhonePress}>
                   <XStack gap="$2" alignItems="center">
                     <Phone 
                       size={14} 
@@ -156,9 +199,9 @@ function BoardMemberCard({ member, index }: { member: TeamMember; index: number 
                       {member.phone}
                     </Text>
                   </XStack>
-                )}
-              </YStack>
-            )}
+                </Pressable>
+              )}
+            </YStack>
           </YStack>
         </YStack>
       </Pressable>
@@ -166,15 +209,59 @@ function BoardMemberCard({ member, index }: { member: TeamMember; index: number 
   );
 }
 
-export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardShowcaseProps) {
-
+export function DepartmentMembersShowcase({ departmentId, title }: DepartmentMembersShowcaseProps) {
+  const [members, setMembers] = useState<DepartmentMember[]>([]);
+  const [departmentName, setDepartmentName] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const colorScheme = useColorScheme();
+  const { campus } = useCampus();
 
+  const fetchDepartmentMembers = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const params: { campus: string; departmentId?: string } = {
+        campus: campus?.$id ?? ''
+      };
+      
+      // Only add departmentId if it's provided
+      if (departmentId) {
+        params.departmentId = departmentId;
+      }
+      
+      const execution = await functions.createExecution(
+        'get_board_members',  // Your function ID
+        JSON.stringify(params),
+        false
+      );
+      console.log(execution.responseBody);
+      
+      const result: DepartmentMembersResponse = JSON.parse(execution.responseBody);
+      
+      if (result.success && Array.isArray(result.members)) {
+        setMembers(result.members);
+        setDepartmentName(result.departmentName);
+      } else {
+        setError(result.message || 'Failed to load department members');
+      }
+    } catch (err) {
+      console.error('Error fetching department members:', err);
+      setError('An error occurred while fetching members. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartmentMembers();
+  }, [campus, departmentId]);
 
   if (isLoading) {
     return (
       <YStack padding="$4" alignItems="center" gap="$4">
-        <Text>Loading board members...</Text>
+        <Text>Loading department members...</Text>
       </YStack>
     );
   }
@@ -185,9 +272,7 @@ export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardSh
         <Text color="$red10">{error}</Text>
         <Button
           themeInverse
-          onPress={() => {
-            // This will trigger the useEffect to run again
-          }}
+          onPress={fetchDepartmentMembers}
         >
           Retry
         </Button>
@@ -195,10 +280,10 @@ export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardSh
     );
   }
 
-  if (boardMembers.length === 0) {
+  if (members.length === 0) {
     return (
       <YStack padding="$4" alignItems="center">
-        <Text>No board members found</Text>
+        <Text>No department members found</Text>
       </YStack>
     );
   }
@@ -221,7 +306,7 @@ export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardSh
             fontWeight="600"
             color="$color"
           >
-            {title}
+            {title || departmentName}
           </Text>
           <ChevronRight 
             size={16} 
@@ -238,8 +323,8 @@ export function BoardShowcase({ boardMembers, title, isLoading, error }: BoardSh
             gap: 12
           }}
         >
-          {boardMembers.map((member, index) => (
-            <BoardMemberCard 
+          {members.map((member, index) => (
+            <MemberCard 
               key={`${member.name}-${index}`}
               member={member} 
               index={index} 

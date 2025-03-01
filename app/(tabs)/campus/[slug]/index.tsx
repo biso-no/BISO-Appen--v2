@@ -36,7 +36,7 @@ import {
 import { useColorScheme } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useCampus } from '@/lib/hooks/useCampus';
-import { BoardShowcase } from '@/components/board-showcase';
+import { DepartmentMembersShowcase } from '@/components/board-showcase';
 import { databases } from '@/lib/appwrite';
 import { Models, Query } from 'react-native-appwrite';
 import { mapCampus, mapCampusNameToId } from '@/lib/utils/map-campus';
@@ -760,7 +760,7 @@ export default function CampusPage() {
               color="pink"
               delay={600}
             />
-            <BoardShowcase boardMembers={campusData.departmentBoard} title="Board Members" />
+            <DepartmentMembersShowcase campusId={slug} title='Management' />
             {/* Contact Card */}
             <MotiView
               from={{ opacity: 0, scale: 0.9 }}

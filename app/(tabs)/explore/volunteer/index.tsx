@@ -96,7 +96,7 @@ function JobCard({ job, onPress, index }: JobCardProps) {
   
   const getCardBackgroundColor = () => {
     return colorScheme === 'dark' 
-      ? `$${jobColor}2` 
+      ? `$${jobColor}1` 
       : `$${jobColor}1`;
   };
 
@@ -128,7 +128,12 @@ function JobCard({ job, onPress, index }: JobCardProps) {
             {/* Top section with title and icon */}
             <XStack gap="$3" alignItems="center" justifyContent="space-between">
               <YStack flex={1} gap="$1">
-                <SizableText size="$5" fontWeight="800" numberOfLines={2} color="$color">
+                <SizableText 
+                  size="$5" 
+                  fontWeight="800" 
+                  numberOfLines={2} 
+                  color={colorScheme === 'dark' ? `$${jobColor}11` : '$color'}
+                >
                   {job.title}
                 </SizableText>
                 
@@ -139,14 +144,18 @@ function JobCard({ job, onPress, index }: JobCardProps) {
                       <Button
                         size="$2"
                         borderRadius="$10"
-                        backgroundColor={`$${jobColor}3`}
-                        borderColor={`$${jobColor}5`}
+                        backgroundColor={colorScheme === 'dark' ? `$${jobColor}2` : `$${jobColor}3`}
+                        borderColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}5`}
                         borderWidth={1}
                         paddingHorizontal="$2"
                         icon={MapPin}
                         iconAfter={null}
                       >
-                        <Text fontSize="$2" color={`$${jobColor}11`} fontWeight="500">
+                        <Text 
+                          fontSize="$2" 
+                          color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
+                          fontWeight="500"
+                        >
                           {campus}
                         </Text>
                       </Button>
@@ -156,8 +165,14 @@ function JobCard({ job, onPress, index }: JobCardProps) {
               </YStack>
               
               <Theme name={jobColor}>
-                <Circle size="$4" backgroundColor={`$${jobColor}4`}>
-                  <Briefcase size={20} color={theme[`${jobColor}10`]?.val} />
+                <Circle 
+                  size="$4" 
+                  backgroundColor={colorScheme === 'dark' ? `$${jobColor}3` : `$${jobColor}4`}
+                >
+                  <Briefcase 
+                    size={20} 
+                    color={colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme[`${jobColor}10`]?.val} 
+                  />
                 </Circle>
               </Theme>
             </XStack>
@@ -165,17 +180,17 @@ function JobCard({ job, onPress, index }: JobCardProps) {
             {/* Job description preview */}
             {job.content && (
               <YStack 
-                backgroundColor={`$${jobColor}1`} 
+                backgroundColor={colorScheme === 'dark' ? `$${jobColor}2` : `$${jobColor}1`}
                 padding="$3" 
                 borderRadius="$4"
-                borderColor={`$${jobColor}3`}
+                borderColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}3`}
                 borderWidth={1}
               >
                 <RenderHTML
                   source={{ html: job.content.split('</p>')[0].replace(/<\/?[^>]+(>|$)/g, '') }}
                   contentWidth={width - 64}
                   baseStyle={{
-                    color: theme.color?.val || '#000',
+                    color: colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme.color?.val,
                     fontSize: 14,
                     lineHeight: 20,
                   }}
@@ -187,15 +202,29 @@ function JobCard({ job, onPress, index }: JobCardProps) {
             <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
               {job.expiry_date ? (
                 <XStack gap="$2" alignItems="center">
-                  <Clock size={14} color={theme[`${jobColor}9`]?.val} />
-                  <SizableText size="$3" color={`$${jobColor}11`} fontWeight="500">
+                  <Clock 
+                    size={14} 
+                    color={colorScheme === 'dark' ? theme[`${jobColor}10`]?.val : theme[`${jobColor}9`]?.val} 
+                  />
+                  <SizableText 
+                    size="$3" 
+                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
+                    fontWeight="500"
+                  >
                     Deadline: {new Date(job.expiry_date).toLocaleDateString()}
                   </SizableText>
                 </XStack>
               ) : (
                 <XStack gap="$2" alignItems="center">
-                  <Zap size={14} color={theme[`${jobColor}9`]?.val} />
-                  <SizableText size="$3" color={`$${jobColor}11`} fontWeight="500">
+                  <Zap 
+                    size={14} 
+                    color={colorScheme === 'dark' ? theme[`${jobColor}10`]?.val : theme[`${jobColor}9`]?.val} 
+                  />
+                  <SizableText 
+                    size="$3" 
+                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
+                    fontWeight="500"
+                  >
                     Open position
                   </SizableText>
                 </XStack>
@@ -205,11 +234,19 @@ function JobCard({ job, onPress, index }: JobCardProps) {
                 <Button
                   size="$3"
                   borderRadius="$10"
-                  backgroundColor={`$${jobColor}5`}
-                  pressStyle={{ scale: 0.95, backgroundColor: `$${jobColor}6` }}
+                  backgroundColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}5`}
+                  pressStyle={{ 
+                    scale: 0.95, 
+                    backgroundColor: colorScheme === 'dark' ? `$${jobColor}5` : `$${jobColor}6` 
+                  }}
                   icon={ChevronRight}
                 >
-                  <Text color={`$${jobColor}12`} fontWeight="600">View</Text>
+                  <Text 
+                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}12`} 
+                    fontWeight="600"
+                  >
+                    View
+                  </Text>
                 </Button>
               </Theme>
             </XStack>
@@ -566,7 +603,7 @@ export default function VolunteerScreen() {
                 maxWidth={width * 0.85}
                 lineHeight="$6"
               >
-                Join our team and create positive change on campus through meaningful volunteer opportunities
+                Join BISO and create positive change on campus through meaningful opportunities
               </Paragraph>
             </MotiView>
             
