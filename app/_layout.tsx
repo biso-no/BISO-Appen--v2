@@ -6,11 +6,14 @@ import { useFonts } from 'expo-font';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Platform } from 'react-native';
+import { DevToolsBubble } from 'react-native-react-query-devtools';
+import * as Clipboard from 'expo-clipboard';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
-import { AuthProvider } from '@/components/context/auth-provider';
 import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
 import 'react-native-gesture-handler';
@@ -18,11 +21,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { CampusProvider } from '@/lib/hooks/useCampus';
 import { ModalProvider } from '@/components/context/membership-modal-provider';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
 import { LogBox } from 'react-native';
-
-
-
+import { queryClient } from '@/lib/react-query';
+import { RootProvider } from '@/components/context/root-provider';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -70,12 +71,18 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const isExpoGo = Constants.appOwnership === 'expo';
 
-
+  const onCopy = async (text: string) => {
+    try {
+      await Clipboard.setStringAsync(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   /*
 useEffect(() => {
@@ -99,28 +106,27 @@ useEffect(() => {
 }, []);
 */
 
-
-
   return (
-
-
-    <TamaguiProvider config={config}>
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-    <PortalProvider shouldAddRootHost>
-    <AuthProvider>
-    <CampusProvider>
-      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
-      <Stack initialRouteName='(tabs)'>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
-      </Stack>
-      </Theme>
-      </CampusProvider>
-      </AuthProvider>
-      </PortalProvider>
-    </ThemeProvider>
-    </TamaguiProvider>
+    <QueryClientProvider client={queryClient}>
+      <TamaguiProvider config={config}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <PortalProvider shouldAddRootHost>
+            <RootProvider>
+              <CampusProvider>
+                <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                  <Stack initialRouteName='(tabs)'>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                    <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+                    <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
+                  </Stack>
+                </Theme>
+              </CampusProvider>
+            </RootProvider>
+          </PortalProvider>
+        </ThemeProvider>
+      </TamaguiProvider>
+      {__DEV__ && <DevToolsBubble onCopy={onCopy} />}
+    </QueryClientProvider>
   );
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { SizeTokens } from 'tamagui';
 import { Label, Separator, Switch, XStack } from 'tamagui';
 import { createSubscriber, deleteSubscriber, updateSubscription, fetchSubscription } from '@/lib/appwrite';
-import { useAuth } from './context/auth-provider';
+import { useAuth } from './context/core/auth-provider';
 
 interface Props {
   label: string;
@@ -12,18 +12,18 @@ interface Props {
 
 export function SwitchWithLabel(props: Props) {
   const id = `switch-${props.topic}`
-  const { data } = useAuth();
+  const { user } = useAuth();
   const [checked, setChecked] = useState<boolean | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!data) {
+    if (!user) {
       return;
     }
 
     const fetchInitialSubscription = async () => {
       try {
-        const response = await fetchSubscription(data, { topic: props.topic });
+        const response = await fetchSubscription(user, { topic: props.topic });
         if (response) {
           setChecked(response.subscribed);
         }
@@ -35,20 +35,20 @@ export function SwitchWithLabel(props: Props) {
     };
 
     fetchInitialSubscription();
-  }, [data, props.topic]);
+  }, [user, props.topic]);
 
   const onChange = async () => {
-    if (data) {
+    if (user) {
       setLoading(true);
       try {
         if (checked) {
           // Unsubscribe
           await deleteSubscriber(props.topic, id);
-          await updateSubscription(data.$id, props.topic, false);
+          await updateSubscription(user.$id, props.topic, false);
         } else {
           // Subscribe
-          await createSubscriber(props.topic, data);
-          await updateSubscription(data.$id, props.topic, true);
+          await createSubscriber(props.topic, user);
+          await updateSubscription(user.$id, props.topic, true);
         }
         setChecked(!checked);
       } catch (error) {

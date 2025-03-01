@@ -1,6 +1,6 @@
 import { H1, YStack, Text, H5, Theme, useTheme } from 'tamagui';
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from '@/components/context/core/auth-provider';
 import { MultiStepForm, Step } from '@/components/ui/multi-step-form'; // Assuming the Stepper component is in this path
 import { Step1 } from '@/components/onboarding/step1';
 import { Step2 } from '@/components/onboarding/step2';
@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PartyPopper, User, Building2, MapPin } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
+import { useProfile } from '@/components/context/core/profile-provider';
 
 enum Campus {
   Bergen = "bergen",
@@ -42,7 +43,8 @@ export default function Onboarding() {
     isVolunteer: false,
     departments: [],
   });
-  const { data, profile, isLoading, error, updateName, updateUserPrefs, updateProfile, setProfile } = useAuth();
+  const { user, isLoading, error, actions } = useAuth();
+  const { profile, actions: profileActions } = useProfile();
   const [name, setName] = useState(profile?.name ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState(profile?.address ?? '');
@@ -85,7 +87,7 @@ export default function Onboarding() {
         setZipCode(value);
         break;
       case 'campus':
-        updateUserPrefs(field, value);
+        actions.updatePreferences(field, value);
         break;
     }
   };
@@ -93,7 +95,7 @@ export default function Onboarding() {
   const handleCampusChange = (campus: Models.Document | null) => {
     setSelectedCampus(campus);
     if (campus) {
-      updateUserPrefs('campus', campus.$id);
+      actions.updatePreferences('campus', campus.$id);
     }
   };
 
@@ -159,30 +161,30 @@ export default function Onboarding() {
     // Show confetti animation
     setShowConfetti(true);
     
-    if (!data) {
+    if (!user) {
       console.error('User data not found');
       return;
     }
 
     try {
       // Create/Update profile with all collected information
-      const response = await databases.createDocument('app', 'user', data.$id, { 
+      const response = await databases.createDocument('app', 'user', user.$id, { 
         name,
         phone, 
         address,
-        email: data.email,
+        email: user.email,
         city, 
         zip: zipCode,
         campus: selectedCampus?.$id,
         departments: selectedDepartments.map(d => d.$id),
       });
 
-      await updateName(name);
+      await actions.updateName(name);
       
       console.log('Profile created/updated successfully:', response);
 
       if (response.$id) {
-        setProfile(response);
+        profileActions.updateProfile(response);
       }
       
       // Wait for animation to complete before redirecting

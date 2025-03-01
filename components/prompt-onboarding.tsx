@@ -1,41 +1,43 @@
 import { AlertDialog, Button, XStack, YStack } from 'tamagui'
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from './context/core/auth-provider';
 import { useRouter } from "expo-router";
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from "react";
+import { useProfile } from './context/core/profile-provider';
 
 export function PromptOnboarding() {
 
     const [open, setOpen] = useState(false);
 
-    const { data, profile, isLoading, updateUserPrefs } = useAuth();
+    const { user, actions, isLoading } = useAuth();
+    const { profile,  } = useProfile()
 
     const { push } = useRouter();
 
-    const promptPref = data?.prefs.promptOnboarding;
+    const promptPref = user?.prefs.promptOnboarding;
 
     useEffect(() => {
-        if (data?.$id && !profile?.name && !isLoading) {
+        if (user?.$id && !profile?.name && !isLoading) {
             async function getPromptOnboarding() {
                 //If there is a value in Async storage, or it is set to true, then we dont need to prompt the user as they have already been asked. 
-                const promptOnboarding = data?.prefs.promptOnboarding;
+                const promptOnboarding = user?.prefs.promptOnboarding;
                 console.log("Prompt onboarding: ", promptOnboarding);
             }
             getPromptOnboarding();
         }
 
-     }, [data?.$id, profile?.name]);
+     }, [user?.$id, profile?.name]);
 
     const onCancel = () => {
         async function setShouldNotPromptOnboarding() {
-            await updateUserPrefs('promptOnboarding', false);
+            await actions.updatePreferences('promptOnboarding', false);
         }
         setOpen(false);
         setShouldNotPromptOnboarding();
     }
 
     const onAccept = async () => {
-        await updateUserPrefs('promptOnboarding', false);
+        await actions.updatePreferences('promptOnboarding', false);
         setOpen(false);
         push('/onboarding');
     }

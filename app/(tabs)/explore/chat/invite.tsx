@@ -1,16 +1,15 @@
 import { CheckCircle } from "@tamagui/lucide-icons";
 import { acceptChatInvite } from "@/lib/appwrite";
-import { useLocalSearchParams } from "expo-router";
+import { RelativePathString, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { MotiView } from 'moti'
 import { Text } from "tamagui";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from "@/components/context/core/auth-provider";
 
 export default function TeamInvitation() {
     const params = useLocalSearchParams();
 
-    const { refetchUser } = useAuth();
 
     const { membershipId, secret, teamId, userId } = params as {
         membershipId: string;
@@ -31,8 +30,7 @@ export default function TeamInvitation() {
                 teamId,
                 userId,
             }).then(() => {
-                refetchUser();
-                push("/(tabs)/chat");
+                push("/(tabs)/chat" as RelativePathString);
             });
         }
     }, [membershipId, secret, teamId, userId]);

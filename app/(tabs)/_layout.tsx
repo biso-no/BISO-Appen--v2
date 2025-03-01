@@ -26,7 +26,7 @@ import {
   Bell,
   Compass
 } from '@tamagui/lucide-icons';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from '@/components/context/core/auth-provider';
 import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
 import { ChatProvider } from '@/lib/ChatContext';
@@ -41,6 +41,7 @@ import { LinearGradient } from 'tamagui/linear-gradient';
 import { usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
+import { useProfile } from '@/components/context/core/profile-provider';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -70,7 +71,8 @@ interface BottomTabBarIconProps {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { data, profile, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
+  const { profile } = useProfile();
   const avatarId = profile?.avatar;
   const [image, setImage] = useState(profile?.avatar || '');
   const insets = useSafeAreaInsets();
@@ -140,7 +142,7 @@ export default function TabLayout() {
   const backgroundColor = theme.background.val;
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
-    if (!data?.$id) {
+    if (!user?.$id) {
       return <LogIn size={25} color={color} marginTop="$2" />;
     } else if (!avatarId) {
       return <UserRound size={25} color={color} marginTop="$2" />;
@@ -154,7 +156,7 @@ export default function TabLayout() {
     }
   };
 
-  const tabNames = data?.$id
+  const tabNames = user?.$id
     ? ['index', 'explore/index', 'profile/index']
     : ['index', 'explore/index', 'auth/signIn/index'];
 
@@ -367,7 +369,7 @@ export default function TabLayout() {
   }
 
   return (
-    <ChatProvider data={data}>
+    <ChatProvider data={user}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <View style={StyleSheet.absoluteFill}>
         <LinearGradient

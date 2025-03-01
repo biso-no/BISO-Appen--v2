@@ -10,7 +10,9 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import { Button, Text, YStack, Spinner } from 'tamagui';
 import { Alert } from 'react-native';
-import { useAuth } from './context/auth-provider';
+import { useAuth } from './context/core/auth-provider';
+import { useProfile } from './context/core/profile-provider';
+import { useMembershipContext } from './context/core/membership-provider';
 import { databases } from '@/lib/appwrite';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -44,9 +46,11 @@ export function BILoginButton() {
         path: 'profile',
     });
 
-    const { profile, addStudentId, data, isLoading, setIsLoading } = useAuth();
+    const { user, actions } = useAuth();
+    const { actions: profileActions } = useProfile();
     const clientId = '09d8bb72-2cef-4b98-a1d3-2414a7a40873';
     const [isReady, setIsReady] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [request, , promptAsync] = useAuthRequest({
         clientId,
@@ -68,7 +72,7 @@ export function BILoginButton() {
     }, [request, discovery]);
 
     const handleLogin = async () => {
-        setIsLoading(true);
+        setLoading(true);
         try {
             const code = await promptAsync();
             if (code.type === 'success' && discovery) {
@@ -91,18 +95,18 @@ export function BILoginButton() {
                 }
 
                 const studentId = email.replace(/@bi.no|@biso.no/, '');
-                await addStudentId(studentId);
+                await profileActions.addStudentId(studentId);
             }
         } catch (error) {
             Alert.alert("Login Error", error instanceof Error ? error.message : "An error occurred during login");
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     return (
         <Button onPress={handleLogin} variant='outlined' disabled={!isReady}>
-            {isLoading && <Spinner size="small" />}
+            {loading && <Spinner size="small" />}
             <Text>Login with BI</Text>
         </Button>
     );

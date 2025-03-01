@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'; 
 import { Button, Text, YStack, Input, H6, YGroup, Label, XStack, ScrollView, Spinner } from 'tamagui'; 
 import { FileUpload } from '@/lib/file-upload'; 
-import { useAuth } from '@/components/context/auth-provider'; 
+import { useAuth } from '@/components/context/core/auth-provider';
 import CampusSelector from '@/components/SelectCampus'; 
 import { MyStack } from '@/components/ui/MyStack'; 
 import DepartmentSelector from '@/components/SelectDepartments'; 
@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { ID, Models } from 'react-native-appwrite';
 import { uriToBlob } from '@/lib/utils/uriToBlob';
 import { useRouter } from 'expo-router';
-
+import { useProfile } from '@/components/context/core/profile-provider';
 export interface Attachment { 
     url: string; 
     description: string; 
@@ -34,19 +34,20 @@ type FormData = {
 };
 
 export function MultiStepForm() { 
-    const { data, profile, isLoading, userCampus, userDepartment } = useAuth(); 
+    const { user: data, isLoading } = useAuth();
+    const { profile } = useProfile();
     const [currentStep, setCurrentStep] = useState(1); 
     const [expenseId, setExpenseId] = useState<string | null>(null); 
-    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null | undefined>(userCampus);
-    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null | undefined>(userDepartment);
+    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(null);
+    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null>(null);
     const [forEvent, setForEvent] = useState(false);
     const [eventName, setEventName] = useState<string>("");
     const [debouncedEventName] = useDebounce(eventName, 500);
     const [showGenerateButton, setShowGenerateButton] = useState(false);
     const [formData, setFormData] = useState<FormData>({ 
         bank_account: profile?.bank_account || "", 
-        campus: userCampus?.name || "",
-        department: userDepartment?.name || "",
+        campus: profile?.campus || "",
+        department: profile?.department || "",
         expenseAttachments: [],
         description: "", 
         prepayment_amount: 0, 
@@ -76,7 +77,7 @@ export function MultiStepForm() {
         })); 
     };
 
-    const handleCampusChange = (campus?: Models.Document | null) => { 
+    const handleCampusChange = (campus: Models.Document | null) => { 
         setSelectedCampus(campus);
         handleInputChange('campus', campus?.name ?? '');
         handleInputChange('department', {} as Models.Document); 
@@ -96,8 +97,8 @@ export function MultiStepForm() {
     const resetForm = () => { 
         setFormData({ 
             bank_account: profile?.bank_account || "", 
-            campus: userCampus?.id || "",
-            department: userDepartment?.name || "",
+            campus: selectedCampus?.name || "",
+            department: selectedDepartment?.name || "",
             expenseAttachments: [],
             description: "", 
             prepayment_amount: 0, 
@@ -229,7 +230,7 @@ export function MultiStepForm() {
                   <CampusSelector
                     onSelect={(value) => handleCampusChange(value)}
                     campus={formData.campus}
-                    initialCampus={userCampus || undefined}
+                    initialCampus={selectedCampus || undefined}
                   />
                 </YGroup.Item>
                 {formData.campus && (

@@ -1,6 +1,6 @@
 import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod, RealtimeResponseEvent } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
-import { AuthContextType } from '@/components/context/auth-provider';
+import { AuthContextType } from '@/components/context/core/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
 import { AnimatableStringValue } from 'react-native';
 
@@ -33,11 +33,10 @@ export async function signIn(email: string) {
     return userId;
   }
   
-  export async function signOut(refetchUser: AuthContextType['refetchUser']) {
+  export async function signOut() {
     const response = await account.deleteSession("current");
-    console.log(response);
-  
-    await refetchUser();
+
+    return response;
   }
 
 export async function getUserPreferences() {

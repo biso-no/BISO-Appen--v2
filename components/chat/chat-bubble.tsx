@@ -1,11 +1,11 @@
 import { YStack, Text, XStack } from "tamagui";
-import { useAuth } from "../context/auth-provider";
+import { useAuth } from "../context/core/auth-provider";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
 
 export function ChatBubble({ message, status, senderName }: { message: Models.Document, status: string, senderName: string }) {
 
-    const { data: user } = useAuth();
+    const { user } = useAuth();
     const isUser = user?.$id === message.users;
     return (
         <YStack

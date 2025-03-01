@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from '@/components/context/core/auth-provider';
+import { useProfile } from '@/components/context/core/profile-provider';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { Models } from 'react-native-appwrite';
 import { getDocuments } from '@/lib/appwrite';
@@ -54,7 +55,7 @@ export const CampusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { id: "5", name: 'National' },
     ]
     const [loading, setLoading] = useState(true);
-    const { profile } = useAuth();
+    const { profile } = useProfile();
 
     useEffect(() => {
         const initializeCampus = async () => {

@@ -1,5 +1,4 @@
 import { Button, Paragraph, Text, XStack, YStack } from "tamagui";
-import { useAuth } from "@/components/context/auth-provider";
 import { Lock } from "@tamagui/lucide-icons";
 import { Accordion } from "../ui/accordion";
 import { useRouter } from "expo-router";

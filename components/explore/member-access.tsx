@@ -1,5 +1,6 @@
 import { Button, Paragraph, Text, XStack, YStack } from "tamagui";
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from "../context/core/auth-provider";
+import { useMembershipContext } from "../context/core/membership-provider";
 import { Lock } from "@tamagui/lucide-icons";
 import { Accordion } from "../ui/accordion";
 import { useRouter } from "expo-router";
@@ -7,7 +8,8 @@ import { useEffect, useState } from "react";
 import { Vote, WalletCards, Gift } from "@tamagui/lucide-icons";
 
 export function MemberAccess() {
-    const { data, isBisoMember, isLoading } = useAuth();
+    const { user, isLoading } = useAuth();
+    const { isBisoMember } = useMembershipContext();
     const [disabled, setDisabled] = useState(true);
     const [open, setOpen] = useState(false);
     const { push, navigate } = useRouter();
@@ -24,7 +26,7 @@ export function MemberAccess() {
         }
     }, [isBisoMember, isLoading]);
 
-    if (!data) {
+    if (!user) {
         return null;
     }
 

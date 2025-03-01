@@ -4,7 +4,7 @@ import { YStack, H1, Text, Spinner } from "tamagui";
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons";
 import { MyStack } from "@/components/ui/MyStack";
 import { createSession } from "@/lib/appwrite";
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from "@/components/context/core/auth-provider";
 
 //A callback screen that verifies the code from the email. If the code is valid, a large checkmark with animation is shown, and the user is redirected to the home screen.
 export default function VerifyScreen() {
@@ -17,7 +17,7 @@ export default function VerifyScreen() {
     const [isVerified, setIsVerified] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { refetchUser } = useAuth();
+    const { actions } = useAuth();
 
     useEffect(() => {
         async function verifyMagicLink() {
@@ -31,7 +31,6 @@ export default function VerifyScreen() {
                 const session = await createSession(userId, secret);
                 if (session.$id) {
                     setIsVerified(true);
-                    await refetchUser();
                 } else {
                     setError("Invalid or expired verification link");
                 }
@@ -43,7 +42,7 @@ export default function VerifyScreen() {
         }
 
         verifyMagicLink();
-    }, [secret, userId, refetchUser]);
+    }, [secret, userId]);
 
     useEffect(() => {
         if (isVerified) {

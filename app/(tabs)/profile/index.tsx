@@ -9,7 +9,7 @@ import {
   CreditCard, Bell 
 } from '@tamagui/lucide-icons';
 import { MotiView, AnimatePresence } from 'moti';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from '@/components/context/core/auth-provider';
 import { useRouter } from 'expo-router';
 import { updateDocument, signOut, databases, triggerFunction } from '@/lib/appwrite';
 import { ExpenseList } from '@/components/tools/expenses/expense-list';
@@ -26,6 +26,8 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMembershipContext } from '@/components/context/core/membership-provider';
+import { useProfile } from '@/components/context/core/profile-provider';
 
 // Type definitions
 type ProfileSection = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
@@ -57,7 +59,9 @@ type NorwegianPaymentFormData = z.infer<typeof norwegianPaymentFormSchema>;
 type InternationalPaymentFormData = z.infer<typeof internationalPaymentFormSchema>;
 
 const ProfileScreen = () => {
-  const { profile, isLoading, data, isBisoMember, refetchUser, studentId, membership, updateUserPrefs, updateProfile } = useAuth();
+  const { user, actions, isLoading } = useAuth();
+  const { profile, actions: profileActions } = useProfile();
+  const { membership, isBisoMember, membershipExpiry } = useMembershipContext();
   const router = useRouter();
   const theme = useTheme();
   const pathName = usePathname();
@@ -214,7 +218,7 @@ const ProfileScreen = () => {
 
   // Load membership options
   useEffect(() => {
-    if (data?.$id && isMembershipOpen) {
+    if (user?.$id && isMembershipOpen) {
       const fetchMemberships = async () => {
         try {
           const response = await databases.listDocuments('app', 'memberships', [
@@ -228,7 +232,7 @@ const ProfileScreen = () => {
       };
       fetchMemberships();
     }
-  }, [data?.$id, isMembershipOpen]);
+  }, [user?.$id, isMembershipOpen]);
 
   const openEditProfile = () => {
     resetProfileForm({
@@ -263,10 +267,10 @@ const ProfileScreen = () => {
 
   // Initialize local prefs
   useEffect(() => {
-    if (data?.prefs) {
-      setLocalPrefs(data.prefs);
+    if (user?.prefs) {
+      setLocalPrefs(user.prefs);
     }
-  }, [data?.prefs]);
+  }, [user?.prefs]);
 
   // Reset form values when opening edit modals
   useEffect(() => {
@@ -303,7 +307,7 @@ const ProfileScreen = () => {
   const onProfileSubmit = async (data: ProfileFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayProfile(data);
       setIsEditing(false);
     } catch (error) {
@@ -314,7 +318,7 @@ const ProfileScreen = () => {
   const onNorwegianPaymentSubmit = async (data: NorwegianPaymentFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayPayment(prev => ({ ...prev, ...data }));
       setIsEditingPayment(false);
     } catch (error) {
@@ -326,7 +330,7 @@ const ProfileScreen = () => {
   const onInternationalPaymentSubmit = async (data: InternationalPaymentFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayPayment(data);
       setIsEditingPayment(false);
     } catch (error) {
@@ -431,7 +435,7 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(refetchUser);
+    await signOut();
     router.replace('/(tabs)');
   };
 
@@ -588,13 +592,13 @@ const ProfileScreen = () => {
 
   const NotificationSection = React.memo(() => {
     const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
-    const { data, updateUserPrefs } = useAuth();
+    const { user, actions } = useAuth();
 
     useEffect(() => {
-      if (data?.prefs) {
-        setLocalPrefs(data.prefs);
+      if (user?.prefs) {
+        setLocalPrefs(user.prefs);
       }
-    }, [data?.prefs]);
+    }, [user?.prefs]);
 
     return (
       <YStack gap="$3">
@@ -605,7 +609,7 @@ const ProfileScreen = () => {
             onCheckedChange={async (checked: boolean) => {
               setLocalPrefs(prev => ({ ...prev, expenses: checked }));
               try {
-                await updateUserPrefs('expenses', checked);
+                await actions.updatePreferences('expenses', checked);
               } catch (error) {
                 setLocalPrefs(prev => ({ ...prev, expenses: !checked }));
                 console.error('Failed to update notification settings:', error);
@@ -987,7 +991,7 @@ const ProfileScreen = () => {
     }
   };
 
-  if (isLoading || !data) return null;
+  if (isLoading || !user) return null;
 
   // Welcome screen for new users
   if (!profile?.name) {
@@ -1028,7 +1032,7 @@ const ProfileScreen = () => {
         <Text color="$gray10">{profile.email}</Text>
         
         {/* Membership Section */}
-        {!studentId ? (
+        {!profile.student_id ? (
           <BILoginButton />
         ) : membership ? (
           <YStack>

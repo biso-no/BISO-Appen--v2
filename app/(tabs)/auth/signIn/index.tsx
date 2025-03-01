@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Input, Text, YStack, XStack, H1, H2, View } from 'tamagui';
-import { signIn, createMagicUrl } from '@/lib/appwrite';
+import { createMagicUrl } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { MyStack } from '@/components/ui/MyStack';
 import { MotiView, AnimatePresence } from 'moti';
-import { useAuth } from '@/components/context/auth-provider';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { Mail, Check } from '@tamagui/lucide-icons';
 import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
@@ -39,7 +38,6 @@ export default function LoginScreen() {
   const [cooldownTime, setCooldownTime] = useState(0);
   const { width } = useWindowDimensions();
 
-  const { refetchUser } = useAuth();
   const { push } = useRouter();
 
   useEffect(() => {

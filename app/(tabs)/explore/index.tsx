@@ -30,7 +30,7 @@ import { Models, Query } from 'react-native-appwrite'
 import { useCampus } from '@/lib/hooks/useCampus'
 import { databases } from '@/lib/appwrite'
 import axios from 'axios'
-import { useAuth } from '@/components/context/auth-provider'
+import { useAuth } from '@/components/context/core/auth-provider'
 import { useColorScheme } from 'react-native'
 import { format, parseISO } from 'date-fns'
 
@@ -129,7 +129,7 @@ export default function ExploreScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
   const [showAuthDialog, setShowAuthDialog] = useState(false)
-  const { data: user } = useAuth()
+  const { user } = useAuth()
   const { campus } = useCampus()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)

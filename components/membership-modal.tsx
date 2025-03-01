@@ -5,7 +5,8 @@ import { Models, Query } from 'react-native-appwrite';
 import { Button, H2, XStack, YStack, Label, RadioGroup, Image, Text } from 'tamagui';
 import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from './context/core/auth-provider';
+import { useMembershipContext } from './context/core/membership-provider';
 
 const paymentMethods = [
   { label: 'Credit Card', value: 'CARD', size: '$5' },
@@ -35,7 +36,8 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const pathName = usePathname();
-  const { isBisoMember, data } = useAuth();
+  const { user } = useAuth();
+  const { isBisoMember} = useMembershipContext();
 
   useEffect(() => {
     if (isBisoMember === true) {
@@ -44,7 +46,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   }, [isBisoMember, setOpen]);
 
   useEffect(() => {
-    if (data?.$id) {
+    if (user?.$id) {
     const fetchMemberships = async () => {
       try {
         const response = await databases.listDocuments('app', 'memberships', [

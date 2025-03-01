@@ -2,7 +2,7 @@ import { Check, Cross } from "@tamagui/lucide-icons";
 import { useEffect, useState } from "react";
 import { H1, H3, H5, Paragraph, YStack, Button, Text, Input, Spinner, Separator } from "tamagui";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from "@/components/context/core/auth-provider";
 import { createSession } from "@/lib/appwrite";
 
 
@@ -14,19 +14,19 @@ export default function OAuthStatusScreen() {
 
     const { status } = searchParams;
     const router = useRouter();
-    const { data } = useAuth();
+    const { user } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (status === "success" && data && secret) {
-            createSession(data.$id, secret[0]).then(response => {
+        if (status === "success" && user && secret) {
+            createSession(user.$id, secret[0]).then(response => {
                 console.log(response);
                 setLoading(false);
             });
         }
-    }, [status, data, secret]);
+    }, [status, user, secret]);
 
 
     if (status === "error") {

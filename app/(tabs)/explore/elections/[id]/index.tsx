@@ -17,7 +17,7 @@ import {
 import { Check, FileText, Users, AlertTriangle } from '@tamagui/lucide-icons'
 import { Models, Query } from 'react-native-appwrite'
 import { databases } from '@/lib/appwrite'
-import { useAuth } from '@/components/context/auth-provider'
+import { useAuth } from '@/components/context/core/auth-provider'
 import { useLocalSearchParams } from 'expo-router'
 import { ElectionSession, ElectionState, Vote} from '@/types/election'
 
@@ -28,7 +28,7 @@ export default function OngoingElectionScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [refreshing, setRefreshing] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
-  const { data } = useAuth()
+  const { user } = useAuth()
   const [voter, setVoter] = useState<Models.Document | null>(null)
 
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -79,10 +79,10 @@ export default function OngoingElectionScreen() {
   const checkUserVoteStatus = useCallback(
     async (currentSession: ElectionSession | null) => {
       try {
-        if (!currentSession || !data) return false
+        if (!currentSession || !user) return false
         const response = await databases.listDocuments('app', 'election_vote', [
           Query.equal('votingSessionId', currentSession.$id),
-          Query.equal('voterId', data.$id),
+          Query.equal('voterId', user.$id),
         ])
         return response.documents.length > 0
       } catch (error) {
@@ -90,7 +90,7 @@ export default function OngoingElectionScreen() {
         return false
       }
     },
-    [data]
+    [user]
   )
 
   const loadElectionData = useCallback(async () => {

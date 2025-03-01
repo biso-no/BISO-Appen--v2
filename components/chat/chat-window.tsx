@@ -5,7 +5,7 @@ import { useChat } from "@/lib/ChatContext";
 import { useRouter } from "expo-router";
 import { sendChatMessage } from "@/lib/appwrite";
 import { Equal, Send } from "@tamagui/lucide-icons";
-import { useAuth } from "../context/auth-provider";
+import { useAuth } from "../context/core/auth-provider";
 import { Models } from 'react-native-appwrite';
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Pressable } from "react-native";
@@ -20,7 +20,7 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
   const [newMessage, setNewMessage] = useState("");
   const scrollViewRef = useRef<ScrollViewType>(null);
   const router = useRouter();
-  const { data } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchMessages(chatGroupId);
@@ -39,17 +39,17 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
   }, [chatGroupId, messages]);
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() && data) {
-      await sendChatMessage(chatGroupId, newMessage, data.$id);
+    if (newMessage.trim() && user) {
+      await sendChatMessage(chatGroupId, newMessage, user.$id);
       setNewMessage("");
-      setUserTyping(chatGroupId, data.$id, false);
+      setUserTyping(chatGroupId, user.$id, false);
     }
   };
 
   const handleInputChange = (text: string) => {
     setNewMessage(text);
-    if (data) {
-      setUserTyping(chatGroupId, data.$id, text.length > 0);
+    if (user) {
+      setUserTyping(chatGroupId, user.$id, text.length > 0);
     }
   };
 
@@ -62,7 +62,7 @@ export function ChatWindow({ chatGroupId }: ChatWindowProps) {
       <ScrollView ref={scrollViewRef} flex={1} padding={8} borderRadius={8}>
         {messages[chatGroupId]?.map((message: Models.Document, index: number) => {
           const user = message.users;
-          const isSender = user === data?.$id;
+          const isSender = user === user?.$id;
           const status = messageStatus[message.$id];
 
           return (

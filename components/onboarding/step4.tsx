@@ -2,8 +2,6 @@ import { Button, View, YStack, XStack, H3, Paragraph, Card, Text } from 'tamagui
 import React, { useState } from 'react';
 import { Input } from '@/components/auth/input';
 import { MotiView } from 'moti';
-import { databases, updateDocument } from '@/lib/appwrite';
-import { useAuth } from '../context/auth-provider';
 import { StyleSheet, Dimensions } from 'react-native';
 import { Home, MapPin, Phone, Mail, Building } from '@tamagui/lucide-icons';
 import Animated, { 
@@ -27,7 +25,6 @@ interface Step4Props {
 }
 
 export function Step4({ phone, address, city, zipCode, setPhone, setAddress, setCity, setZipCode }: Step4Props) {
-  const { data, profile, updateProfile } = useAuth();
   const [activeField, setActiveField] = useState<string | null>(null);
   const { width, height } = Dimensions.get('window');
   const isSmallDevice = width < 380;
