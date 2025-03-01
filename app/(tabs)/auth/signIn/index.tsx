@@ -1,18 +1,14 @@
-import React, { RefObject, useEffect, useRef, useState } from 'react';
-import { Button, Input, Text, YStack, XStack, H1, H2, Sheet, View } from 'tamagui';
-import { signIn, verifyOtp } from '@/lib/appwrite';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button, Input, Text, YStack, XStack, H1, H2, View } from 'tamagui';
+import { signIn, createMagicUrl } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { MyStack } from '@/components/ui/MyStack';
 import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/auth-provider';
 import { LinearGradient } from 'tamagui/linear-gradient';
-import { Mail, Lock, ArrowLeft } from '@tamagui/lucide-icons';
-import { FlipCard } from '@/components/ui/FlipCard';
-import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView, TextInput } from 'react-native';
+import { Mail, Check } from '@tamagui/lucide-icons';
+import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const OTP_LENGTH = 6;
 
 // Company Colors
 const COLORS = {
@@ -35,18 +31,13 @@ const blurhash =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export default function LoginScreen() {
-  const [step, setStep] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [email, setEmail] = useState('');
-  const [userId, setUserId] = useState('');
   const [errorMessages, setErrorMessages] = useState<string[]>();
   const [isLoading, setIsLoading] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
   const { width } = useWindowDimensions();
-  const [otp, setOtp] = useState('');
-  const insets = useSafeAreaInsets();
-
-  const refs: RefObject<TextInput>[] = Array.from({ length: OTP_LENGTH }, () => useRef<TextInput>(null));
 
   const { refetchUser } = useAuth();
   const { push } = useRouter();
@@ -66,10 +57,17 @@ export default function LoginScreen() {
     };
   }, []);
 
-  // Add effect to handle card flip when step changes
   useEffect(() => {
-    setIsFlipped(step === 1);
-  }, [step]);
+    let timer: NodeJS.Timeout;
+    if (cooldownTime > 0) {
+      timer = setInterval(() => {
+        setCooldownTime((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cooldownTime]);
 
   const handleEmailSubmit = async () => {
     if (!email) {
@@ -78,40 +76,32 @@ export default function LoginScreen() {
     }
     setIsLoading(true);
     try {
-      const response = await signIn(email);
+      const response = await createMagicUrl(email);
       if (response) {
-        setUserId(response);
-        setStep(1); // This will trigger the flip animation through the useEffect
+        setIsEmailSent(true);
+        setCooldownTime(10); // Set 10 second cooldown
       }
     } catch (error) {
-      setErrorMessages(['Failed to send verification code. Please try again.']);
+      setErrorMessages(['Failed to send magic link. Please try again.']);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBack = () => {
-    setStep(0); // This will trigger the flip animation through the useEffect
-  };
-
-  const handleOtpSubmit = async (code: string) => {
-    if (!code) {
-      setErrorMessages(['Please enter a valid verification code']);
-      return;
-    }
+  const handleResend = useCallback(async () => {
+    if (cooldownTime > 0) return;
     setIsLoading(true);
     try {
-      const response = await verifyOtp(userId, code);
+      const response = await createMagicUrl(email);
       if (response) {
-        push('/');
-        refetchUser();
+        setCooldownTime(10); // Reset cooldown timer
       }
     } catch (error) {
-      setErrorMessages(['Invalid verification code. Please try again.']);
+      setErrorMessages(['Failed to resend magic link. Please try again.']);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, cooldownTime]);
 
   return (
     <KeyboardAvoidingView
@@ -171,218 +161,138 @@ export default function LoginScreen() {
               )}
             </AnimatePresence>
 
-            <YStack style={{ zIndex: 1 }}>
-              <FlipCard
-                isFlipped={isFlipped}
-                frontContent={
-                  <YStack 
-                    gap="$4" 
-                    padding="$4" 
-                    backgroundColor={COLORS.mutedBlue}
-                    borderRadius="$6"
-                    shadowColor={COLORS.primary}
-                    shadowOffset={{ width: 0, height: 4 }}
-                    shadowOpacity={0.15}
-                    shadowRadius={16}
-                    elevation={8}
-                  >
-                    <H1
-                      textAlign="center"
-                      color={COLORS.primary}
-                      fontWeight="900"
-                      fontSize={32}
-                      letterSpacing={-0.5}
-                    >
-                      Welcome Back
-                    </H1>
-                    <H2
+            <YStack 
+              gap="$4" 
+              padding="$4" 
+              backgroundColor={COLORS.mutedBlue}
+              borderRadius="$6"
+              shadowColor={COLORS.primary}
+              shadowOffset={{ width: 0, height: 4 }}
+              shadowOpacity={0.15}
+              shadowRadius={16}
+              elevation={8}
+            >
+              <H1
+                textAlign="center"
+                color={COLORS.primary}
+                fontWeight="900"
+                fontSize={32}
+                letterSpacing={-0.5}
+              >
+                Welcome Back
+              </H1>
+              <H2
+                textAlign="center"
+                color={COLORS.defaultBlue}
+                fontSize={18}
+                fontWeight="600"
+                letterSpacing={-0.2}
+              >
+                Sign in to continue
+              </H2>
+
+              <YStack gap="$4" marginTop="$6">
+                <XStack
+                  backgroundColor="white"
+                  borderRadius="$4"
+                  borderWidth={1}
+                  borderColor={COLORS.subtleBlue}
+                  padding="$3"
+                  alignItems="center"
+                >
+                  <Mail size={20} color={COLORS.secondary} />
+                  <Input
+                    flex={1}
+                    marginLeft="$2"
+                    placeholder="Enter your email"
+                    backgroundColor="transparent"
+                    borderWidth={0}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    color={COLORS.primary}
+                    placeholderTextColor={COLORS.defaultBlue}
+                    fontSize={16}
+                    fontWeight="500"
+                    editable={!isEmailSent}
+                  />
+                </XStack>
+
+                {isEmailSent ? (
+                  <YStack gap="$4" alignItems="center">
+                    <Check size={24} color={COLORS.secondary} />
+                    <Text
                       textAlign="center"
                       color={COLORS.defaultBlue}
-                      fontSize={18}
+                      fontSize={14}
+                      fontWeight="500"
+                      letterSpacing={-0.1}
+                      paddingHorizontal="$4"
+                    >
+                      We've sent a magic link to your email. Please check your inbox and click the link to sign in.
+                    </Text>
+                    <Button
+                      backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
+                      color="white"
+                      size="$4"
                       fontWeight="600"
-                      letterSpacing={-0.2}
+                      onPress={handleResend}
+                      disabled={cooldownTime > 0 || isLoading}
+                      pressStyle={{ 
+                        backgroundColor: COLORS.accentBlue,
+                        scale: 0.98,
+                      }}
+                      opacity={cooldownTime > 0 ? 0.7 : 1}
                     >
-                      Sign in to continue
-                    </H2>
-
-                    <YStack gap="$4" marginTop="$6">
-                      <XStack
-                        backgroundColor="white"
-                        borderRadius="$4"
-                        borderWidth={1}
-                        borderColor={COLORS.subtleBlue}
-                        padding="$3"
-                        alignItems="center"
-                      >
-                        <Mail size={20} color={COLORS.secondary} />
-                        <Input
-                          flex={1}
-                          marginLeft="$2"
-                          placeholder="Enter your email"
-                          backgroundColor="transparent"
-                          borderWidth={0}
-                          value={email}
-                          onChangeText={setEmail}
-                          keyboardType="email-address"
-                          autoCapitalize="none"
-                          color={COLORS.primary}
-                          placeholderTextColor={COLORS.defaultBlue}
-                          fontSize={16}
-                          fontWeight="500"
-                        />
-                      </XStack>
-
-                      <Button
-                        backgroundColor={COLORS.secondary}
-                        color="white"
-                        size="$5"
-                        fontWeight="700"
-                        onPress={handleEmailSubmit}
-                        pressStyle={{ 
-                          backgroundColor: COLORS.accentBlue,
-                          scale: 0.98,
-                        }}
-                        disabled={isLoading}
-                        borderRadius="$4"
-                        shadowColor={COLORS.primary}
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.2}
-                        shadowRadius={4}
-                        elevation={5}
-                      >
-                        <Text color="white" fontSize={16} fontWeight="700">
-                          {isLoading ? 'Sending Code...' : 'Continue with Email'}
-                        </Text>
-                      </Button>
-
-                      <Text 
-                        fontSize="$2" 
-                        textAlign="center" 
-                        opacity={0.7}
-                        color={COLORS.defaultBlue}
-                      >
-                        By continuing, you agree to our{' '}
-                        <Text
-                          color={COLORS.accentBlue}
-                          onPress={() => push('https://biso.no/en/privacy-policy/')}
-                          fontWeight="500"
-                        >
-                          Privacy Policy
-                        </Text>
+                      <Text color="white" fontSize={14} fontWeight="600">
+                        {isLoading ? 'Sending...' : 
+                         cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
+                         'Resend Link'}
                       </Text>
-                    </YStack>
+                    </Button>
                   </YStack>
-                }
-                backContent={
-                  <YStack 
-                    gap="$4" 
-                    padding="$4"
-                    backgroundColor={COLORS.mutedBlue}
-                    borderRadius="$6"
+                ) : (
+                  <Button
+                    backgroundColor={COLORS.secondary}
+                    color="white"
+                    size="$5"
+                    fontWeight="700"
+                    onPress={handleEmailSubmit}
+                    pressStyle={{ 
+                      backgroundColor: COLORS.accentBlue,
+                      scale: 0.98,
+                    }}
+                    disabled={isLoading}
+                    borderRadius="$4"
                     shadowColor={COLORS.primary}
-                    shadowOffset={{ width: 0, height: 4 }}
-                    shadowOpacity={0.15}
-                    shadowRadius={16}
-                    elevation={8}
+                    shadowOffset={{ width: 0, height: 2 }}
+                    shadowOpacity={0.2}
+                    shadowRadius={4}
+                    elevation={5}
                   >
-                    <XStack alignItems="center" gap="$2">
-                      <Button
-                        icon={ArrowLeft}
-                        backgroundColor="transparent"
-                        onPress={handleBack}
-                        color={COLORS.primary}
-                        pressStyle={{ scale: 0.95 }}
-                      />
-                      <XStack 
-                        flex={1} 
-                        backgroundColor="$gray2" 
-                        padding="$2" 
-                        borderRadius="$4"
-                        alignItems="center"
-                      >
-                        <Mail size={16} color={COLORS.defaultBlue} />
-                        <Text 
-                          fontSize={14} 
-                          color={COLORS.defaultBlue}
-                          fontWeight="500"
-                          numberOfLines={1}
-                          ellipsizeMode="middle"
-                          marginLeft="$2"
-                        >
-                          {email}
-                        </Text>
-                      </XStack>
-                    </XStack>
+                    <Text color="white" fontSize={16} fontWeight="700">
+                      {isLoading ? 'Sending Link...' : 'Continue with Email'}
+                    </Text>
+                  </Button>
+                )}
 
-                    <H2
-                      textAlign="center"
-                      color={COLORS.primary}
-                      fontSize={24}
-                      fontWeight="800"
-                      letterSpacing={-0.3}
-                    >
-                      Enter Verification Code
-                    </H2>
-
-                    <YStack gap="$4" alignItems="center" marginTop="$4">
-                      <XStack
-                        backgroundColor="white"
-                        borderRadius="$4"
-                        padding="$3"
-                        borderWidth={1}
-                        borderColor={COLORS.subtleBlue}
-                        width="100%"
-                        justifyContent="center"
-                      >
-                        <Input
-                          flex={1}
-                          placeholder="Enter verification code"
-                          value={otp}
-                          onChangeText={setOtp}
-                          keyboardType="number-pad"
-                          maxLength={OTP_LENGTH}
-                          textAlign="center"
-                          fontSize={20}
-                          backgroundColor="transparent"
-                          borderWidth={0}
-                          color={COLORS.primary}
-                        />
-                      </XStack>
-
-                      <Button
-                        backgroundColor={COLORS.secondary}
-                        color="white"
-                        size="$5"
-                        fontWeight="700"
-                        onPress={() => handleOtpSubmit(otp)}
-                        pressStyle={{ 
-                          backgroundColor: COLORS.accentBlue,
-                          scale: 0.98,
-                        }}
-                        disabled={isLoading || otp.length !== OTP_LENGTH}
-                        borderRadius="$4"
-                        width="100%"
-                      >
-                        <Text color="white" fontSize={16} fontWeight="700">
-                          {isLoading ? 'Verifying...' : 'Verify Code'}
-                        </Text>
-                      </Button>
-
-                      <Lock size={24} color={COLORS.secondary} />
-                      <Text
-                        textAlign="center"
-                        color={COLORS.defaultBlue}
-                        fontSize={14}
-                        fontWeight="500"
-                        letterSpacing={-0.1}
-                        paddingHorizontal="$4"
-                      >
-                        We sent a verification code to your email
-                      </Text>
-                    </YStack>
-                  </YStack>
-                }
-              />
+                <Text 
+                  fontSize="$2" 
+                  textAlign="center" 
+                  opacity={0.7}
+                  color={COLORS.defaultBlue}
+                >
+                  By continuing, you agree to our{' '}
+                  <Text
+                    color={COLORS.accentBlue}
+                    onPress={() => push('https://biso.no/en/privacy-policy/')}
+                    fontWeight="500"
+                  >
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </YStack>
             </YStack>
 
             {errorMessages && errorMessages.length > 0 && (

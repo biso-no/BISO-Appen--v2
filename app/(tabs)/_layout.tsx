@@ -189,9 +189,10 @@ export default function TabLayout() {
     return nestedRoutes.map((route, index) => {
       const isTab = tabNames.includes(route.name);
       const showCampusPopover = routesWithCampusPopover.includes(route.name);
+      const isAuthScreen = route.name === 'auth/signIn/index';
 
       const HeaderComponent = () => {
-        const showCampusPopover = routesWithCampusPopover.includes(route.name);
+        if (isAuthScreen) return null;
         
         return (
           <View style={{ 
@@ -203,7 +204,14 @@ export default function TabLayout() {
             <BlurView
               intensity={colorScheme === 'dark' ? 40 : 80}
               tint={colorScheme === 'dark' ? 'dark' : 'light'}
-              style={StyleSheet.absoluteFill}
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderBottomLeftRadius: 24,
+                  borderBottomRightRadius: 24,
+                  overflow: 'hidden',
+                }
+              ]}
             />
             <Animated.View 
               style={[
@@ -212,6 +220,8 @@ export default function TabLayout() {
                   backgroundColor: colorScheme === 'dark' 
                     ? 'rgba(0,0,0,0.3)' 
                     : 'rgba(255,255,255,0.3)',
+                  borderBottomLeftRadius: 24,
+                  borderBottomRightRadius: 24,
                 }
               ]} 
             />
@@ -329,7 +339,7 @@ export default function TabLayout() {
         onPress={handlePress}
         style={[animatedStyle, { padding: 8 }]}
       >
-        <YStack alignItems="center" space="$1">
+        <YStack alignItems="center" gap="$1">
           <Animated.View style={[{ padding: 12, borderRadius: 16 }, isActive && {
             backgroundColor: Colors[colorScheme ?? 'light'].tint + '15',
           }]}>

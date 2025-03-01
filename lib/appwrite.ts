@@ -65,7 +65,7 @@ export async function createMagicUrl(email: string) {
     const response = await account.createMagicURLToken(
         ID.unique(),
         email,
-        'biso://(tabs)/auth/verify',
+        'https://auth.biso.no/auth/verify',
     )
     return response;
 }

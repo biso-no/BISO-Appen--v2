@@ -1,128 +1,418 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, Animated, PanResponder, Easing } from 'react-native';
-import { YStack, Button, Text, View } from 'tamagui';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme, KeyboardAvoidingView, Platform } from 'react-native';
+import { YStack, Button, Text, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
 import { MyStack } from './MyStack';
+import { MotiView } from 'moti';
+import { ChevronRight, ChevronLeft, Check } from '@tamagui/lucide-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface Step {
   label: string;
   content: React.ReactNode;
   onNext?: () => void;
   onPrevious?: () => void;
+  icon?: React.ReactNode;
 }
 
 export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: () => void; }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const translateY = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const { width, height } = Dimensions.get('window');
+  const isSmallDevice = width < 380 || height < 700;
+  
+  // Update progress animation when step changes
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: (currentStep / (steps.length - 1)),
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [currentStep, steps.length]);
 
   const moveToNextStep = () => {
     if (currentStep < steps.length - 1) {
       steps[currentStep]?.onNext?.();
-      Animated.timing(translateY, {
-        toValue: -500,
-        duration: 300,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => {
+      
+      // Sequence of animations for a more dynamic transition
+      Animated.sequence([
+        // Fade and scale out current step
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 0.8,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: -width * 0.3,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          })
+        ]),
+      ]).start(() => {
         setCurrentStep((prev) => prev + 1);
-        translateY.setValue(500); // Reset for the next animation
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }).start();
+        translateX.setValue(width * 0.3);
+        
+        // Animate in the new step
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.back(1.5)),
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          })
+        ]).start();
       });
+    } else {
+      // Final submit animation
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(scaleAnim, {
+            toValue: 0.95,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 0.8,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scaleAnim, {
+            toValue: 1.05,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start(onSubmit);
     }
   };
 
   const moveToPreviousStep = () => {
     if (currentStep > 0) {
       steps[currentStep]?.onPrevious?.();
-      Animated.timing(translateY, {
-        toValue: 500,
-        duration: 300,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => {
+      
+      // Sequence of animations for a more dynamic transition
+      Animated.sequence([
+        // Fade and scale out current step
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 0.8,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: width * 0.3,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          })
+        ]),
+      ]).start(() => {
         setCurrentStep((prev) => prev - 1);
-        translateY.setValue(-500); // Reset for the next animation
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }).start();
+        translateX.setValue(-width * 0.3);
+        
+        // Animate in the new step
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.back(1.5)),
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          })
+        ]).start();
       });
     }
   };
 
+  // Swipe gesture handler
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 10,
-      onPanResponderMove: Animated.event([null, { dy: translateY }], { useNativeDriver: false }),
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+      onPanResponderMove: (_, gestureState) => {
+        translateX.setValue(gestureState.dx * 0.5);
+        const opacity = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.5]);
+        fadeAnim.setValue(opacity);
+        const scale = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.95]);
+        scaleAnim.setValue(scale);
+      },
       onPanResponderRelease: (_, gestureState) => {
-        const threshold = 50;
-        if (gestureState.dy < -threshold) {
+        const threshold = 80;
+        if (gestureState.dx < -threshold && currentStep < steps.length - 1) {
           moveToNextStep();
-        } else if (gestureState.dy > threshold) {
+        } else if (gestureState.dx > threshold && currentStep > 0) {
           moveToPreviousStep();
         } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
+          // Reset if threshold not reached
+          Animated.parallel([
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+              friction: 5,
+            }),
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start();
         }
       },
     })
   ).current;
 
+  // Helper function for interpolation
+  const interpolateValue = (value: number, inputRange: number[], outputRange: number[]) => {
+    return inputRange[0] === inputRange[1]
+      ? outputRange[0]
+      : outputRange[0] + ((value - inputRange[0]) / (inputRange[1] - inputRange[0])) * (outputRange[1] - outputRange[0]);
+  };
+
+  // Progress bar width calculation
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
   return (
-    <View>
-      <Animated.View
-        style={[
-          {
-            transform: [{ translateY }],
-          },
-        ]}
+    <YStack flex={1}>
+      {/* Progress indicator */}
+      <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
+        {steps.map((_, index) => (
+          <MotiView
+            key={index}
+            style={styles.stepIndicatorContainer}
+            animate={{
+              scale: currentStep >= index ? 1 : 0.8,
+              opacity: currentStep >= index ? 1 : 0.6,
+            }}
+            transition={{
+              type: 'timing',
+              duration: 300,
+            }}
+          >
+            <Circle
+              size={isSmallDevice ? "$3" : "$3.5"}
+              backgroundColor={currentStep >= index ? '$primary' : '$backgroundHover'}
+              pressStyle={{ scale: 0.9 }}
+              onPress={() => {
+                if (index < currentStep) {
+                  setCurrentStep(index);
+                }
+              }}
+            >
+              {currentStep > index && <Check size={isSmallDevice ? "$0.5" : "$1"} color="white" />}
+            </Circle>
+          </MotiView>
+        ))}
+        
+        {/* Progress line */}
+        <View style={styles.progressLineContainer}>
+          <View style={[styles.progressLineBg, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]} />
+          <Animated.View
+            style={[
+              styles.progressLine,
+              {
+                width: progressWidth,
+                backgroundColor: theme.primary?.val || '#3b82f6',
+              },
+            ]}
+          />
+        </View>
+      </XStack>
+
+      {/* Scrollable content area */}
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <MyStack justifyContent='center' alignItems='center' gap='$4' padding='$4' width='100%'>
-          <Step step={steps[currentStep]} />
-        </MyStack>
-        <YStack gap="$4" alignItems="center">
-          {currentStep > 0 && (
-            <Button onPress={moveToPreviousStep}>
-              Back
-            </Button>
-          )}
-          {currentStep < steps.length - 1 && (
-            <Button onPress={moveToNextStep}>
-              Next
-            </Button>
-          )}
-          {currentStep === steps.length - 1 && (
-            <Button onPress={onSubmit}>
-              Submit
-            </Button>
-          )}
-        </YStack>
-      </Animated.View>
-    </View>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.contentContainer,
+            {
+              transform: [
+                { translateX },
+                { scale: scaleAnim }
+              ],
+              opacity: fadeAnim,
+            },
+          ]}
+        >
+          <Theme name={isDark ? 'dark' : 'light'}>
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'timing', duration: 400 }}
+              style={styles.stepContainer}
+            >
+              <H2 
+                textAlign="center" 
+                marginBottom="$2" 
+                fontWeight="bold"
+                fontSize={isSmallDevice ? "$8" : "$8"}
+              >
+                {steps[currentStep].label}
+              </H2>
+              <View style={styles.contentWrapper}>
+                {steps[currentStep].content}
+              </View>
+            </MotiView>
+          </Theme>
+        </Animated.View>
+      </ScrollView>
+
+      {/* Navigation buttons */}
+      <XStack 
+        justifyContent="space-between" 
+        paddingHorizontal="$4"
+        paddingVertical="$4"
+        borderTopWidth={1}
+        borderTopColor="$borderColor"
+      >
+        <Button
+          size={isSmallDevice ? "$3" : "$4"}
+          circular
+          icon={<ChevronLeft size={isSmallDevice ? "$1" : "$1.5"} />}
+          opacity={currentStep > 0 ? 1 : 0}
+          disabled={currentStep === 0}
+          onPress={moveToPreviousStep}
+          pressStyle={{ scale: 0.9 }}
+          animation="quick"
+        />
+        
+        <Button
+          size={isSmallDevice ? "$4" : "$5"}
+          theme="active"
+          borderRadius="$10"
+          paddingHorizontal="$6"
+          pressStyle={{ scale: 0.95 }}
+          animation="quick"
+          onPress={moveToNextStep}
+          iconAfter={currentStep < steps.length - 1 ? <ChevronRight size={isSmallDevice ? "$1" : "$1.5"} /> : undefined}
+        >
+          {currentStep < steps.length - 1 ? 'Next' : 'Complete'}
+        </Button>
+      </XStack>
+    </YStack>
   );
 }
 
-const Step = ({ step }: { step: Step }) => (
-  <YStack justifyContent='center' alignItems='center' gap='$4'>
-    <Text style={styles.stepLabel}>{step.label}</Text>
-    {step.content}
-  </YStack>
-);
-
 const styles = StyleSheet.create({
-  stepLabel: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  container: {
+    flex: 1,
+    width: '100%',
+    paddingVertical: 8,
   },
-  stepContent: {
-    fontSize: 18,
+  contentContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 12,
   },
+  stepContainer: {
+    width: '100%',
+    padding: 8,
+    alignItems: 'center',
+  },
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    minHeight: 350,
+  },
+  progressLineContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    height: 3,
+    zIndex: -1,
+  },
+  progressLineBg: {
+    position: 'absolute',
+    width: '100%',
+    height: 3,
+  },
+  progressLine: {
+    position: 'absolute',
+    height: 3,
+    left: 0,
+  },
+  stepIndicatorContainer: {
+    zIndex: 1,
+  },
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    width: '100%',
+  },
+  motiContainer: {
+    flex: 1,
+    width: '100%',
+  }
 });

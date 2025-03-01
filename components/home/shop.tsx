@@ -137,7 +137,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                     campus: campus?.$id
                 }
                 const fetchedProducts = await functions.createExecution(
-                    '66a3d188000dd012e6de',
+                    'sync_webshop_products',
                     JSON.stringify(body),
                     false
                 );

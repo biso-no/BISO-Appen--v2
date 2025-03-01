@@ -418,37 +418,37 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
         }}
       >
         <YStack gap="$4">
-          <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
-          {error ? (
-            <Stack
-              backgroundColor="$red2"
-              padding="$4"
-              borderRadius="$4"
-              borderWidth={1}
-              borderColor="$red4"
-            >
-              <Text color="$red9">{error}</Text>
-              <Button
-                marginTop="$2"
-                onPress={loadEvents}
-                backgroundColor="$red8"
-              >
-                <Text color="white">Retry</Text>
-              </Button>
-            </Stack>
-          ) : isLoading ? (
+          {events.length > 0 && (
             <>
-              <LoadingEventCard />
-              <LoadingEventCard />
+              <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
+              {error ? (
+                <Stack
+                  backgroundColor="$red2"
+                  padding="$4"
+                  borderRadius="$4"
+                  borderWidth={1}
+                  borderColor="$red4"
+                >
+                  <Text color="$red9">{error}</Text>
+                  <Button
+                    marginTop="$2"
+                    onPress={loadEvents}
+                    backgroundColor="$red8"
+                  >
+                    <Text color="white">Retry</Text>
+                  </Button>
+                </Stack>
+              ) : isLoading ? (
+                <>
+                  <LoadingEventCard />
+                  <LoadingEventCard />
+                </>
+              ) : (
+                events.map(event => (
+                  <EventCard key={event.id} event={event} />
+                ))
+              )}
             </>
-          ) : events.length === 0 ? (
-            <Text color="$color" opacity={0.7} textAlign="center" padding="$4">
-              No events found
-            </Text>
-          ) : (
-            events.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))
           )}
         </YStack>
 

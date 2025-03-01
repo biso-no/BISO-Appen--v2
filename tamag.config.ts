@@ -104,30 +104,31 @@ const extendedThemes = {
   },
   dark: {
     ...themes.dark,
-    blue1: '#0037d0',
-    blue2: '#0f4dff',
-    blue3: '#2d64ff',
-    blue4: '#4b7bff',
-    blue5: '#6992ff',
-    blue6: '#87a9ff',
-    blue7: '#a5beff',
-    blue8: '#c3d4ff',
-    blue9: '#e1e9ff',
-    blue10: '#f0f4ff',
-    blue11: '#ffffff', // Brightest variation for dark mode
+    // Adjusted blue spectrum for dark mode - even darker background colors
+    blue1: '#00101F', // Darkest blue - for main backgrounds
+    blue2: '#001631',
+    blue3: '#001D42',
+    blue4: '#002B5C',
+    blue5: '#003875',
+    blue6: '#004A99',
+    blue7: '#0066CC',
+    blue8: '#1A75D2',
+    blue9: '#3384D9',
+    blue10: '#4D93E0',
+    blue11: '#66A3E6', // Lightest blue - for highlights
 
-    // Greens (similarly adjusted for dark mode)
-    green1: '#14c94c',
-    green2: '#2bce5e',
-    green3: '#43d370',
-    green4: '#5ad882',
-    green5: '#72de94',
-    green6: '#89e3a6',
-    green7: '#a1e9b8',
-    green8: '#b8eeca',
-    green9: '#d0f4dc',
-    green10: '#e7f9ed',
-    green11: '#ffffff',
+    // Adjusted green spectrum for dark mode - darker backgrounds
+    green1: '#071D0F',
+    green2: '#0A2815',
+    green3: '#0E361D',
+    green4: '#134927',
+    green5: '#1A6134',
+    green6: '#237842',
+    green7: '#2C9051',
+    green8: '#35A85F',
+    green9: '#4CBC73',
+    green10: '#63D088',
+    green11: '#7AE39E',
   }
 };
 

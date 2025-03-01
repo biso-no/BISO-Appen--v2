@@ -77,7 +77,7 @@ export default function CampusPopover({
   }, [fetchCampuses]);
 
   const buttonText = campus?.name 
-    ? `BISO ${capitalizeFirstLetter(campus.name)}` 
+    ? `${capitalizeFirstLetter(campus.name)}` 
     : 'Select Campus';
 
   const CampusList = () => (
