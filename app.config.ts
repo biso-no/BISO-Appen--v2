@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   assetBundlePatterns: ['**/*'],
   ios: {
-    associatedDomains: ['applinks:biso.no'],
+    associatedDomains: ['applinks:auth.biso.no'],
     supportsTablet: true,
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
@@ -47,7 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         data: [
           {
             scheme: 'https',
-            host: 'biso.no',
+            host: 'auth.biso.no',
             pathPrefix: '/',  // This now matches any path like /auth/verify, not /app/auth/verify
           },
         ],
