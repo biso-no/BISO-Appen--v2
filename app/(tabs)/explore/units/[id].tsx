@@ -10,49 +10,6 @@ import { useWindowDimensions } from 'react-native';
 import { useTheme } from 'tamagui';
 
 
-// Example data - replace with data fetched from your Appwrite backend
-const department = {
-  name: 'Information Technology',
-  description: '<p>The IT department is responsible for managing the technology infrastructure of the company.</p>',
-  campus: {
-    name: 'Bergen',
-    $id: '1',
-  },
-  logo: 'https://example.com/logo.png',
-  type: 'Society',
-  createdAt: '2023-04-01T00:00:00.000Z',
-  updatedAt: '2023-05-01T00:00:00.000Z',
-  $id: '1',
-  news: [
-    {
-      id: '1',
-      content: 'Latest post about IT',
-      url: 'https://socialmedia.com/post/1',
-    },
-    {
-      id: '2',
-      content: 'Another update on IT',
-      url: 'https://socialmedia.com/post/2',
-    },
-  ],
-  socialMedia: {
-    facebook: 'https://facebook.com/department',
-    twitter: 'https://twitter.com/department',
-  },
-  boardOfTrustees: [
-    {
-      name: 'John Doe',
-      portrait: 'https://example.com/john.png',
-      contact: 'john@example.com',
-    },
-    {
-      name: 'Jane Smith',
-      portrait: 'https://example.com/jane.png',
-      contact: 'jane@example.com',
-    },
-  ],
-};
-
 const DepartmentScreen = () => {
   const route = useRoute();
   const searchParams = useLocalSearchParams<{ id: string }>();
@@ -73,10 +30,6 @@ const DepartmentScreen = () => {
     }
   }, [id]);
 
-  // Fetch department data from Appwrite backend using departmentId
-  // For this example, we'll use the example data above
-
-//If department is not found, display a funny screen with the message: "Uh oh, we couldn't find that department. Please try again."
 if (!department) {
   return <Text>Uh oh, we couldn't find that department. Please try again.</Text>;
 }

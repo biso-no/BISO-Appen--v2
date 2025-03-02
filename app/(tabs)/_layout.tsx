@@ -5,14 +5,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Avatar, XStack, Text, Button, Stack, YStack, AnimatePresence } from 'tamagui';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  interpolate,
-  useAnimatedScrollHandler,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+// Remove Reanimated imports
 import { 
   UserRound, 
   LogIn, 
@@ -41,6 +34,9 @@ import { usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
 import { useProfile } from '@/components/context/core/profile-provider';
+// Add moti imports
+import { MotiView } from 'moti';
+import { CopilotButton } from '@/components/ai';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -50,7 +46,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+// Replace Animated.createAnimatedComponent with MotiPressable
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface TabBarIconProps {
@@ -78,15 +74,15 @@ export default function TabLayout() {
   const theme = useTheme();
   const navigationState = useNavigationState(state => state);
   const pathname = usePathname();
-  const scrollY = useSharedValue(0);
-  const tabOffsetY = useSharedValue(0);
-  const lastScrollY = useSharedValue(0);
+  
+  // Replace useSharedValue with useState for tracking scroll
+  const [scrollY, setScrollY] = useState(0);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Define dynamic styles that depend on insets
   const dynamicStyles = StyleSheet.create({
     headerContainer: {
       position: 'relative',
-
       height: Platform.select({
         ios: 45 + (insets.top || 20),
         android: 40 + (insets.top || 20),
@@ -107,15 +103,15 @@ export default function TabLayout() {
     },
     headerBackgroundContainer: {
       ...StyleSheet.absoluteFillObject,
-      overflow: 'hidden' as const,
+      overflow: 'hidden',
     },
     headerBlurView: {
       borderBottomLeftRadius: 24,
       borderBottomRightRadius: 24,
-      overflow: 'hidden' as const,
+      overflow: 'hidden',
     },
     tabBar: {
-      position: 'absolute' as const,
+      position: 'absolute',
       bottom: 20,
       left: 20,
       right: 20,
@@ -214,7 +210,7 @@ export default function TabLayout() {
                 }
               ]}
             />
-            <Animated.View 
+            <MotiView 
               style={[
                 StyleSheet.absoluteFill,
                 {
@@ -233,9 +229,21 @@ export default function TabLayout() {
               paddingHorizontal="$4"
               width="100%"
             >
-              <XStack justifyContent="center" alignItems="center">
-                <XStack gap="$4" alignItems="center">
-                  <CampusPopover />
+              <XStack justifyContent="space-between" alignItems="center">
+                {/* Left side - empty for balance */}
+                <XStack flex={1} justifyContent="flex-start">
+                </XStack>
+                
+                {/* Center - Campus selector */}
+                <XStack flex={2} justifyContent="center" alignItems="center">
+                  <XStack gap="$4" alignItems="center">
+                    <CampusPopover />
+                  </XStack>
+                </XStack>
+                
+                {/* Right side - Copilot Button */}
+                <XStack flex={1} justifyContent="flex-end">
+                  <CopilotButton />
                 </XStack>
               </XStack>
             </Stack>
@@ -273,93 +281,85 @@ export default function TabLayout() {
     }
   };
 
-  const tabBarStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(
-      scrollY.value,
-      [0, 50],
-      [0, scrollY.value > lastScrollY.value ? 100 : 0]
-    );
-
-    lastScrollY.value = scrollY.value;
-
-    return {
-      transform: [{ translateY: withSpring(translateY) }],
+  // Replace useAnimatedStyle with Moti animation props
+  const tabBarAnimProps = {
+    from: {
+      translateY: 0,
+    },
+    animate: {
+      translateY: scrollY > lastScrollY ? 100 : 0,
+    },
+    transition: {
+      type: 'spring',
+    },
+    style: {
       backgroundColor: 'transparent',
-    };
-  });
+    }
+  };
 
-  const headerStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0]
-    );
-
-    const scale = interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0.95]
-    );
-
-    return {
-      opacity: withTiming(opacity),
-      transform: [{ scale: withSpring(scale) }],
-    };
-  });
+  // Replace useAnimatedStyle with Moti animation props
+  const headerAnimProps = {
+    from: {
+      opacity: 1,
+      scale: 1,
+    },
+    animate: {
+      opacity: Math.max(0, 1 - scrollY / 100),
+      scale: Math.max(0.95, 1 - scrollY / 2000),
+    },
+    transition: {
+      type: 'timing',
+      duration: 300,
+    }
+  };
 
   const TabBarIcon: React.FC<TabBarIconProps> = ({ routeName, color, isActive }) => {
-    const scale = useSharedValue(1);
-    const opacity = useSharedValue(isActive ? 1 : 0.7);
-    
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        transform: [{ scale: scale.value }],
-        opacity: opacity.value,
-      };
-    });
-
-    const indicatorStyle = useAnimatedStyle(() => {
-      return {
-        transform: [
-          { scale: withSpring(isActive ? 1 : 0) },
-          { translateY: withSpring(isActive ? 0 : 10) }
-        ],
-        opacity: withSpring(isActive ? 1 : 0),
-      };
-    });
-
     const handlePress = () => {
-      scale.value = withSpring(0.8, {}, () => {
-        scale.value = withSpring(1);
-      });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
     return (
-      <AnimatedPressable
+      <Button
+        unstyled
         onPress={handlePress}
-        style={[animatedStyle, { padding: 8 }]}
+        paddingVertical="$2"
+        paddingHorizontal="$2"
+        animation="quick"
+        pressStyle={{ scale: 0.9 }}
+        opacity={isActive ? 1 : 0.7}
       >
         <YStack alignItems="center" gap="$1">
-          <Animated.View style={[{ padding: 12, borderRadius: 16 }, isActive && {
-            backgroundColor: Colors[colorScheme ?? 'light'].tint + '15',
-          }]}>
+          <YStack 
+            padding="$3" 
+            borderRadius="$4"
+            backgroundColor={isActive ? Colors[colorScheme ?? 'light'].tint + '15' : 'transparent'}
+          >
             {getIconForRoute(routeName, color)}
-          </Animated.View>
-          <Animated.View 
-            style={[
-              {
-                width: 4,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: Colors[colorScheme ?? 'light'].tint,
-                marginTop: -4,
-              },
-              indicatorStyle
-            ]} 
+          </YStack>
+          <MotiView 
+            from={{
+              scale: 0,
+              translateY: 10,
+              opacity: 0,
+            }}
+            animate={{
+              scale: isActive ? 1 : 0,
+              translateY: isActive ? 0 : 10,
+              opacity: isActive ? 1 : 0,
+            }}
+            transition={{
+              type: 'spring',
+            }}
+            style={{
+              width: 4,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: Colors[colorScheme ?? 'light'].tint,
+              marginTop: -4,
+            }}
           />
         </YStack>
-      </AnimatedPressable>
+      </Button>
     );
   };
 
@@ -408,7 +408,7 @@ export default function TabLayout() {
                   }
                 ]}
               />
-              <Animated.View 
+              <MotiView 
                 style={[
                   StyleSheet.absoluteFill,
                   {
@@ -416,7 +416,7 @@ export default function TabLayout() {
                       ? 'rgba(0,0,0,0.7)' 
                       : 'rgba(255,255,255,0.7)',
                     borderBottomLeftRadius: 24,
-                    borderBottomRightRadius: 24,
+                    borderTopRightRadius: 24,
                   }
                 ]} 
               />

@@ -1,449 +1,114 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { useRouter } from "expo-router";
-import axios from "axios";
 import { MotiView } from 'moti';
-import RenderHTML from "react-native-render-html";
-import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, useWindowDimensions, RefreshControl } from 'react-native';
+import { ActivityIndicator, useColorScheme, useWindowDimensions } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { 
   Text, 
   YStack, 
   XStack,
   useTheme, 
   Card, 
-  ScrollView, 
+  Stack, 
   Button,
   H1,
-  H2,
   Paragraph,
   Input,
-  Sheet,
-  Theme,
-  SizableText,
-  Separator,
-  Stack,
-  styled,
-  Image,
   Circle,
+  Theme,
 } from "tamagui";
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { 
   Search, 
   Briefcase, 
-  MapPin,
-  Calendar,
   Filter,
-  Star,
-  ChevronRight,
-  Heart,
-  Clock,
-  Users,
-  Sparkles,
   Rocket,
+  Sparkles,
   Zap,
-  ChevronDown,
-  ChevronUp
 } from "@tamagui/lucide-icons";
+
 import { useCampus } from "@/lib/hooks/useCampus";
-import { Models } from "react-native-appwrite";
-import { useColorScheme } from "react-native";
+import { useVolunteerJobs } from "@/lib/hooks/useVolunteerJobs";
+import { useVolunteerStore } from "@/lib/stores/volunteerStore";
+import { JobCard } from "@/components/volunteer/JobCard";
+import { CategoryFilter } from "@/components/volunteer/CategoryFilter";
+import { FilterSheet } from "@/components/volunteer/FilterSheet";
 
-const ITEMS_PER_PAGE = 15;
-
-// Categories for volunteer positions
-const defaultCategories = [
-  { id: 'all', name: 'All', icon: Users, color: 'blue' },
-  { id: 'leadership', name: 'Leadership', icon: Rocket, color: 'purple' },
-  { id: 'events', name: 'Events', icon: Calendar, color: 'orange' },
-  { id: 'marketing', name: 'Marketing', icon: Sparkles, color: 'pink' },
-  { id: 'tech', name: 'Tech', icon: Zap, color: 'green' },
-];
-
-interface JobCardProps {
-  job: Models.Document;
-  onPress: () => void;
-  index: number;
-}
-
-function JobCard({ job, onPress, index }: JobCardProps) {
-  const theme = useTheme();
-  const { width } = useWindowDimensions();
-  const colorScheme = useColorScheme();
-  
-  // Generate a random color from a predefined set for each job
-  const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow'];
-  
-  // Fix for job.id.charCodeAt - ensure we have a string and use a fallback if needed
-  const getColorIndex = () => {
-    // If job.id exists and is a string, use it
-    if (typeof job.id === 'string' && job.id.length > 0) {
-      return job.id.charCodeAt(0) % colors.length;
-    }
-    // If job.id is a number, use it directly
-    else if (typeof job.id === 'number') {
-      return job.id % colors.length;
-    }
-    // Otherwise use the index or a fallback
-    return (index || 0) % colors.length;
-  };
-  
-  const jobColor = colors[getColorIndex()];
-  
-  const getCardBorderColor = () => {
-    return colorScheme === 'dark' 
-      ? `$${jobColor}6` 
-      : `$${jobColor}4`;
-  };
-  
-  const getCardBackgroundColor = () => {
-    return colorScheme === 'dark' 
-      ? `$${jobColor}1` 
-      : `$${jobColor}1`;
-  };
-
-  return (
-    <MotiView
-      from={{ opacity: 0, scale: 0.95, translateY: 15 }}
-      animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{
-        type: 'spring',
-        delay: index * 80,
-        damping: 15,
-        mass: 0.8,
-      }}
-    >
-      <Button
-        unstyled
-        onPress={onPress}
-        pressStyle={{ scale: 0.98 }}
-      >
-        <Card
-          bordered
-          animation="bouncy"
-          borderColor={getCardBorderColor()}
-          backgroundColor={getCardBackgroundColor()}
-          borderRadius="$6"
-          overflow="hidden"
-        >
-          <YStack padding="$4" gap="$3">
-            {/* Top section with title and icon */}
-            <XStack gap="$3" alignItems="center" justifyContent="space-between">
-              <YStack flex={1} gap="$1">
-                <SizableText 
-                  size="$5" 
-                  fontWeight="800" 
-                  numberOfLines={2} 
-                  color={colorScheme === 'dark' ? `$${jobColor}11` : '$color'}
-                >
-                  {job.title}
-                </SizableText>
-                
-                {/* Campus tags */}
-                <XStack flexWrap="wrap" gap="$2" marginTop="$1">
-                  {job.campus?.map((campus: string) => (
-                    <Theme name={jobColor} key={campus}>
-                      <Button
-                        size="$2"
-                        borderRadius="$10"
-                        backgroundColor={colorScheme === 'dark' ? `$${jobColor}2` : `$${jobColor}3`}
-                        borderColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}5`}
-                        borderWidth={1}
-                        paddingHorizontal="$2"
-                        icon={MapPin}
-                        iconAfter={null}
-                      >
-                        <Text 
-                          fontSize="$2" 
-                          color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
-                          fontWeight="500"
-                        >
-                          {campus}
-                        </Text>
-                      </Button>
-                    </Theme>
-                  ))}
-                </XStack>
-              </YStack>
-              
-              <Theme name={jobColor}>
-                <Circle 
-                  size="$4" 
-                  backgroundColor={colorScheme === 'dark' ? `$${jobColor}3` : `$${jobColor}4`}
-                >
-                  <Briefcase 
-                    size={20} 
-                    color={colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme[`${jobColor}10`]?.val} 
-                  />
-                </Circle>
-              </Theme>
-            </XStack>
-            
-            {/* Job description preview */}
-            {job.content && (
-              <YStack 
-                backgroundColor={colorScheme === 'dark' ? `$${jobColor}2` : `$${jobColor}1`}
-                padding="$3" 
-                borderRadius="$4"
-                borderColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}3`}
-                borderWidth={1}
-              >
-                <RenderHTML
-                  source={{ html: job.content.split('</p>')[0].replace(/<\/?[^>]+(>|$)/g, '') }}
-                  contentWidth={width - 64}
-                  baseStyle={{
-                    color: colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme.color?.val,
-                    fontSize: 14,
-                    lineHeight: 20,
-                  }}
-                />
-              </YStack>
-            )}
-            
-            {/* Bottom section with deadline and actions */}
-            <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
-              {job.expiry_date ? (
-                <XStack gap="$2" alignItems="center">
-                  <Clock 
-                    size={14} 
-                    color={colorScheme === 'dark' ? theme[`${jobColor}10`]?.val : theme[`${jobColor}9`]?.val} 
-                  />
-                  <SizableText 
-                    size="$3" 
-                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
-                    fontWeight="500"
-                  >
-                    Deadline: {new Date(job.expiry_date).toLocaleDateString()}
-                  </SizableText>
-                </XStack>
-              ) : (
-                <XStack gap="$2" alignItems="center">
-                  <Zap 
-                    size={14} 
-                    color={colorScheme === 'dark' ? theme[`${jobColor}10`]?.val : theme[`${jobColor}9`]?.val} 
-                  />
-                  <SizableText 
-                    size="$3" 
-                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
-                    fontWeight="500"
-                  >
-                    Open position
-                  </SizableText>
-                </XStack>
-              )}
-              
-              <Theme name={jobColor}>
-                <Button
-                  size="$3"
-                  borderRadius="$10"
-                  backgroundColor={colorScheme === 'dark' ? `$${jobColor}4` : `$${jobColor}5`}
-                  pressStyle={{ 
-                    scale: 0.95, 
-                    backgroundColor: colorScheme === 'dark' ? `$${jobColor}5` : `$${jobColor}6` 
-                  }}
-                  icon={ChevronRight}
-                >
-                  <Text 
-                    color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}12`} 
-                    fontWeight="600"
-                  >
-                    View
-                  </Text>
-                </Button>
-              </Theme>
-            </XStack>
-          </YStack>
-        </Card>
-      </Button>
-    </MotiView>
-  );
-}
+// Maximum visible items for categories and interests
+const MAX_VISIBLE_CATEGORIES = 5;
+const MAX_VISIBLE_INTERESTS = 5;
 
 export default function VolunteerScreen() {
-  const [jobs, setJobs] = useState<Models.Document[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [showAllInterests, setShowAllInterests] = useState(false);
-  const [showAllCategoriesInSheet, setShowAllCategoriesInSheet] = useState(false);
-
-  const MAX_VISIBLE_CATEGORIES = 5;
-  const MAX_VISIBLE_INTERESTS = 5;
-
-  const [categories, setCategories] = useState<Array<{id: string, name: string, icon: any, color: string}>>(defaultCategories);
-  const [interests, setInterests] = useState<Array<string>>([]);
-  const [selectedInterests, setSelectedInterests] = useState<Array<string>>([]);
-  
   const theme = useTheme();
-  const { campus } = useCampus();
   const router = useRouter();
+  const { campus } = useCampus();
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
 
-  const fetchJobs = useCallback(async (pageNumber: number, isInitial: boolean = false) => {
-    try {
-      if (isInitial) {
-        setInitialLoading(true);
-      } else {
-        setIsLoadingMore(true);
-      }
-      setError(null);
-
-      const apiUrl = `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=${ITEMS_PER_PAGE}&page=${pageNumber}&campus=${campus?.name}`;
-      
-      const response = await axios.get(apiUrl);
-      
-      // Check if response.data is an array
-      if (!Array.isArray(response.data)) {
-        console.error("API response is not an array:", response.data);
-        setError("Invalid API response format");
-        return;
-      }
-      
-      const newJobs = response.data;
-      
-      
-      if (isInitial) {
-        setJobs(newJobs);
-        // Extract categories and interests from the new jobs data
-        extractCategoriesAndInterests(newJobs);
-      } else {
-        setJobs(prevJobs => {
-          const combinedJobs = [...prevJobs, ...newJobs];
-          // Extract categories and interests from the combined jobs data
-          extractCategoriesAndInterests(combinedJobs);
-          return combinedJobs;
-        });
-      }
-
-      // Check if we've received fewer items than requested, indicating no more data
-      setHasMore(response.data.length === ITEMS_PER_PAGE);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while fetching jobs');
-    } finally {
-      if (isInitial) {
-        setInitialLoading(false);
-      } else {
-        setIsLoadingMore(false);
-      }
-      setRefreshing(false);
-    }
-  }, [campus]);
-
-  useEffect(() => {
-    setPage(1);
-    setJobs([]);
-    setHasMore(true);
-    fetchJobs(1, true);
-  }, [campus, fetchJobs]);
-
-  // Add this right after the fetchJobs implementation to extract unique types and interests
-  const extractCategoriesAndInterests = useCallback((jobData: Models.Document[]) => {
-    if (!jobData || jobData.length === 0) return;
-    
-    
-    // Extract types (categories) with frequency count
-    const typesCount: Record<string, number> = {};
-    jobData.forEach(job => {
-      if (job.type && Array.isArray(job.type)) {
-        job.type.forEach(type => {
-          typesCount[type] = (typesCount[type] || 0) + 1;
-        });
-      }
-    });
+  // Get state and actions from Zustand store
+  const {
+    filters,
+    categories,
+    interests,
+    showAllCategories,
+    showAllInterests,
+    showAllCategoriesInSheet,
+    isFilterOpen,
+    isLoading,
+    error,
+    setFilters,
+    resetFilters,
+    toggleShowAllCategories,
+    toggleShowAllInterests,
+    toggleShowAllCategoriesInSheet,
+    toggleFilterSheet,
+    getFilteredJobs
+  } = useVolunteerStore();
   
-    // Extract unique interests
-    const uniqueInterests = new Set<string>();
-    jobData.forEach(job => {
-      if (job.interests && Array.isArray(job.interests)) {
-        job.interests.forEach(interest => uniqueInterests.add(interest));
-      }
-    });
-
-    const interestsCount: Record<string, number> = {};
-    jobData.forEach(job => {
-      if (job.interests && Array.isArray(job.interests)) {
-        job.interests.forEach(interest => {
-          interestsCount[interest] = (interestsCount[interest] || 0) + 1;
-        });
-      }
-    });
-
-    const sortedTypes = Object.keys(typesCount).sort((a, b) => typesCount[b] - typesCount[a]);
-    const sortedInterests = Object.keys(interestsCount).sort((a, b) => interestsCount[b] - interestsCount[a]);
-    
-    // Map types to category objects with icons
-    const icons = [Users, Rocket, Calendar, Sparkles, Zap, Briefcase, Heart, Star];
-    const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow', 'red', 'cyan'];
-    
-    const typeCategories = sortedTypes.map((type, index) => ({
-      id: type.toLowerCase(),
-      name: type,
-      icon: icons[index % icons.length],
-      color: colors[index % colors.length],
-      frequency: typesCount[type]
-    }));
-    
-    // Add "All" category at the beginning
-    typeCategories.unshift({
-      id: 'all',
-      name: 'All',
-      icon: Users,
-      color: 'blue',
-      frequency: jobData.length
-    });
-    
-    
-    setCategories(typeCategories.length > 1 ? typeCategories : defaultCategories);
-    setInterests(Array.from(uniqueInterests));
-  }, []);
-
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isLoadingMore || !hasMore) return;
-
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const scrollPosition = (contentOffset.y + layoutMeasurement.height) / contentSize.height;
-
-    if (scrollPosition > 0.8) {
-      setPage(prevPage => prevPage + 1);
-      fetchJobs(page + 1);
-    }
-  }, [isLoadingMore, hasMore, page, fetchJobs]);
-
-  // Define colors array for use in the component
-  const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow', 'red', 'cyan'];
+  // Destructure filters
+  const { searchQuery, selectedCategory, selectedInterests } = filters;
   
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setPage(1);
-    fetchJobs(1, true);
-  }, [fetchJobs]);
-
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Check if job matches selected category (type)
-    const matchesCategory = selectedCategory === "all" || 
-      (job.type && Array.isArray(job.type) && 
-        job.type.some(type => type.toLowerCase() === selectedCategory.toLowerCase()));
-    
-    // Check if job matches selected interests (if any are selected)
-    const matchesInterests = selectedInterests.length === 0 ||
-      (job.interests && Array.isArray(job.interests) &&
-        selectedInterests.some(interest => 
-          job.interests.some((jobInterest: string) => 
-            jobInterest.toLowerCase() === interest.toLowerCase()
-          )
-        ));
-    
-    return matchesSearch && matchesCategory && matchesInterests;
-  });
+  // Use our custom hook for fetching jobs with React Query
+  const { 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage,
+    refetch 
+  } = useVolunteerJobs(campus?.name);
+  
+  // Get filtered jobs from the store
+  const filteredJobs = getFilteredJobs();
+  
+  // Handle job card press
+  const handleJobPress = useCallback((jobId: string) => {
+    router.push(`/explore/volunteer/${jobId}`);
+  }, [router]);
+  
+  // Handle category selection
+  const handleCategorySelect = useCallback((categoryId: string) => {
+    setFilters({ selectedCategory: categoryId });
+  }, [setFilters]);
+  
+  // Handle interest toggle
+  const handleInterestToggle = useCallback((interest: string) => {
+    setFilters({
+      selectedInterests: selectedInterests.includes(interest)
+        ? selectedInterests.filter(i => i !== interest)
+        : [...selectedInterests, interest]
+    });
+  }, [selectedInterests, setFilters]);
+  
+  // Handle search input change
+  const handleSearchChange = useCallback((text: string) => {
+    setFilters({ searchQuery: text });
+  }, [setFilters]);
+  
+  // Handle reaching end of list
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Loading animation component
   const LoadingAnimation = () => (
@@ -467,18 +132,84 @@ export default function VolunteerScreen() {
     </YStack>
   );
 
-  return (
-    <ScrollView 
-      onScroll={handleScroll} 
-      scrollEventThrottle={16}
-      style={{ flex: 1, backgroundColor: theme.background?.val }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      contentContainerStyle={{
-        paddingBottom: 100 // Add padding at the bottom for the tab bar
-      }}
+  // Empty list component
+  const EmptyListComponent = () => (
+    <MotiView
+      from={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring' }}
     >
+      <Card 
+        bordered 
+        borderRadius="$6" 
+        padding="$6" 
+        alignItems="center" 
+        gap="$4"
+        backgroundColor={colorScheme === 'dark' ? '$blue2' : '$blue1'}
+        borderColor="$blue4"
+        marginTop="$6"
+      >
+        <Theme name="blue">
+          <Circle size="$8" backgroundColor="$blue3">
+            <Briefcase size={32} color={theme.blue9?.val} />
+          </Circle>
+        </Theme>
+        
+        <YStack alignItems="center" gap="$2">
+          <Text fontSize="$5" fontWeight="700" textAlign="center">
+            No positions found
+          </Text>
+          <Paragraph textAlign="center" color="$gray11" maxWidth={width * 0.7}>
+            Try adjusting your search or filters to find more opportunities
+          </Paragraph>
+        </YStack>
+        
+        <Button 
+          theme="blue" 
+          onPress={resetFilters}
+          size="$4"
+          borderRadius="$6"
+        >
+          Clear Filters
+        </Button>
+      </Card>
+    </MotiView>
+  );
+  
+  // Error component
+  const ErrorComponent = () => (
+    <MotiView
+      from={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring' }}
+    >
+      <Card 
+        bordered 
+        borderRadius="$6" 
+        padding="$5" 
+        alignItems="center" 
+        gap="$4"
+        backgroundColor="$red2"
+        borderColor="$red5"
+      >
+        <Text color="$red10" fontSize={16} textAlign="center" fontWeight="600">
+          {error || "An error occurred while loading opportunities"}
+        </Text>
+        <Button 
+          onPress={() => refetch()} 
+          theme="red"
+          size="$4"
+          borderRadius="$6"
+        >
+          Retry
+        </Button>
+      </Card>
+    </MotiView>
+  );
+  
+  // List header component
+  const ListHeaderComponent = useCallback(() => (
+    <YStack>
       {/* Hero Section */}
       <MotiView
         from={{ opacity: 0, translateY: -10 }}
@@ -590,77 +321,20 @@ export default function VolunteerScreen() {
                 Join BISO and create positive change on campus through meaningful opportunities
               </Paragraph>
             </MotiView>
-            
           </YStack>
         </Stack>
       </MotiView>
       
-      {/* Category Pills */}
+      {/* Category Filter */}
       {categories.length > 0 && (
-        <MotiView
-          from={{ opacity: 0, translateY: 10 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'spring', delay: 400 }}
-        >
-          <YStack padding="$4" paddingTop="$5" gap="$3">
-            <XStack flexWrap="wrap" gap="$2" justifyContent="center">
-              {categories
-                .slice(0, showAllCategories ? categories.length : MAX_VISIBLE_CATEGORIES)
-                .map((category, index) => (
-                  <Button
-                    key={category.id}
-                    size="$3"
-                    theme={category.color}
-                    borderRadius="$10"
-                    backgroundColor={selectedCategory === category.id ? 
-                      `$${category.color}5` : 
-                      `$${category.color}2`
-                    }
-                    borderColor={selectedCategory === category.id ? 
-                      `$${category.color}8` : 
-                      `$${category.color}4`
-                    }
-                    borderWidth={1}
-                    paddingHorizontal="$3"
-                    icon={<category.icon size={16} />}
-                    pressStyle={{ scale: 0.96 }}
-                    onPress={() => setSelectedCategory(category.id)}
-                    marginBottom="$2"
-                  >
-                    <Text 
-                      color={selectedCategory === category.id ? 
-                        `$${category.color}12` : 
-                        `$${category.color}11`
-                      }
-                      fontWeight={selectedCategory === category.id ? "700" : "500"}
-                    >
-                      {category.name}
-                    </Text>
-                  </Button>
-                ))}
-              
-              {categories.length > MAX_VISIBLE_CATEGORIES && (
-                <Button
-                  size="$3"
-                  theme="gray"
-                  borderRadius="$10"
-                  backgroundColor="$gray2"
-                  borderColor="$gray4"
-                  borderWidth={1}
-                  paddingHorizontal="$3"
-                  icon={showAllCategories ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  pressStyle={{ scale: 0.96 }}
-                  onPress={() => setShowAllCategories(!showAllCategories)}
-                  marginBottom="$2"
-                >
-                  <Text color="$gray11" fontWeight="500">
-                    {showAllCategories ? "Show Less" : `${categories.length - MAX_VISIBLE_CATEGORIES} More`}
-                  </Text>
-                </Button>
-              )}
-            </XStack>
-          </YStack>
-        </MotiView>
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={handleCategorySelect}
+          showAllCategories={showAllCategories}
+          onToggleShowAll={() => toggleShowAllCategories()}
+          maxVisible={MAX_VISIBLE_CATEGORIES}
+        />
       )}
       
       {/* Search Bar */}
@@ -688,278 +362,116 @@ export default function VolunteerScreen() {
                 borderWidth={0}
                 backgroundColor="transparent"
                 value={searchQuery}
-                onChangeText={setSearchQuery}
+                onChangeText={handleSearchChange}
                 fontSize="$4"
               />
               <Button
                 icon={Filter}
                 circular
                 backgroundColor="$backgroundHover"
-                onPress={() => setIsFilterOpen(true)}
+                onPress={() => toggleFilterSheet(true)}
               />
             </XStack>
           </Card>
         </Stack>
       </MotiView>
       
-      {/* Job List */}
-      <Stack padding="$4" paddingTop="$2">
-        {initialLoading ? (
-          <LoadingAnimation />
-        ) : error ? (
-          <MotiView
-            from={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring' }}
-          >
-            <Card 
-              bordered 
-              borderRadius="$6" 
-              padding="$5" 
-              alignItems="center" 
-              gap="$4"
-              backgroundColor="$red2"
-              borderColor="$red5"
-            >
-              <Text color="$red10" fontSize={16} textAlign="center" fontWeight="600">
-                {error}
-              </Text>
-              <Button 
-                onPress={() => fetchJobs(1, true)} 
-                theme="red"
-                size="$4"
-                borderRadius="$6"
-              >
-                Retry
-              </Button>
-            </Card>
-          </MotiView>
-        ) : filteredJobs.length > 0 ? (
-          <YStack gap="$4">
+      {/* List Title */}
+      {!isLoading && !error && filteredJobs.length > 0 && (
+        <YStack padding="$4" paddingTop="$2" paddingBottom="$1">
             <MotiView
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ type: 'timing', duration: 500 }}
             >
-              <Text fontSize="$5" fontWeight="700" color="$color" marginBottom="$2">
+            <Text fontSize="$5" fontWeight="700" color="$color">
                 {selectedCategory === 'all' ? 'All Opportunities' : `${categories.find(c => c.id === selectedCategory)?.name} Positions`}
               </Text>
             </MotiView>
-            
-            {filteredJobs.map((job, index) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                index={index}
-                onPress={() => router.push(`/explore/volunteer/${job.id}`)}
-              />
-            ))}
-            
-            {isLoadingMore && (
-              <YStack alignItems="center" padding="$4">
-                <ActivityIndicator color={theme.blue10?.val || '#007AFF'} />
               </YStack>
             )}
           </YStack>
-        ) : (
-          <MotiView
-            from={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring' }}
-          >
-            <Card 
-              bordered 
-              borderRadius="$6" 
-              padding="$6" 
-              alignItems="center" 
-              gap="$4"
-              backgroundColor={colorScheme === 'dark' ? '$blue2' : '$blue1'}
-              borderColor="$blue4"
-            >
-              <Theme name="blue">
-                <Circle size="$8" backgroundColor="$blue3">
-                  <Briefcase size={32} color={theme.blue9?.val} />
-                </Circle>
-              </Theme>
-              
-              <YStack alignItems="center" gap="$2">
-                <Text fontSize="$5" fontWeight="700" textAlign="center">
-                  No positions found
-                </Text>
-                <Paragraph textAlign="center" color="$gray11" maxWidth={width * 0.7}>
-                  Try adjusting your search or filters to find more opportunities
-                </Paragraph>
+  ), [
+    colorScheme, 
+    width, 
+    categories, 
+    selectedCategory, 
+    handleCategorySelect, 
+    showAllCategories, 
+    toggleShowAllCategories,
+    searchQuery,
+    handleSearchChange,
+    toggleFilterSheet,
+    isLoading,
+    error,
+    filteredJobs.length,
+    theme
+  ]);
+  
+  // List footer component with loading indicator
+  const ListFooterComponent = useCallback(() => (
+    isFetchingNextPage ? (
+      <YStack alignItems="center" padding="$4">
+        <ActivityIndicator color={theme.blue10?.val || '#007AFF'} />
               </YStack>
-              
-              <Button 
-                theme="blue" 
-                onPress={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                }}
-                size="$4"
-                borderRadius="$6"
-              >
-                Clear Filters
-              </Button>
-            </Card>
-          </MotiView>
-        )}
-      </Stack>
-
-      {/* Filter Sheet */}
-      <Sheet
-        modal
-        open={isFilterOpen}
-        onOpenChange={setIsFilterOpen}
-        snapPoints={[50]}
-        dismissOnSnapToBottom
-      >
-        <Sheet.Overlay />
-        <Sheet.Frame padding="$4">
-  <Sheet.Handle />
-  <Sheet.ScrollView>
-  <YStack gap="$4">
-    <H2 size="$6" fontWeight="700">Filters</H2>
-    <Separator />
-    
-    <YStack gap="$4">
-      <Text fontWeight="600">Position Type</Text>
-      <XStack flexWrap="wrap" gap="$2">
-        {categories
-          .slice(0, showAllCategoriesInSheet ? categories.length : MAX_VISIBLE_CATEGORIES)
-          .map(category => (
-          <Button
-            key={category.id}
-            size="$3"
-            theme={category.color}
-            borderRadius="$6"
-            backgroundColor={selectedCategory === category.id ? 
-              `$${category.color}5` : 
-              `$${category.color}2`
-            }
-            borderColor={selectedCategory === category.id ? 
-              `$${category.color}8` : 
-              `$${category.color}4`
-            }
-            borderWidth={1}
-            icon={<category.icon size={16} />}
-            pressStyle={{ scale: 0.96 }}
-            onPress={() => {
-              setSelectedCategory(category.id);
-            }}
-            marginBottom="$2"
-          >
-            {category.name}
-          </Button>
-        ))}
-        
-        {categories.length > MAX_VISIBLE_CATEGORIES && (
-          <Button
-            size="$3"
-            theme="gray"
-            borderRadius="$6"
-            backgroundColor="$gray2"
-            borderColor="$gray4"
-            borderWidth={1}
-            pressStyle={{ scale: 0.96 }}
-            onPress={() => setShowAllCategoriesInSheet(!showAllCategoriesInSheet)}
-            marginBottom="$2"
-            icon={showAllCategoriesInSheet ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          >
-            {showAllCategoriesInSheet ? "Show Less" : `${categories.length - MAX_VISIBLE_CATEGORIES} More`}
-          </Button>
-        )}
-      </XStack>
+    ) : null
+  ), [isFetchingNextPage, theme]);
+  
+  // Render item function for FlashList
+  const renderItem = useCallback(({ item, index }: { item: any, index: number }) => (
+    <YStack key={item.id} paddingHorizontal="$4">
+      <JobCard
+        job={item}
+        index={index}
+        onPress={() => handleJobPress(item.id)}
+      />
     </YStack>
-    
-    {/* Add the interests filter section */}
-    {interests.length > 0 && (
-      <YStack gap="$4">
-        <Text fontWeight="600">Interests</Text>
-        <XStack flexWrap="wrap" gap="$2">
-          {interests
-            .slice(0, showAllInterests ? interests.length : MAX_VISIBLE_INTERESTS)
-            .map((interest, index) => {
-              const isSelected = selectedInterests.includes(interest);
-              const color = colors[index % colors.length];
+  ), [handleJobPress]);
               
               return (
-                <Button
-                  key={interest}
-                  size="$3"
-                  theme={color}
-                  borderRadius="$6"
-                  backgroundColor={isSelected ? 
-                    `$${color}5` : 
-                    `$${color}2`
-                  }
-                  borderColor={isSelected ? 
-                    `$${color}8` : 
-                    `$${color}4`
-                  }
-                  borderWidth={1}
-                  pressStyle={{ scale: 0.96 }}
-                  onPress={() => {
-                    if (isSelected) {
-                      setSelectedInterests(prev => prev.filter(i => i !== interest));
-                    } else {
-                      setSelectedInterests(prev => [...prev, interest]);
-                    }
-                  }}
-                  marginBottom="$2"
-                >
-                  {interest}
-                </Button>
-              );
-            })}
-            
-          {interests.length > MAX_VISIBLE_INTERESTS && (
-            <Button
-              size="$3"
-              theme="gray"
-              borderRadius="$6"
-              backgroundColor="$gray2"
-              borderColor="$gray4"
-              borderWidth={1}
-              pressStyle={{ scale: 0.96 }}
-              onPress={() => setShowAllInterests(!showAllInterests)}
-              marginBottom="$2"
-              icon={showAllInterests ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            >
-              {showAllInterests ? "Show Less" : `${interests.length - MAX_VISIBLE_INTERESTS} More`}
-            </Button>
-          )}
-        </XStack>
-      </YStack>
-    )}
-    
-    <XStack gap="$4" marginTop="$4">
-      <Button 
-        theme="gray" 
-        size="$4"
-        flex={1}
-        onPress={() => {
-          setSelectedCategory("all");
-          setSelectedInterests([]);
-        }}
-      >
-        Clear Filters
-      </Button>
+    <Stack 
+      flex={1} 
+      backgroundColor={theme.background?.val}
+    >
+      {isLoading ? (
+        <LoadingAnimation />
+      ) : (
+        <FlashList
+          data={filteredJobs}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          estimatedItemSize={350}
+          ListHeaderComponent={ListHeaderComponent}
+          ListFooterComponent={ListFooterComponent}
+          ListEmptyComponent={error ? ErrorComponent : EmptyListComponent}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          contentContainerStyle={{
+            paddingBottom: 100 // Add padding at the bottom for the tab bar
+          }}
+          refreshing={false}
+          onRefresh={refetch}
+        />
+      )}
       
-      <Button 
-        theme="blue" 
-        size="$4"
-        flex={1}
-        onPress={() => setIsFilterOpen(false)}
-      >
-        Apply Filters
-      </Button>
-    </XStack>
-  </YStack>
-</Sheet.ScrollView>
-</Sheet.Frame>
-      </Sheet>
-    </ScrollView>
+      {/* Filter Sheet */}
+      <FilterSheet
+        isOpen={isFilterOpen}
+        onOpenChange={toggleFilterSheet}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleCategorySelect}
+        interests={interests}
+        selectedInterests={selectedInterests}
+        onToggleInterest={handleInterestToggle}
+        showAllCategories={showAllCategoriesInSheet}
+        onToggleShowAllCategories={() => toggleShowAllCategoriesInSheet()}
+        showAllInterests={showAllInterests}
+        onToggleShowAllInterests={() => toggleShowAllInterests()}
+        onClearFilters={resetFilters}
+        maxVisibleCategories={MAX_VISIBLE_CATEGORIES}
+        maxVisibleInterests={MAX_VISIBLE_INTERESTS}
+      />
+    </Stack>
   );
 }

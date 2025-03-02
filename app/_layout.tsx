@@ -25,6 +25,7 @@ import { LogBox } from 'react-native';
 import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
 import { PerformanceProvider, PerformanceToggle } from '@/lib/performance';
+import { AICopilotProvider } from '@/components/ai';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -113,6 +114,7 @@ useEffect(() => {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootProvider>
             <CampusProvider>
+            <AICopilotProvider>
               <PortalProvider shouldAddRootHost>
                 <ModalProvider>
                   <MembershipModalProvider>
@@ -130,6 +132,7 @@ useEffect(() => {
                   </MembershipModalProvider>
                 </ModalProvider>
               </PortalProvider>
+              </AICopilotProvider>
             </CampusProvider>
           </RootProvider>
         </ThemeProvider>

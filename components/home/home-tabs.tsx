@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { 
   XStack,
   Text,
@@ -6,9 +6,8 @@ import {
   styled,
   useTheme,
   Stack,
+  ScrollView
 } from 'tamagui';
-import { MotiView, MotiScrollView } from 'moti';
-
 
 interface Category {
     id: string;
@@ -42,70 +41,105 @@ const CategoryPill = styled(Button, {
     },
   })
 
-export function HomeCategories({ categories, activeCategory, setActiveCategory }: TabsProps) {
+// Memoized Category component for better performance
+const CategoryButton = memo(({ 
+  category, 
+  isActive, 
+  onPress, 
+  theme 
+}: { 
+  category: Category; 
+  isActive: boolean; 
+  onPress: () => void;
+  theme: any;
+}) => {
+  // Add debug logging for button press and make the click handler more direct
+  const handlePress = React.useCallback(() => {
+    console.log('Category button pressed:', category.id, 'isActive:', isActive);
+    // Call the provided onPress handler directly
+    onPress();
+  }, [category.id, isActive, onPress]);
+  
+  const Icon = category.icon;
+  
+  return (
+    <CategoryPill
+      pressStyle={{ scale: 0.95 }}
+      onPress={handlePress}
+      active={isActive}
+      accessibilityLabel={`Select ${category.label} category`}
+      accessibilityState={{ selected: isActive }}
+    >
+      <XStack gap="$2" alignItems="center">
+        <Stack
+          backgroundColor={isActive ? 'rgba(255,255,255,0.2)' : '$blue4'}
+          padding="$2"
+          borderRadius="$4"
+        >
+          <Icon
+            size={16}
+            color={isActive ? 'white' : theme?.color?.get()}
+          />
+        </Stack>
+        <Text
+          color={isActive ? 'white' : theme?.color?.get()}
+          fontSize={14}
+          fontWeight="500"
+        >
+          {category.label}
+        </Text>
+      </XStack>
+    </CategoryPill>
+  );
+});
 
+export const HomeCategories = memo(({ categories, activeCategory, setActiveCategory }: TabsProps) => {
     const theme = useTheme();
-
+    
+    // Debug the categories and active category
+    useEffect(() => {
+        console.log('HomeCategories rendered with activeCategory:', activeCategory);
+        console.log('Available categories:', categories.map(c => c.id).join(', '));
+    }, [categories, activeCategory]);
+    
+    // Separate handler function for category selection to ensure it works
+    const handleCategorySelect = React.useCallback((categoryId: string) => {
+        console.log('HomeCategories: User selected category:', categoryId);
+        
+        // Skip if already selected
+        if (activeCategory === categoryId) {
+            console.log('Category already active, skipping update');
+            return;
+        }
+        
+        // Use direct function call
+        setActiveCategory(categoryId);
+        
+        // Log confirmation of attempted update
+        console.log('HomeCategories: Called setActiveCategory with:', categoryId);
+    }, [activeCategory, setActiveCategory]);
+    
+    // Pre-render all category buttons to avoid re-rendering
+    const categoryButtons = useMemo(() => {
+        return categories.map((category) => (
+            <CategoryButton
+                key={category.id}
+                category={category}
+                isActive={activeCategory === category.id}
+                onPress={() => handleCategorySelect(category.id)}
+                theme={theme}
+            />
+        ));
+    }, [categories, activeCategory, theme, handleCategorySelect]);
 
     return (
-        <MotiScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        from={{ opacity: 0, translateX: -20 }}
-        animate={{ opacity: 1, translateX: 0 }}
-        transition={{ type: 'spring', damping: 20 }}
-      >
-        <XStack gap="$3" paddingVertical="$2" paddingRight="$4">
-          {categories.map((category, index) => {
-            const Icon = category.icon;
-            return (
-              <MotiView
-                key={category.id}
-                from={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 100 }}
-              >
-                <CategoryPill
-                  pressStyle={{ scale: 0.95 }}
-                  onPress={() => setActiveCategory(category.id)}
-                  active={activeCategory === category.id}
-                >
-                  <XStack gap="$2" alignItems="center">
-                    <Stack
-                      backgroundColor={
-                        activeCategory === category.id
-                          ? 'rgba(255,255,255,0.2)'
-                          : '$blue4'
-                      }
-                      padding="$2"
-                      borderRadius="$4"
-                    >
-                      <Icon
-                        size={16}
-                        color={
-                          activeCategory === category.id
-                            ? 'white'
-                            : theme?.color?.get()
-                        }
-                      />
-                    </Stack>
-                    <Text
-                      color={
-                        activeCategory === category.id
-                          ? 'white'
-                          : theme?.color?.get()
-                      }
-                      fontSize={14}
-                      fontWeight="500"
-                    >
-                      {category.label}
-                    </Text>
-                  </XStack>
-                </CategoryPill>
-              </MotiView>
-            );
-          })}
-        </XStack>
-      </MotiScrollView>
-    )
-}
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+        >
+            <XStack gap="$3" paddingVertical="$2" paddingRight="$4">
+                {categoryButtons}
+            </XStack>
+        </ScrollView>
+    );
+});

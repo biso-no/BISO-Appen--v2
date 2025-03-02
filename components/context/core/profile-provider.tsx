@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext } from 'react';
 import { Models } from 'react-native-appwrite';
-import { useProfile as useProfileQuery } from '@/lib/hooks/useProfile';
-import { useAuth } from './auth-provider';
-import { databases, updateDocument } from '@/lib/appwrite';
+import { useZustandProfile } from '@/lib/hooks/useProfileStore';
 
 interface Profile extends Models.Document {
   name?: string;
-  studentId?: Models.Document;
+  studentId?: Models.Document | string;
   student_id?: string;
   address?: string;
   city?: string;
@@ -25,6 +23,7 @@ interface ProfileContextType {
   actions: {
     updateProfile: (profile: Partial<Profile>) => Promise<void>;
     addStudentId: (studentId: string) => Promise<void>;
+    refetch: () => Promise<any>;
   };
 }
 
@@ -39,44 +38,13 @@ export const useProfile = () => {
 };
 
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-  const { data: profileData, isLoading } = useProfileQuery(user?.$id);
-
-  const updateProfile = useCallback(async (profileData: Partial<Profile>) => {
-    if (!user?.$id) return;
-
-    try {
-      await databases.updateDocument('app', 'user', user.$id, profileData);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  }, [user?.$id]);
-
-  const addStudentId = useCallback(async (studentId: string) => {
-    if (!user?.$id) throw new Error('User not found');
-
-    try {
-      const newStudentId = await databases.createDocument('app', 'student_id', studentId, {
-        student_id: studentId,
-      });
-      if (newStudentId.$id) {
-        await updateDocument('user', user.$id, { 
-          student_id: newStudentId.$id, 
-          studentId: newStudentId.$id 
-        });
-      }
-    } catch (error) {
-      console.error('Error adding student ID:', error);
-    }
-  }, [user?.$id]);
-
+  // Use our new Zustand-based hook
+  const { profile, isLoading, actions } = useZustandProfile();
+  
   const value = {
-    profile: profileData || null,
+    profile,
     isLoading,
-    actions: {
-      updateProfile,
-      addStudentId,
-    },
+    actions,
   };
 
   return (

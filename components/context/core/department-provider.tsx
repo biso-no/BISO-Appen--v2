@@ -1,11 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { Models } from 'react-native-appwrite';
-import { useProfile } from './profile-provider';
-import { 
-  useDepartmentData, 
-  useFollowedDepartments, 
-  useToggleDepartmentFollow 
-} from '@/lib/hooks/useCampusData';
+import { useZustandDepartment } from '@/lib/hooks/useDepartmentStore';
 
 interface DepartmentContextType {
   userDepartment: Models.Document | null;
@@ -13,6 +8,7 @@ interface DepartmentContextType {
   isLoading: boolean;
   actions: {
     toggleDepartmentFollow: (department: Models.Document) => Promise<void>;
+    refetchFollowedDepartments: () => Promise<any>;
   };
 }
 
@@ -27,39 +23,14 @@ export const useDepartment = () => {
 };
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile } = useProfile();
+  // Use our new Zustand-based hook
+  const { userDepartment, followedDepartments, isLoading, actions } = useZustandDepartment();
   
-  const { data: departmentData, isLoading: departmentLoading } = useDepartmentData(
-    profile?.departments_ids?.[0]
-  );
-  
-  const { 
-    data: followedDepartmentsData, 
-    isLoading: followedDepartmentsLoading 
-  } = useFollowedDepartments(profile?.$id);
-  
-  const toggleDepartmentFollow = useToggleDepartmentFollow();
-
-  const onToggleDepartmentFollow = async (department: Models.Document) => {
-    if (!profile?.$id) return;
-    
-    try {
-      await toggleDepartmentFollow.mutateAsync({
-        userId: profile.$id,
-        departmentId: department.$id,
-      });
-    } catch (error) {
-      console.error('Error updating followed units:', error);
-    }
-  };
-
   const value = {
-    userDepartment: departmentData || null,
-    followedDepartments: followedDepartmentsData || [],
-    isLoading: departmentLoading || followedDepartmentsLoading,
-    actions: {
-      toggleDepartmentFollow: onToggleDepartmentFollow,
-    },
+    userDepartment,
+    followedDepartments,
+    isLoading,
+    actions
   };
 
   return (

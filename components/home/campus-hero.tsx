@@ -152,7 +152,7 @@ function CampusHeroComponent() {
     };
 
     return (
-        <YStack width="100%" marginVertical="$4">
+        <YStack width="100%" >
             <CampusCard>
                 <Pressable 
                     onPress={handlePress}
@@ -179,7 +179,7 @@ function CampusHeroComponent() {
                         }}>
                             <Image
                                 source={PRELOADED_CAMPUS_IMAGES[campusId]}
-                                resizeMode="cover"
+                                objectFit="cover"
                                 width="100%"
                                 height="100%"
                                 alt={`${CAMPUS_NAMES[campusId]} campus`}

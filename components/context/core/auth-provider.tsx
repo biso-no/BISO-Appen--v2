@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 import { Models } from 'react-native-appwrite';
-import { useAccount, useUpdateName } from '@/lib/hooks/useAccount';
-import { usePreferences, useUpdatePreferences } from '@/lib/hooks/usePreferences';
+import { useAuth as useZustandAuth } from '@/lib/hooks/useAuthStore';
 
 export interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
@@ -10,6 +9,7 @@ export interface AuthContextType {
   actions: {
     updateName: (name: string) => Promise<void>;
     updatePreferences: (key: string, value: any) => Promise<void>;
+    refetch: () => Promise<unknown>;
   };
 }
 
@@ -24,38 +24,14 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [error, setError] = useState<string | null>(null);
+  // Use our new Zustand-based hook
+  const { user, isLoading, error, actions } = useZustandAuth();
   
-  const { data: userData, isLoading } = useAccount();
-  const updateNameMutation = useUpdateName();
-  const updatePrefsMutation = useUpdatePreferences();
-
-  const updateName = async (name: string) => {
-    try {
-      await updateNameMutation.mutateAsync(name);
-      setError(null);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    }
-  };
-
-  const updatePreferences = async (key: string, value: any) => {
-    try {
-      await updatePrefsMutation.mutateAsync({ key, value });
-      setError(null);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    }
-  };
-
   const value = {
-    user: userData || null,
+    user,
     isLoading,
     error,
-    actions: {
-      updateName,
-      updatePreferences,
-    },
+    actions,
   };
 
   return (

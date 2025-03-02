@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useProfile } from './profile-provider';
-import { useMembership } from '@/lib/hooks/useMembership';
+import React, { createContext, useContext } from 'react';
+import { useZustandMembership } from '@/lib/hooks/useMembershipStore';
 
 interface Membership {
   membership_id: string;
@@ -17,6 +16,7 @@ interface MembershipContextType {
   isLoading: boolean;
   isBisoMember: boolean;
   membershipExpiry: Date | null;
+  refetch: () => Promise<any>;
 }
 
 const MembershipContext = createContext<MembershipContextType | undefined>(undefined);
@@ -30,25 +30,15 @@ export const useMembershipContext = () => {
 };
 
 export const MembershipProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile } = useProfile();
-  const { data: membershipData, isLoading } = useMembership(profile?.student_id);
-
-  // Derive membership status and expiry from membership data
-  const isBisoMember = useMemo(() => 
-    membershipData?.status ?? false,
-    [membershipData]
-  );
-
-  const membershipExpiry = useMemo(() => 
-    membershipData?.expiryDate ? new Date(membershipData.expiryDate) : null,
-    [membershipData]
-  );
-
+  // Use our new Zustand-based hook
+  const { membership, isLoading, isBisoMember, membershipExpiry, refetch } = useZustandMembership();
+  
   const value = {
-    membership: membershipData || null,
+    membership,
     isLoading,
     isBisoMember,
     membershipExpiry,
+    refetch
   };
 
   return (

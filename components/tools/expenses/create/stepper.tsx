@@ -1,344 +1,428 @@
-import React, { useEffect, useState } from 'react'; 
-import { Button, Text, YStack, Input, H6, YGroup, Label, XStack, ScrollView, Spinner } from 'tamagui'; 
-import { FileUpload } from '@/lib/file-upload'; 
-import { useAuth } from '@/components/context/core/auth-provider';
-import CampusSelector from '@/components/SelectCampus'; 
-import { MyStack } from '@/components/ui/MyStack'; 
-import DepartmentSelector from '@/components/SelectDepartments'; 
-import { updateDocument, triggerFunction, storage, databases } from '@/lib/appwrite'; 
+import React, { useEffect } from 'react';
+import {
+  Button, Text, YStack, Input, H6, YGroup, Label,
+  XStack, ScrollView, Spinner, Switch, Card
+} from 'tamagui';
+import { FileUpload } from './FileUpload';
+import { useRouter } from 'expo-router';
+import { MultiStepForm as StepperUI, Step } from '@/components/ui/multi-step-form';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useExpenses } from '@/lib/hooks/useExpenses';
+import { expenseFormSchema } from '@/lib/schemas/expenseSchema';
+import CampusSelector from '@/components/SelectCampus';
+import DepartmentSelector from '@/components/SelectDepartments';
+import { useProfileStore } from '@/lib/stores/profileStore';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { MotiView } from 'moti';
 import { useDebounce } from 'use-debounce';
-import OverviewScreen from './overview';
-import { Switch } from '@/components/ui/switch';
-import { ID, Models } from 'react-native-appwrite';
-import { uriToBlob } from '@/lib/utils/uriToBlob';
-import { useRouter } from 'expo-router';
-import { useProfile } from '@/components/context/core/profile-provider';
-export interface Attachment { 
-    url: string; 
-    description: string; 
-    date: Date; 
-    amount: number; 
-    type: 'pdf' | 'png' | 'jpg' | 'jpeg' | 'webp' | 'heic';
-}
+import { Check } from '@tamagui/lucide-icons';
 
-type FormData = {
-  bank_account: string;
-  campus: string;
-  department: string;
-  expenseAttachments: Attachment[];
-  description: string;
-  prepayment_amount: number;
-  total: number;
-  status: string;
-};
-
-export function MultiStepForm() { 
-    const { user: data, isLoading } = useAuth();
-    const { profile } = useProfile();
-    const [currentStep, setCurrentStep] = useState(1); 
-    const [expenseId, setExpenseId] = useState<string | null>(null); 
-    const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(null);
-    const [selectedDepartment, setSelectedDepartment] = useState<Models.Document | null>(null);
-    const [forEvent, setForEvent] = useState(false);
-    const [eventName, setEventName] = useState<string>("");
-    const [debouncedEventName] = useDebounce(eventName, 500);
-    const [showGenerateButton, setShowGenerateButton] = useState(false);
-    const [formData, setFormData] = useState<FormData>({ 
-        bank_account: profile?.bank_account || "", 
-        campus: profile?.campus || "",
-        department: profile?.department || "",
-        expenseAttachments: [],
-        description: "", 
-        prepayment_amount: 0, 
-        total: 0, 
-        status: "draft"
-    }); 
-    const [receivedPrepayment, setReceivedPrepayment] = useState(formData.prepayment_amount > 0); 
-    const [isProcessing, setIsProcessing] = useState(false);
-
-    const router = useRouter();
- 
-    const handleNextStep = () => setCurrentStep((prevStep) => Math.min(prevStep + 1, 5)); 
-
-    const handlePrevStep = () => setCurrentStep((prevStep) => Math.max(prevStep - 1, 1)); 
-
-    const handleInputChange = (field: keyof FormData, value: string | number | Models.Document) => { 
-        setFormData((prevData) => ({
-            ...prevData, 
-            [field]: value
-        })); 
-    }; 
-
-    const handleAttachmentsChange = (attachments: Attachment[]) => { 
-        setFormData((prevData) => ({
-            ...prevData, 
-            expenseAttachments: attachments
-        })); 
-    };
-
-    const handleCampusChange = (campus: Models.Document | null) => { 
-        setSelectedCampus(campus);
-        handleInputChange('campus', campus?.name ?? '');
-        handleInputChange('department', {} as Models.Document); 
-    }; 
-
-    const handleSaveDraft = async () => { 
-        if (!profile) return; 
-        const newExpense = await updateDocument('user', profile.$id, { 
-            expenses: [{ 
-                ...formData, 
-                status: 'draft', 
-            }], 
-        });
-        setExpenseId(newExpense.$id); 
-    }; 
-
-    const resetForm = () => { 
-        setFormData({ 
-            bank_account: profile?.bank_account || "", 
-            campus: selectedCampus?.name || "",
-            department: selectedDepartment?.name || "",
-            expenseAttachments: [],
-            description: "", 
-            prepayment_amount: 0, 
-            total: 0, 
-            status: "draft"
-        }); 
-    };
-
-    const handleSubmit = async () => { 
-        if (!profile) return; 
-
-        setIsProcessing(true);
-
-        const updatedAttachments = await Promise.all(formData.expenseAttachments.map(async (attachment) => {
-            const fileId = ID.unique();
-            const blob = await uriToBlob(attachment.url);
-
-            const customFile = {
-                name: attachment.description,
-                type: blob.type,
-                size: blob.size,
-                uri: attachment.url,
-            };
-
-            const uploadResult = await storage.createFile('expenses', fileId, customFile);
-            const downloadUrl = 'https://appwrite.biso.no/v1/storage/buckets/expenses/files/' + uploadResult.$id + '/view?project=biso';
-
-            return {
-                ...attachment,
-                url: downloadUrl,
-            };
-        }));
-
-        const updatedFormData = {
-            ...formData,
-            expenseAttachments: updatedAttachments,
-        };
-
-        const newExpense = await databases.createDocument('app', 'expense', ID.unique(),{ 
-                ...updatedFormData, 
-                status: 'pending', 
-                userId: data?.$id,
-                user: data?.$id
-        });
-        setExpenseId(newExpense.$id); 
-        setIsProcessing(false);
-        resetForm();
-        router.push('/explore/expenses');
-    };
-
-    useEffect(() => {
-        setShowGenerateButton(!!debouncedEventName);
-    }, [debouncedEventName]);
-
-    const handleGenerateDescription = async () => {
-        setIsProcessing(true);
-        const descriptions = formData.expenseAttachments.map(attachment => attachment.description).join(', ');
-        const event = eventName ? `for ${eventName}` : '';
-        const body = { descriptions, event };
-
-        const overallDescription = await triggerFunction({
-            functionId: 'generate_expense_description',
-            async: false,
-            data: JSON.stringify(body)
-        });
-
-        if (overallDescription) {
-            const responseBody = JSON.parse(overallDescription.responseBody);
-            handleInputChange('description', responseBody.description);
-        }
-        setIsProcessing(false);
-    };
-
-    useEffect(() => {
-        const total = formData.expenseAttachments.reduce((acc, attachment) => acc + attachment.amount, 0);
-        handleInputChange('total', total);
-    }, [formData.expenseAttachments]);
-
-    const submitButtonDisabled = currentStep === 5 && (
-      !formData.bank_account || 
-      !formData.description || 
-      !formData.total || 
-      !formData.expenseAttachments.length
-    );
-
-    if (isLoading || !data || !profile) { 
-        return <Text>Loading...</Text>; 
-    } 
-
-    return (
-        <MyStack gap="$4" padding="$4">
-          {currentStep === 1 && (
-            <ScrollView>
-              <H6 fontWeight="bold">Payment Details</H6>
-              <YGroup>
-                <YGroup.Item>
-                  <Label>Bank Account</Label>
-                  <Input
-                    placeholder="Bank Account"
-                    onChangeText={(value) => handleInputChange('bank_account', value)}
-                    value={formData.bank_account}
-                  />
-                </YGroup.Item>
-                <YGroup.Item>
-                  <Switch value={receivedPrepayment} onValueChange={() => setReceivedPrepayment(!receivedPrepayment)} label='Did you receive a prepayment?' size="$4" />
-                </YGroup.Item>
-                {receivedPrepayment && (
-                  <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <YGroup.Item>
-                  <Label>How much was prepaid?</Label>
-                  <Input
-                    placeholder="Prepayment Amount"
-                    onChangeText={(value) => handleInputChange('prepayment_amount', parseFloat(value))}
-                    value={formData.prepayment_amount.toString()}
-                  />
-                </YGroup.Item>
-                </MotiView>
-                )}
-              </YGroup>
-            </ScrollView>
-          )}
+export function MultiStepForm() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const { profile } = useProfileStore();
+  
+  // Initialize expense form hook with custom validation
+  const methods = useForm({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: {
+      bank_account: profile?.bank_account || "",
+      campus: profile?.campus || "",
+      department: profile?.department || "",
+      expenseAttachments: [],
+      description: "",
+      prepayment_amount: 0,
+      total: 0,
+      status: "draft" as const,
+      eventName: ""
+    },
+    mode: 'onChange'
+  });
+  
+  const {
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid, isDirty }
+  } = methods;
+  
+  // Get form values
+  const receivedPrepayment = watch('prepayment_amount') > 0;
+  const description = watch('description');
+  const eventName = watch('eventName');
+  const expenseAttachments = watch('expenseAttachments') || [];
+  const [debouncedEventName] = useDebounce(eventName || '', 500);
+  
+  // Get store and query hooks
+  const {
+    form,
+    actions,
+    createExpense,
+    isCreating,
+    saveDraft,
+    isSavingDraft,
+    generateDescription,
+    isGeneratingDescription
+  } = useExpenses();
+  
+  // Set up event name effect
+  const showGenerateButton = !!debouncedEventName;
+  
+  // Calculate total automatically based on attachments
+  useEffect(() => {
+    if (expenseAttachments.length > 0) {
+      const total = expenseAttachments.reduce((acc, att) => acc + att.amount, 0);
+      setValue('total', total);
+    } else {
+      setValue('total', 0);
+    }
+  }, [expenseAttachments, setValue]);
+  
+  // Handle form steps
+  const handleNextStep = () => {
+    actions.nextStep();
+  };
+  
+  const handlePrevStep = () => {
+    actions.prevStep();
+  };
+  
+  // Handle prepayment toggle
+  const handlePrepaymentToggle = (value: boolean) => {
+    if (!value) {
+      setValue('prepayment_amount', 0);
+    }
+  };
+  
+  // Handle campus selection
+  const handleCampusChange = (campus: any) => {
+    if (campus) {
+      setValue('campus', campus.name);
+      setValue('department', ''); // Reset department when campus changes
+      actions.setSelectedCampus(campus);
+    }
+  };
+  
+  // Handle department selection
+  const handleDepartmentChange = (department: any) => {
+    if (department) {
+      setValue('department', department.Name || department.name);
+      actions.setSelectedDepartment(department);
+    }
+  };
+  
+  // Description generation
+  const handleGenerateDescription = async () => {
+    if (expenseAttachments.length === 0) return;
     
-          {currentStep === 2 && (
-            <ScrollView>
-            <YStack>
-              <YGroup>
-                <YGroup.Item>
-                  <Label>Campus</Label>
-                  <CampusSelector
-                    onSelect={(value) => handleCampusChange(value)}
-                    campus={formData.campus}
-                    initialCampus={selectedCampus || undefined}
+    const descriptions = expenseAttachments.map(a => a.description).join(', ');
+    
+    generateDescription({
+      descriptions,
+      eventName: eventName || ''
+    });
+  };
+  
+  // Submit the form
+  const onSubmit = async (data: any) => {
+    if (!user?.$id) return;
+    
+    // Update the store with form data
+    actions.setCurrentExpense({
+      ...data,
+      status: 'pending'
+    });
+    
+    // Submit the expense
+    createExpense();
+    
+    // Navigate back to expenses list on success
+    router.push('/explore/expenses');
+  };
+  
+  // Save as draft
+  const handleSaveDraft = async () => {
+    if (!user?.$id) return;
+    
+    const currentData = methods.getValues();
+    
+    // Update the store with form data
+    actions.setCurrentExpense({
+      ...currentData,
+      status: 'draft'
+    });
+    
+    // Save as draft
+    saveDraft();
+  };
+  
+  // Define steps
+  const steps: Step[] = [
+    {
+      label: 'Payment Details',
+      content: (
+        <ScrollView>
+          <YStack space="$4" padding="$4">
+            <H6 fontWeight="bold">Payment Details</H6>
+            <YGroup>
+              <YGroup.Item>
+                <Label>Bank Account</Label>
+                <Input
+                  placeholder="Bank Account"
+                  onChangeText={(value) => setValue('bank_account', value)}
+                  value={watch('bank_account')}
+                />
+                {errors.bank_account && (
+                  <Text color="$red10">{errors.bank_account.message as string}</Text>
+                )}
+              </YGroup.Item>
+              <YGroup.Item>
+                <XStack space="$2" alignItems="center">
+                  <Switch 
+                    checked={receivedPrepayment} 
+                    onCheckedChange={handlePrepaymentToggle} 
+                    size="$4" 
                   />
-                </YGroup.Item>
-                {formData.campus && (
+                  <Text>Did you receive a prepayment?</Text>
+                </XStack>
+              </YGroup.Item>
+              {receivedPrepayment && (
+                <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <YGroup.Item>
-                    <Label>Department</Label>
-                    <DepartmentSelector
-                    campus={selectedCampus?.$id}
-                    onSelect={(value) => (
-                      handleInputChange('department', value.Name),
-                      setSelectedDepartment(value)
-                    )}
-                    selectedDepartments={selectedDepartment ? [selectedDepartment] : []}
-                  />
+                    <Label>How much was prepaid?</Label>
+                    <Input
+                      placeholder="Prepayment Amount"
+                      onChangeText={(value) => setValue('prepayment_amount', parseFloat(value) || 0)}
+                      value={watch('prepayment_amount').toString()}
+                      keyboardType="numeric"
+                    />
                   </YGroup.Item>
+                </MotiView>
+              )}
+            </YGroup>
+          </YStack>
+        </ScrollView>
+      ),
+      onNext: handleNextStep,
+      onPrevious: handlePrevStep,
+    },
+    {
+      label: 'Department',
+      content: (
+        <ScrollView>
+          <YStack space="$4" padding="$4">
+            <H6 fontWeight="bold">Department Information</H6>
+            <YGroup>
+              <YGroup.Item>
+                <Label>Campus</Label>
+                <CampusSelector
+                  onSelect={handleCampusChange}
+                  campus={watch('campus')}
+                  initialCampus={form.selectedCampus || undefined}
+                />
+                {errors.campus && (
+                  <Text color="$red10">{errors.campus.message as string}</Text>
                 )}
-              </YGroup>
-            </YStack>
-            </ScrollView>
-          )}
-    
-    
-    {currentStep === 3 && (
-            <YStack>
-              <FileUpload
-                ocrResults={formData.expenseAttachments}
-                setOcrResults={(attachments: Attachment[] | ((prevAttachments: Attachment[]) => Attachment[])) => {
-                  if (Array.isArray(attachments)) {
-                    setFormData(prevData => ({
-                      ...prevData,
-                      expenseAttachments: attachments,
-                    }));
-                  } else {
-                    setFormData(prevData => ({
-                      ...prevData,
-                      expenseAttachments: attachments(prevData.expenseAttachments),
-                    }));
-                  }
-                }}
-              />
-            </YStack>
-          )}
-    
-          {currentStep === 4 && (
-            <YStack>
-              <YGroup gap="$4">
+              </YGroup.Item>
+              {watch('campus') && (
                 <YGroup.Item>
-                  <Switch value={forEvent} onValueChange={() => setForEvent(!forEvent)} label='Is this expense related to a specific event?' size="$4" />
+                  <Label>Department</Label>
+                  <DepartmentSelector
+                    campus={form.selectedCampus?.$id}
+                    onSelect={handleDepartmentChange}
+                    selectedDepartments={form.selectedDepartment ? [form.selectedDepartment] : []}
+                  />
+                  {errors.department && (
+                    <Text color="$red10">{errors.department.message as string}</Text>
+                  )}
                 </YGroup.Item>
-                {forEvent && (
-                  <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <YGroup.Item>
-                      <Label>Event Name</Label>
-                      <Input
-                        placeholder="Event Name"
-                        onChangeText={(value) => setEventName(value)}
-                        value={eventName}
-                      />
-                    </YGroup.Item>
-                  </MotiView>
-                )}
-                {(!forEvent || showGenerateButton) && (
+              )}
+            </YGroup>
+          </YStack>
+        </ScrollView>
+      ),
+      onNext: handleNextStep,
+      onPrevious: handlePrevStep,
+    },
+    {
+      label: 'Attachments',
+      content: (
+        <ScrollView>
+          <YStack space="$4" padding="$4">
+            <FileUpload />
+            {errors.expenseAttachments && (
+              <Text color="$red10">{errors.expenseAttachments.message as string}</Text>
+            )}
+          </YStack>
+        </ScrollView>
+      ),
+      onNext: handleNextStep,
+      onPrevious: handlePrevStep,
+    },
+    {
+      label: 'Event',
+      content: (
+        <ScrollView>
+          <YStack space="$4" padding="$4">
+            <H6 fontWeight="bold">Event Information (Optional)</H6>
+            <Text>Is this expense related to a specific event?</Text>
+            <YGroup marginTop="$2">
+              <YGroup.Item>
+                <XStack space="$2" alignItems="center">
+                  <Switch 
+                    checked={!!eventName} 
+                    onCheckedChange={(val: boolean) => {
+                      if (!val) setValue('eventName', '');
+                    }} 
+                    size="$4" 
+                  />
+                  <Text>Expense for event?</Text>
+                </XStack>
+              </YGroup.Item>
+              {!!eventName && (
+                <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <YGroup.Item>
+                    <Label>Event Name</Label>
+                    <Input
+                      placeholder="Event Name"
+                      onChangeText={(value) => setValue('eventName', value)}
+                      value={eventName || ''}
+                    />
+                  </YGroup.Item>
+                </MotiView>
+              )}
+            </YGroup>
+          </YStack>
+        </ScrollView>
+      ),
+      onNext: handleNextStep,
+      onPrevious: handlePrevStep,
+    },
+    {
+      label: 'Overview',
+      content: (
+        <ScrollView>
+          <YStack space="$4" padding="$4">
+            <H6 fontWeight="bold">Description & Review</H6>
+            
+            <YStack space="$2">
+              <XStack justifyContent="space-between">
+                <Label>Description</Label>
+                {showGenerateButton && (
                   <Button
-                      onPress={handleGenerateDescription}
-                      disabled={
-                        isProcessing || 
-                        formData.expenseAttachments.length === 0 || 
-                        formData.expenseAttachments.some((attachment) => !attachment.description)
-                      }
-                    >
-                    <XStack alignItems='center'>
-                        <Text>{isProcessing ? 'Generating...' : 'Generate Description'}</Text>
-                        {isProcessing && <Spinner size='small' color='white' />}
-                    </XStack>
+                    size="$2"
+                    onPress={handleGenerateDescription}
+                    disabled={isGeneratingDescription}
+                  >
+                    {isGeneratingDescription ? <Spinner /> : 'AI Generate'}
                   </Button>
                 )}
-                <YGroup.Item>
-                  <Label>Description</Label>
-                  <Input
-                    placeholder="Description of the Expense"
-                    multiline
-                    onChangeText={(value) => handleInputChange('description', value)}
-                    value={formData.description}
-                  />
-                </YGroup.Item>
-              </YGroup>
+              </XStack>
+              <Input
+                placeholder="Expense Description"
+                onChangeText={(value) => setValue('description', value)}
+                value={description}
+                multiline
+                numberOfLines={4}
+                minHeight={100}
+                textAlignVertical="top"
+              />
+              {errors.description && (
+                <Text color="$red10">{errors.description.message as string}</Text>
+              )}
             </YStack>
-          )}
-    
-          {currentStep === 5 && (
-            <OverviewScreen formData={formData} />
-          )}
-    
-    <XStack gap="$4">
-      {currentStep > 1 && <Button variant="outlined" position='absolute' left={0} bottom={0} onPress={handlePrevStep}>Back</Button>}
-      {submitButtonDisabled && currentStep === 5 ? (
-        <Text color="red" position='absolute' right={0} bottom={0}>
-          Please fill in all fields to submit.
-        </Text>
-      ) : (
-        <Button 
-          position='absolute'
-          right={0}
-          bottom={0}
-          onPress={currentStep === 5 ? handleSubmit : handleNextStep}>
-          {currentStep === 5 ? 'Submit' : 'Next'}
-        </Button>
-      )}
-    </XStack>
-  </MyStack>
-);
+            
+            <YStack space="$4" marginTop="$4">
+              <H6>Expense Summary</H6>
+              
+              <Card bordered padding="$4">
+                <YStack space="$3">
+                  <XStack justifyContent="space-between">
+                    <Text color="$gray11">Bank Account:</Text>
+                    <Text>{watch('bank_account') || 'Not provided'}</Text>
+                  </XStack>
+                  
+                  <XStack justifyContent="space-between">
+                    <Text color="$gray11">Campus:</Text>
+                    <Text>{watch('campus') || 'Not selected'}</Text>
+                  </XStack>
+                  
+                  <XStack justifyContent="space-between">
+                    <Text color="$gray11">Department:</Text>
+                    <Text>{watch('department') || 'Not selected'}</Text>
+                  </XStack>
+                  
+                  {receivedPrepayment && (
+                    <XStack justifyContent="space-between">
+                      <Text color="$gray11">Prepayment Amount:</Text>
+                      <Text>{watch('prepayment_amount')} kr</Text>
+                    </XStack>
+                  )}
+                  
+                  {eventName && (
+                    <XStack justifyContent="space-between">
+                      <Text color="$gray11">Event:</Text>
+                      <Text>{eventName}</Text>
+                    </XStack>
+                  )}
+                  
+                  <XStack justifyContent="space-between">
+                    <Text color="$gray11">Attachments:</Text>
+                    <Text>{expenseAttachments.length} items</Text>
+                  </XStack>
+                  
+                  <XStack justifyContent="space-between">
+                    <Text color="$gray11" fontWeight="bold">Total Amount:</Text>
+                    <Text fontWeight="bold" color="$green9">{watch('total')} kr</Text>
+                  </XStack>
+                </YStack>
+              </Card>
+            </YStack>
+            
+            <XStack space="$2" marginTop="$4">
+              <Button
+                flex={1}
+                onPress={handleSaveDraft}
+                disabled={isSavingDraft || !isDirty}
+              >
+                {isSavingDraft ? <Spinner /> : 'Save as Draft'}
+              </Button>
+              
+              <Button
+                flex={1}
+                backgroundColor="$green9"
+                color="white"
+                onPress={handleSubmit(onSubmit)}
+                disabled={isCreating || !isValid}
+                icon={isValid ? <Check size={16} color="white" /> : undefined}
+              >
+                {isCreating ? <Spinner /> : 'Submit Expense'}
+              </Button>
+            </XStack>
+          </YStack>
+        </ScrollView>
+      ),
+      onPrevious: handlePrevStep,
+    },
+  ];
+
+  // Show loading if user data is not yet available
+  if (!user || !profile) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center">
+        <Spinner size="large" />
+        <Text marginTop="$4">Loading...</Text>
+      </YStack>
+    );
+  }
+
+  return (
+    <FormProvider {...methods}>
+      <StepperUI
+        steps={steps}
+        onSubmit={handleSubmit(onSubmit)}
+      />
+    </FormProvider>
+  );
 }

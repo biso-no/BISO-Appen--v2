@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshControl, useColorScheme, useWindowDimensions, Platform, StatusBar } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { RefreshControl, useColorScheme, useWindowDimensions, Platform, Pressable } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   YStack, 
   XStack,
@@ -13,6 +15,7 @@ import {
   styled,
   useTheme,
   Stack,
+  Spinner,
 } from 'tamagui';
 import { 
   Calendar,
@@ -20,6 +23,8 @@ import {
   ShoppingBag,
   Users,
   Sparkles,
+  ChevronRight,
+  Tag,
 } from '@tamagui/lucide-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import { router } from 'expo-router';
@@ -39,6 +44,8 @@ import { HomeJobs } from '@/components/home/home-jobs';
 import type { Job } from '@/types/jobs';
 import CampusWeather from '@/components/CampusWeather';
 import { useScreenPerformance } from '@/lib/performance';
+import { BISCOLogo } from '@/components/BISCOLogo';
+import { Campus } from '@/lib/get-weather';
 
 // Types remain the same as before
 interface Product {
@@ -50,12 +57,9 @@ interface Product {
   sale_price: string;
 }
 
-
-
 // Enhanced styled components with new visual treatments
 const HeroCard = styled(Card, {
   overflow: "hidden",
-  height: 500,
   marginHorizontal: -16,
   marginTop: -16,
   borderRadius: 0,
@@ -78,9 +82,64 @@ const SearchBar = styled(XStack, {
   borderColor: 'rgba(255,255,255,0.2)',
 })
 
+// Replace CategorySelector component with a new implementation
+const CategorySelector = memo(
+  ({ categories, activeCategory, onSelectCategory }: {
+    categories: Array<{
+      id: string;
+      label: string;
+      icon: React.ComponentType<any>;
+      description: string;
+    }>;
+    activeCategory: string;
+    onSelectCategory: (category: string) => void;
+  }) => {
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 12, gap: 8 }}
+      >
+        {categories.map((category) => {
+          const isActive = activeCategory === category.id;
+          const Icon = category.icon;
+          
+          return (
+            <Button
+              key={category.id}
+              chromeless
+              paddingVertical="$2"
+              paddingHorizontal="$3"
+              backgroundColor={isActive ? '$blue9' : '$gray100'}
+              pressStyle={{ scale: 0.97, opacity: 0.9 }}
+              borderRadius="$10"
+              onPress={() => onSelectCategory(category.id)}
+            >
+              <XStack gap="$2" alignItems="center">
+                <Stack
+                  backgroundColor={isActive ? "rgba(255,255,255,0.3)" : "$blue4"}
+                  padding="$2"
+                  borderRadius="$4"
+                >
+                  <Icon size={16} color={isActive ? "white" : "$color"} />
+                </Stack>
+                <Text
+                  fontWeight={isActive ? '600' : '500'}
+                  color={isActive ? 'white' : '$gray700'}
+                >
+                  {category.label}
+                </Text>
+              </XStack>
+            </Button>
+          );
+        })}
+      </ScrollView>
+    );
+  }
+);
 
-
-const categories = [
+// Define categories outside component to avoid recreation
+const categoriesData = [
   { 
     id: 'all', 
     label: 'All',
@@ -108,38 +167,90 @@ const categories = [
 ];
 
 export default function HomeScreen() {
-  const [refreshing, setRefreshing] = useState(false);
-  const { campus } = useCampus();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [scrollY, setScrollY] = useState(0);
+  // Track initial load to prevent duplicate fetches
+  const initialLoadCompleted = useRef(false);
 
+  // State management
+  const [events, setEvents] = useState<Event[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { campus } = useCampus();
+  const colorScheme = useColorScheme();
+  const theme = useTheme();
   const { width } = useWindowDimensions();
-  
-  // Monitor performance of this screen
+  const headerHeight = useHeaderHeight();
+
+  // Track performance 
   useScreenPerformance('HomeScreen');
 
-  useEffect(() => {
-    loadAllData();
+  // Memoize categories to prevent recreating on each render
+  const categories = useMemo(() => [
+    {
+      id: 'all',
+      label: 'All',
+      icon: Sparkles,
+      description: 'Browse everything happening at your campus',
+    },
+    {
+      id: 'events',
+      label: 'Events',
+      icon: Calendar,
+      description: 'Find events happening at your campus',
+    },
+    {
+      id: 'marketplace',
+      label: 'Shop',
+      icon: ShoppingBag,
+      description: 'Buy and sell items within your campus community',
+    },
+    {
+      id: 'jobs',
+      label: 'Jobs',
+      icon: Users,
+      description: 'Find job opportunities with campus partners',
+    },
+  ], []);
+
+  // Handle category selection
+  const handleCategorySelect = useCallback((category: string) => {
+    setActiveCategory(category);
+  }, []);
+
+  // Original fetch functions
+  const fetchProducts = useCallback(async () => {
+    try {
+      const body = { campus: campus?.$id };
+      const response = await functions.createExecution(
+        'sync_webshop_products',
+        JSON.stringify(body),
+        false
+      );
+      const productBody = JSON.parse(response.responseBody);
+      return productBody?.products?.slice(0, 3) || [];
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      return [];
+    }
   }, [campus?.$id]);
 
-  const loadAllData = async () => {
-    setIsLoading(true);
-    await Promise.all([
-      fetchProducts(),
-      fetchJobs(),
-      fetchEvents(),
-    ]);
-    setIsLoading(false);
-  };
-
-  const fetchEvents = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
-      setIsLoading(true);
-  
+      const response = await axios.get(
+        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=3&campus=${campus?.name}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      return [];
+    }
+  }, [campus?.name]);
+
+  const fetchEvents = useCallback(async () => {
+    try {
       let url = 'https://biso.no/wp-json/biso/v1/events';
       
       const params: Record<string, string | number> = {
@@ -172,50 +283,15 @@ export default function HomeScreen() {
         return eventDate > today;
       });
   
-      setEvents(filteredEvents);
+      return filteredEvents;
       
     } catch (err) {
       console.error('Error loading events:', err);
-    } finally {
-      setIsLoading(false);
+      return [];
     }
-  };
+  }, [campus?.name]);
 
-  
-
-  const fetchProducts = async () => {
-    try {
-      const body = { campus: campus?.$id };
-      const response = await functions.createExecution(
-        'sync_webshop_products',
-        JSON.stringify(body),
-        false
-      );
-      const productBody = JSON.parse(response.responseBody);
-      setProducts(productBody?.products?.slice(0, 3) || []);
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    }
-  };
-
-  const fetchJobs = async () => {
-    try {
-      const response = await axios.get(
-        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=3&campus=${campus?.name}`
-      );
-      setJobs(response.data);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    }
-  };
-
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadAllData();
-    setRefreshing(false);
-  }, []);
-
+  // Get featured event helper function
   const getFeaturedEvent = useCallback(() => {
     if (!events.length) return null;
     // Find an event within the next 7 days
@@ -225,6 +301,7 @@ export default function HomeScreen() {
     });
   }, [events]);
 
+  // Get regular events helper function
   const getRegularEvents = useCallback(() => {
     const featuredEvent = getFeaturedEvent();
     if (!featuredEvent) return events.slice(0, 3);
@@ -235,172 +312,139 @@ export default function HomeScreen() {
       .slice(0, 3);
   }, [events, getFeaturedEvent]);
 
-  // Memoize the hero section to prevent unnecessary re-renders
-  const HeroSection = React.memo(() => {
-    const featuredEvent = getFeaturedEvent();
-    if (!featuredEvent) return null;
+  // Optimized data loading with parallel requests
+  const loadAllData = useCallback(async () => {
+    if (!campus) return;
+    
+    setIsLoading(true);
+    try {
+      // Use Promise.all to load data in parallel
+      const [eventsData, productsData, jobsData] = await Promise.all([
+        fetchEvents(),
+        fetchProducts(),
+        fetchJobs()
+      ]);
+      
+      // Update state with fetched data
+      setEvents(eventsData);
+      setProducts(productsData);
+      setJobs(jobsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [campus, fetchEvents, fetchProducts, fetchJobs]);
+  
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    loadAllData();
+  }, [loadAllData]);
+  
+  // Initialize data on mount or campus change
+  useEffect(() => {
+    if (campus && !initialLoadCompleted.current) {
+      loadAllData();
+      initialLoadCompleted.current = true;
+    }
+  }, [campus, loadAllData]);
+  
+  // Filtered events based on active category
+  const filteredEvents = useMemo(() => {
+    return activeCategory === 'all' || activeCategory === 'events' 
+      ? getRegularEvents() 
+      : [];
+  }, [activeCategory, getRegularEvents]);
+  
+  const featuredEvent = useMemo(() => {
+    return activeCategory === 'all' || activeCategory === 'events'
+      ? getFeaturedEvent()
+      : null;
+  }, [activeCategory, getFeaturedEvent]);
+  
+  // Filtered products based on active category
+  const filteredProducts = useMemo(() => {
+    return activeCategory === 'all' || activeCategory === 'marketplace' 
+      ? products 
+      : [];
+  }, [products, activeCategory]);
+  
+  // Filtered jobs based on active category
+  const filteredJobs = useMemo(() => {
+    return activeCategory === 'all' || activeCategory === 'jobs' 
+      ? jobs 
+      : [];
+  }, [jobs, activeCategory]);
 
-    return (
-      <HeroCard>
-        <MotiView
-          from={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'timing', duration: 1500 }}
-        >
-          <Image
-            source={{ uri: featuredEvent.featured_image }}
-            alt={featuredEvent.title}
-            height={500}
-            width={width}
-            style={{ transform: [{ scale: 1.1 }] }}
-          />
-          <LinearGradient
-            start={[0, 0]}
-            end={[0, 1]}
-            colors={['transparent', 'rgba(0,0,0,0.9)']}
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 300,
-              padding: 24,
-              justifyContent: 'flex-end',
-            }}
-          >
-            <YStack gap="$3">
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 300 }}
-              >
-                <XStack gap="$2" alignItems="center">
-                  <Stack
-                    backgroundColor="rgba(255,255,255,0.2)"
-                    padding="$2"
-                    borderRadius="$4"
-                  >
-                    <Calendar size={16} color="white" />
-                  </Stack>
-                  <Text color="white" fontSize={16}>
-                    {formatDate(parseISO(featuredEvent.date), 'dd MMM yyyy')}
-                  </Text>
-                </XStack>
-              </MotiView>
-              
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 400 }}
-              >
-                <H2 color="white" fontSize={32} lineHeight={40}>
-                  {featuredEvent.title}
-                </H2>
-              </MotiView>
-
-              {featuredEvent.venue && (
-                <MotiView
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: 500 }}
-                >
-                  <XStack gap="$2" alignItems="center">
-                    <Stack
-                      backgroundColor="rgba(255,255,255,0.2)"
-                      padding="$2"
-                      borderRadius="$4"
-                    >
-                      <MapPin size={16} color="white" />
-                    </Stack>
-                    <Text color="white" fontSize={16}>
-                      {featuredEvent.venue}
-                    </Text>
-                  </XStack>
-                </MotiView>
-              )}
-
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: 600 }}
-              >
-                <Button
-                  backgroundColor="$blue9"
-                  borderRadius="$10"
-                  paddingHorizontal="$6"
-                  paddingVertical="$3"
-                  marginTop="$2"
-                  pressStyle={{ scale: 0.95 }}
-                  onPress={() => router.push(`/explore/events/${featuredEvent.id}`)}
-                >
-                  <Text color="white" fontWeight="600" fontSize={16}>
-                    Learn More
-                  </Text>
-                </Button>
-              </MotiView>
-            </YStack>
-          </LinearGradient>
-        </MotiView>
-      </HeroCard>
-    );
-  });
-
-  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
-    const scrollPosition = event.nativeEvent.contentOffset.y;
-    setScrollY(scrollPosition);
-  }, []);
+  // Memoized loading component
+  const LoadingComponent = useMemo(() => (
+    <YStack flex={1} justifyContent="center" alignItems="center" marginTop={80}>
+      <MotiView
+        from={{ opacity: 0.5, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 1000, loop: true }}
+      >
+        <BISCOLogo />
+      </MotiView>
+      <Text color="$blue10" marginTop={20}>Loading content...</Text>
+    </YStack>
+  ), []);
 
   return (
-    <>
-      <StatusBar barStyle="light-content" />
-      <ScrollView
-        flex={1}
+    <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme?.background?.val || '#ffffff' }}>
+      <Stack
+        paddingBottom={100} 
         backgroundColor="$background"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        scrollEventThrottle={16}
-        onScroll={handleScroll}
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
-        removeClippedSubviews={Platform.OS === 'android'}
-        keyboardShouldPersistTaps="handled"
+        flex={1}
       >
-        <HeroSection />
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        
+        {/* Hero and Header */}
 
-        <YStack padding="$4" gap="$6">
-          <CampusHero />
-          <HomeCategories
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            categories={categories}
-          />
 
-          <AnimatePresence>
-            {(activeCategory === 'all' || activeCategory === 'events') && getRegularEvents().length > 0 && (
-              <HomeEvents
-                activeCategory={activeCategory}
-                events={getRegularEvents()}
+
+        {isLoading ? (
+          LoadingComponent
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor={theme?.color?.val || '#000000'}
               />
-            )}
-
-            {(activeCategory === 'all' || activeCategory === 'products') && products.length > 0 && (
-              <HomeProducts
+            }
+          >
+            {/* Categories Selector */}
+            <YStack padding="$3" marginTop="$1" marginBottom="$4" gap="$4">
+            <CampusHero />
+              <CategorySelector
+                categories={categories}
                 activeCategory={activeCategory}
-                products={products}
+                onSelectCategory={handleCategorySelect}
               />
-            )}
+            </YStack>
 
-            {(activeCategory === 'all' || activeCategory === 'jobs') && jobs.length > 0 && (
-              <HomeJobs
-                activeCategory={activeCategory}
-                jobs={jobs}
-              />
+            {/* Events Section */}
+            {(activeCategory === 'all' || activeCategory === 'events') && (
+              <HomeEvents events={filteredEvents} featuredEvent={featuredEvent} />
             )}
-          </AnimatePresence>
-        </YStack>
-      </ScrollView>
-    </>
+            
+            {/* Marketplace Section */}
+            {(activeCategory === 'all' || activeCategory === 'marketplace') && (
+              <HomeProducts products={filteredProducts} />
+            )}
+            
+            {/* Jobs Section */}
+            {(activeCategory === 'all' || activeCategory === 'jobs') && (
+              <HomeJobs jobs={filteredJobs} />
+            )}
+          </ScrollView>
+        )}
+      </Stack>
+    </SafeAreaView>
   );
 }
