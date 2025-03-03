@@ -78,6 +78,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
+    'expo-asset',
     'expo-secure-store',
     [
       "expo-notifications",
