@@ -28,6 +28,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMembershipContext } from '@/components/context/core/membership-provider';
 import { useProfile } from '@/components/context/core/profile-provider';
+import { useAuthStore } from '@/lib/stores/authStore';
+import { useProfileStore } from '@/lib/stores/profileStore';
+import { useMembershipStore } from '@/lib/stores/membershipStore';
+import { queryClient } from '@/lib/react-query';
 
 // Type definitions
 type ProfileSection = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
@@ -434,8 +438,28 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    router.replace('/(tabs)');
+    try {
+      // Sign out from Appwrite
+      await signOut();
+      
+      // Reset auth store state
+      useAuthStore.getState().resetState();
+      
+      // Reset profile store state if it exists
+      useProfileStore.getState().resetState();
+      
+      // Reset membership store state if it exists
+      useMembershipStore.getState().resetState();
+      
+      // Clear all React Query cache
+      queryClient.clear();
+      
+      // Navigate to the home tab
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // You might want to show an error toast here
+    }
   };
 
   // Helper Components

@@ -25,25 +25,21 @@ export function CopilotButton({}: CopilotButtonProps) {
   }, [isLoading, currentAnimation]);
   
   return (
-    <Button
-      circular
-      size="$3"
-      backgroundColor={isLoading ? '$blue8' : 'transparent'}
-      borderWidth={1}
-      borderColor={isLoading ? '$blue8' : '$borderColor'}
-      marginRight="$2"
-      pressStyle={{ scale: 0.92 }}
-      onPress={() => expandCopilot()}
-      animation="bouncy"
-      hoverStyle={{ scale: 1.05 }}
-      scale={isPulsing ? 1.05 : 1}
-      animateOnly={['scale']}
-    >
-      {isLoading ? (
-        <Sparkles size={20} color={isDark ? 'white' : theme.color?.get()} />
-      ) : (
-        <Bot size={20} color={theme.color?.get()} />
-      )}
-    </Button>
+      <Button
+        circular
+        size="$3"
+        backgroundColor={isLoading ? '$blue8' : 'transparent'}
+        borderWidth={1}
+        borderColor={isLoading ? '$blue8' : '$borderColor'}
+        marginRight="$2"
+        pressStyle={{ scale: 0.92 }}
+        onPress={() => expandCopilot()}
+      >
+        {isLoading ? (
+          <Sparkles size={20} color={isDark ? 'white' : theme.color?.get()} />
+        ) : (
+          <Bot size={20} color={theme.color?.get()} />
+        )}
+      </Button>
   );
 } 

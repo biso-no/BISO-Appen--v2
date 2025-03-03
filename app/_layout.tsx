@@ -86,27 +86,6 @@ function RootLayoutNav() {
     }
   };
 
-  /*
-useEffect(() => {
-  if (!isExpoGo) {
-  async function onFetchUpdateAsync() {
-    try {
-      const update = await Updates.checkForUpdateAsync();
-
-      if (update.isAvailable) {
-        await Updates.fetchUpdateAsync();
-        await Updates.reloadAsync();
-      }
-    } catch (error) {
-      // You can also add an alert() to see the error message in case of an error when fetching updates.
-      alert(`Error fetching latest Expo update: ${error}`);
-
-    }
-  }
-  onFetchUpdateAsync();
-  }
-}, []);
-*/
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -126,7 +105,6 @@ useEffect(() => {
                           <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
                           <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
                         </Stack>
-                        {__DEV__ && <PerformanceToggle />}
                       </Theme>
                     </PerformanceProvider>
                   </MembershipModalProvider>

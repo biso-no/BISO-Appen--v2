@@ -578,8 +578,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                           end={{ x: 1, y: 1 }}
                         />
                         <MotiView
-                          from={{ rotate: '0deg' }}
-                          animate={{ rotate: '20deg' }}
+                          from={{ transform: [{ rotate: '0deg' }] }}
+                          animate={{ transform: [{ rotate: '20deg' }] }}
                           transition={{
                             loop: true,
                             repeatReverse: true,
@@ -587,7 +587,9 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                             delay: 1000,
                           }}
                         >
-                          <Sparkles size={40} color="white" /> {/* Reduced size from 50 to 40 */}
+                          <Text>
+                            <Sparkles size={40} color="white" />
+                          </Text>
                         </MotiView>
                       </Avatar>
                     </MotiView>

@@ -8,44 +8,31 @@ import {
   Text,
   ScrollView,
   Button,
-  Image,
   Card,
-  H3,
-  H2,
   styled,
   useTheme,
   Stack,
-  Spinner,
 } from 'tamagui';
 import { 
   Calendar,
-  MapPin,
   ShoppingBag,
   Users,
   Sparkles,
-  ChevronRight,
-  Tag,
 } from '@tamagui/lucide-icons';
-import { MotiView, AnimatePresence } from 'moti';
-import { router } from 'expo-router';
+import { MotiView } from 'moti';
 import axios from 'axios';
-import { Models } from 'react-native-appwrite';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { functions } from '@/lib/appwrite';
-import { LinearGradient } from '@tamagui/linear-gradient';
 import { formatDate, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { CampusHero } from '@/components/home/campus-hero';
-import { HomeCategories } from '@/components/home/home-tabs';
 import { Event } from '@/types/event';
 import { HomeEvents } from '@/components/home/home-events';
 import { HomeProducts } from '@/components/home/home-products';
 import { HomeJobs } from '@/components/home/home-jobs';
 import type { Job } from '@/types/jobs';
-import CampusWeather from '@/components/CampusWeather';
 import { useScreenPerformance } from '@/lib/performance';
 import { BISCOLogo } from '@/components/BISCOLogo';
-import { Campus } from '@/lib/get-weather';
 
 // Types remain the same as before
 interface Product {
@@ -56,31 +43,6 @@ interface Product {
   price: string;
   sale_price: string;
 }
-
-// Enhanced styled components with new visual treatments
-const HeroCard = styled(Card, {
-  overflow: "hidden",
-  marginHorizontal: -16,
-  marginTop: -16,
-  borderRadius: 0,
-})
-
-const SearchBar = styled(XStack, {
-  backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.8)' : '$background',
-  borderRadius: 24,
-  paddingHorizontal: "$4",
-  paddingVertical: "$3",
-  marginHorizontal: "$4",
-  marginTop: 10,
-  shadowColor: "$shadowColor",
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.2,
-  shadowRadius: 24,
-  elevation: 10,
-  zIndex: 1,
-  borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.2)',
-})
 
 // Replace CategorySelector component with a new implementation
 const CategorySelector = memo(
@@ -138,33 +100,6 @@ const CategorySelector = memo(
   }
 );
 
-// Define categories outside component to avoid recreation
-const categoriesData = [
-  { 
-    id: 'all', 
-    label: 'All',
-    icon: Sparkles,
-    description: 'Everything at a glance'
-  },
-  { 
-    id: 'events', 
-    label: 'Events',
-    icon: Calendar,
-    description: 'Upcoming happenings'
-  },
-  { 
-    id: 'products', 
-    label: 'Shop',
-    icon: ShoppingBag,
-    description: 'Campus merchandise'
-  },
-  { 
-    id: 'jobs', 
-    label: 'Volunteer',
-    icon: Users,
-    description: 'Join our team'
-  },
-];
 
 export default function HomeScreen() {
   // Track initial load to prevent duplicate fetches
@@ -181,8 +116,6 @@ export default function HomeScreen() {
   const { campus } = useCampus();
   const colorScheme = useColorScheme();
   const theme = useTheme();
-  const { width } = useWindowDimensions();
-  const headerHeight = useHeaderHeight();
 
   // Track performance 
   useScreenPerformance('HomeScreen');
