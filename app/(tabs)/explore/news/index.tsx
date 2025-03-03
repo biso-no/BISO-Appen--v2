@@ -1,16 +1,15 @@
 //A list of news, instagram style
-import { Card, Image, H6, Paragraph, YStack, XStack, ScrollView, YGroup, Button, H5, Text, H3, Separator } from "tamagui";
+import { Card, Image, H6, Paragraph, YStack, XStack, ScrollView, YGroup, H3, Separator } from "tamagui";
 import { useState } from "react";
 import { useEffect } from "react";
 import { getNews } from "@/lib/appwrite";
 import { useRouter } from "expo-router";
-import { capitalizeFirstLetter, truncateString } from "@/lib/utils/helpers";
+import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
 import { Frown } from "@tamagui/lucide-icons";
 import { useCampus } from "@/lib/hooks/useCampus";
-import RenderHTML from "react-native-render-html";
 
 export default function NewsScreen() {
     const [news, setNews] = useState<Models.DocumentList<Models.Document>>();

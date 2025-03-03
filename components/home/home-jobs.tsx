@@ -1,9 +1,9 @@
 import { Briefcase, ChevronRight } from "@tamagui/lucide-icons";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import React, { memo, useMemo, useEffect } from "react";
+import React, { memo, useMemo } from "react";
 import RenderHTML from "react-native-render-html";
-import { YStack, XStack, H3, Card, Stack, Text, Button, styled } from "tamagui";
+import { YStack, XStack, H3, Card, Stack, Text, Button } from "tamagui";
 import { useWindowDimensions, ColorSchemeName } from "react-native";
 import { Job } from "@/types/jobs";
 import { useTheme } from "tamagui";
@@ -77,6 +77,8 @@ const JobCard = memo(({ job, width, theme, colorScheme, campusName }: {
     );
 });
 
+JobCard.displayName = 'JobCard';
+
 // Memoized component to prevent unnecessary re-renders
 export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     const theme = useTheme();
@@ -84,7 +86,23 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     const { width } = useWindowDimensions();
     const { campus } = useCampus();
     
-    // Ensure we have jobs before trying to render
+    // Memoize the job cards to prevent re-rendering when switching categories
+    const jobCards = useMemo(() => {
+        if (!jobs || jobs.length === 0) return null;
+        
+        return jobs.map(job => (
+            <JobCard 
+                key={`job-${job.id}`}
+                job={job} 
+                width={width} 
+                theme={theme} 
+                colorScheme={colorScheme}
+                campusName={campus?.name}
+            />
+        ));
+    }, [jobs, width, theme, colorScheme, campus?.name]);
+    
+    // Handle empty state
     if (!jobs || jobs.length === 0) {
         return (
             <YStack gap="$4">
@@ -104,20 +122,6 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
         );
     }
     
-    // Memoize the job cards to prevent re-rendering when switching categories
-    const jobCards = useMemo(() => {
-        return jobs.map(job => (
-            <JobCard 
-                key={`job-${job.id}`}
-                job={job} 
-                width={width} 
-                theme={theme} 
-                colorScheme={colorScheme}
-                campusName={campus?.name}
-            />
-        ));
-    }, [jobs, width, theme, colorScheme, campus?.name]);
-    
     return (
         <YStack gap="$4">
             <XStack justifyContent="space-between" alignItems="center">
@@ -134,3 +138,5 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
         </YStack>
     );
 });
+
+HomeJobs.displayName = 'HomeJobs';

@@ -1,5 +1,4 @@
 import React from "react";
-import { useColorScheme } from 'react-native';
 import { MotiView } from 'moti';
 import { 
   Text, 
@@ -33,7 +32,6 @@ export function CategoryFilter({
   onToggleShowAll,
   maxVisible = 5
 }: CategoryFilterProps) {
-  const colorScheme = useColorScheme();
   
   // Only show up to maxVisible categories when not showing all
   const visibleCategories = showAllCategories 

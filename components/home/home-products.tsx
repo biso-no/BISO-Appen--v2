@@ -1,5 +1,5 @@
 import type { WooProduct } from "@/types/product";
-import { Tag, ChevronRight } from "@tamagui/lucide-icons";
+import { Tag } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import React, { memo, useMemo } from "react";
 import { LinearGradient } from "tamagui/linear-gradient";
@@ -30,7 +30,7 @@ const ProductCard = styled(Card, {
     gap: "$1",
     alignSelf: "flex-start", // This ensures the tag only takes up needed width
   })
-  
+
 // Optimize with memo and minimal animations
 export const HomeProducts = memo(({ products }: HomeProductsProps) => {
     // Using useMemo to prevent recreating elements on each render
@@ -109,3 +109,4 @@ export const HomeProducts = memo(({ products }: HomeProductsProps) => {
         </YStack>
     );
 });
+HomeProducts.displayName = 'HomeProducts';

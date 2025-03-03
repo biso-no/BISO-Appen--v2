@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Sheet, Dialog, YStack, View } from 'tamagui';
+import { Sheet, Dialog } from 'tamagui';
 
 type ModalType = 'sheet' | 'dialog';
 
@@ -8,7 +8,7 @@ interface ModalConfig {
   id: string;
   component: () => React.ReactNode;
   props?: {
-    snapPoints?: Array<number>;
+    snapPoints?: number[];
     dismissOnSnapToBottom?: boolean;
     position?: number;
     zIndex?: number;

@@ -1,7 +1,6 @@
 import { ProductDetails } from "@/components/shop/product";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
-import { Button, View } from "tamagui";
+import { View } from "tamagui";
 import { MotiView } from 'moti';
 
 export default function ProductScreen() {

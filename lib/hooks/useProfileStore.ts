@@ -16,7 +16,6 @@ export function useZustandProfile() {
   const { 
     profile, 
     isLoading: storeLoading, 
-    error, 
     setProfile, 
     setLoading, 
     setError,

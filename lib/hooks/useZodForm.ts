@@ -43,7 +43,6 @@ export function useZodForm<TSchema extends z.ZodType<any, any>>({
     setFormError, 
     setFieldTouched,
     getForm,
-    validateWithSchema,
     clearForm,
     registerSchema
   } = useFormStore();

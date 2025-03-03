@@ -1,11 +1,5 @@
 import axios from 'axios';
 
-interface EventResponse {
-    events: Event[];
-    rest_url: string;
-    total: number;
-    total_pages: number;
-}
 
 type Organizer = "BISO Bergen" | "BISO Oslo" | "BISO Stavanger" | "BISO Trondheim" | "BISO National"
 
@@ -20,7 +14,7 @@ interface Category {
     taxonomy: string;
     term_group: number;
     term_taxonomy_id: number;
-    urls: Object[];
+    urls: object[];
 }
 
 interface CostDetails {

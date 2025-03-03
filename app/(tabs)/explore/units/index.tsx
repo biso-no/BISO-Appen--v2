@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from "expo-router";
 import { Models, Query } from "react-native-appwrite";
 import { 
@@ -7,7 +7,6 @@ import {
   H1,
   Text,
   useTheme,
-  Spinner,
   Input,
   Button,
   Stack,
@@ -16,7 +15,7 @@ import {
   Circle
 } from "tamagui";
 import { LinearGradient } from 'tamagui/linear-gradient';
-import { Search, Building, Filter, School, BookOpen, GraduationCap } from "@tamagui/lucide-icons";
+import { Search, Building, School, BookOpen, GraduationCap } from "@tamagui/lucide-icons";
 import { MyStack } from "@/components/ui/MyStack";
 import { databases, getDepartments } from "@/lib/appwrite";
 import { useCampus } from "@/lib/hooks/useCampus";

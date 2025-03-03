@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ToastAndroid, Platform, Alert } from 'react-native';
+import { StyleSheet, ToastAndroid, Platform, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useCopilotStore } from '../../lib/stores/copilotStore';
 import { AICopilotPanel } from './AICopilotPanel';
@@ -46,7 +46,7 @@ export function AICopilotProvider({
     };
     
     initializeApi();
-  }, []);
+  }, [setAnimation]);
   
   return (
     <GestureHandlerRootView style={styles.container}>

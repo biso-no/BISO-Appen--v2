@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { functions } from '@/lib/appwrite';
-import { queryClient } from '@/lib/react-query';
 
 // Define the Membership interface
 interface Membership {

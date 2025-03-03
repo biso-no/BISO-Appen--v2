@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { mastraApi, Message, AgentMetadata, AGENT_METADATA } from '../mastra-api';
-import { AgentType, agentTypeToId } from '../stores/copilotStore';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { mastraApi, Message, AGENT_METADATA } from '../mastra-api';
+import { AgentType } from '../stores/copilotStore';
 
 // Query keys for React Query
 const QUERY_KEYS = {
@@ -67,7 +67,6 @@ export function useAgentSuggestions(agentType: AgentType) {
  * Always uses the universalAgent agent
  */
 export function useSendMessage() {
-  const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: ({

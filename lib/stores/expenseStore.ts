@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { ID, Models } from 'react-native-appwrite';
-import { createDocument, updateDocument, uploadFile, storage, databases } from '@/lib/appwrite';
+import { createDocument, updateDocument, storage } from '@/lib/appwrite';
 import { devtools } from 'zustand/middleware';
 
 export interface Attachment {

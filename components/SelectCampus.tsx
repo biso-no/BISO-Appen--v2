@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { H1, YStack, Text, Stack, useTheme, styled } from 'tamagui';
+import { YStack, Text, Stack, styled, useTheme } from 'tamagui';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import { getDocuments } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';

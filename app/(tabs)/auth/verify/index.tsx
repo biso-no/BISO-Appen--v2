@@ -17,7 +17,6 @@ export default function VerifyScreen() {
     const [isVerified, setIsVerified] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { actions } = useAuth();
 
     useEffect(() => {
         async function verifyMagicLink() {

@@ -1,21 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, useWindowDimensions, Platform, RefreshControl, Pressable, AppState } from 'react-native';
+import { useWindowDimensions, Platform, RefreshControl, Pressable, AppState } from 'react-native';
 import { 
-  H1, H2, H3, H4, Paragraph, YStack, XStack, Button, Image, Text, 
-  Card, Theme, useTheme, Sheet, Adapt, Dialog, Separator,
+  H1, H2, H3, H4, Paragraph, YStack, XStack, Button, Text, 
+ useTheme, Sheet, Separator,
   View
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView, MotiScrollView, AnimatePresence, motify } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import Animated, { 
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   interpolate,
-  Extrapolate,
-  withSpring,
   Extrapolation
 } from 'react-native-reanimated';
 import { 
@@ -24,10 +20,8 @@ import {
   Mail, 
   Users, 
   Briefcase, 
-  Shield, 
   GraduationCap,
   Calendar,
-  Gift,
   Building,
   X,
   ExternalLink,
@@ -38,13 +32,11 @@ import { useEffect, useState, useMemo, useCallback, memo, Suspense, useRef } fro
 import { useCampus } from '@/lib/hooks/useCampus';
 import { DepartmentMembersShowcase } from '@/components/board-showcase';
 import { databases } from '@/lib/appwrite';
-import { Models, Query } from 'react-native-appwrite';
-import { mapCampus, mapCampusNameToId } from '@/lib/utils/map-campus';
+import { Models } from 'react-native-appwrite';
+import { mapCampusNameToId } from '@/lib/utils/map-campus';
 import { useQuery, useQueryClient, QueryClient } from '@tanstack/react-query';
 import { Image as ExpoImage } from 'expo-image';
-import * as AssetUtils from 'expo-asset-utils';
 import { Asset } from 'expo-asset';
-import * as SplashScreen from 'expo-splash-screen';
 
 // Define query keys for React Query
 const QUERY_KEYS = {
@@ -231,6 +223,7 @@ const QuickActionButton = memo(({ icon: Icon, title, color, onPress }: {
     </Button>
   );
 });
+QuickActionButton.displayName = 'QuickActionButton';
 
 // Memoize BenefitsModal
 const BenefitsModal = memo(({ 
@@ -315,7 +308,7 @@ const BenefitsModal = memo(({
     </Sheet>
   );
 });
-
+BenefitsModal.displayName = 'BenefitsModal';
 // Memoize BenefitCard
 const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
   title: string;
@@ -413,7 +406,7 @@ const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
     </View>
   );
 });
-
+BenefitCard.displayName = 'BenefitCard';
 // Loading skeleton components
 // Memoizing skeleton components isn't necessary as they're only rendered during loading
 function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: { 
@@ -424,7 +417,6 @@ function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: {
 }) {
   const colorScheme = useColorScheme();
   const baseColor = colorScheme === 'dark' ? '$gray5' : '$gray3';
-  const highlightColor = colorScheme === 'dark' ? '$gray7' : '$gray1';
   
   return (
     <MotiView
@@ -447,7 +439,7 @@ function SkeletonBox({ width, height, borderRadius = "$4", delay = 0 }: {
     </MotiView>
   );
 }
-
+SkeletonBox.displayName = 'SkeletonBox';
 // Combine all skeleton components into a single function
 function CampusLoadingState() {
   const { height: windowHeight } = useWindowDimensions();
@@ -593,7 +585,7 @@ function CampusLoadingState() {
     </AnimatePresence>
   );
 }
-
+CampusLoadingState.displayName = 'CampusLoadingState';
 // Add lazy loaded components for better initial load time
 const LazyDepartmentMembersShowcase = memo(({ campusId, title }: { campusId: string, title: string }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -618,7 +610,7 @@ const LazyDepartmentMembersShowcase = memo(({ campusId, title }: { campusId: str
   
   return <DepartmentMembersShowcase campusId={campusId} title={title} />;
 });
-
+LazyDepartmentMembersShowcase.displayName = 'LazyDepartmentMembersShowcase';
 // Add global pre-loading for campus images
 const preloadCampusImages = async () => {
   try {

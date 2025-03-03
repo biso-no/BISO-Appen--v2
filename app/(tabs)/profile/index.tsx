@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  YStack, Avatar, Card, H2, H4, Text, Input, Separator,
-  Label, YGroup, Switch, Button, XStack, useTheme, View, Sheet, ScrollView,
+  YStack, Card, H2, H4, Text, Input, Separator,
+  Label, Button, XStack, useTheme, View, Sheet, ScrollView,
   SizableText, RadioGroup, Stack, Form
 } from 'tamagui';
 import { 
@@ -11,7 +11,7 @@ import {
 import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/core/auth-provider';
 import { useRouter } from 'expo-router';
-import { updateDocument, signOut, databases, triggerFunction } from '@/lib/appwrite';
+import { signOut, databases, triggerFunction } from '@/lib/appwrite';
 import { ExpenseList } from '@/components/tools/expenses/expense-list';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { Models, Query } from 'react-native-appwrite';
@@ -34,7 +34,7 @@ import { useMembershipStore } from '@/lib/stores/membershipStore';
 import { queryClient } from '@/lib/react-query';
 
 // Type definitions
-type ProfileSection = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
+type ProfileSectionProps = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
 
 const paymentMethods = [
   { label: 'Credit Card', value: 'CARD', size: '$5' },
@@ -63,11 +63,11 @@ type NorwegianPaymentFormData = z.infer<typeof norwegianPaymentFormSchema>;
 type InternationalPaymentFormData = z.infer<typeof internationalPaymentFormSchema>;
 
 const ProfileScreen = () => {
-  const { user, actions, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const { profile, actions: profileActions } = useProfile();
-  const { membership, isBisoMember, membershipExpiry } = useMembershipContext();
+  const { membership, isBisoMember } = useMembershipContext();
   const router = useRouter();
-  const theme = useTheme();
+
   const pathName = usePathname();
   
   // Display States - Only for showing data
@@ -143,7 +143,7 @@ const ProfileScreen = () => {
   });
 
   // Section and UI States
-  const [currentSection, setCurrentSection] = useState<ProfileSection>('menu');
+  const [currentSection, setCurrentSection] = useState<ProfileSectionProps>('menu');
   const [bankType, setBankType] = useState<'norwegian' | 'international'>('norwegian');
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPayment, setIsEditingPayment] = useState(false);
@@ -196,29 +196,7 @@ const ProfileScreen = () => {
     fetchFollowedDepartments();
   }, [profile?.$id]);
 
-  const resetForms = () => {
-    resetProfileForm({
-      phone: profile?.phone ?? '',
-      address: profile?.address ?? '',
-      city: profile?.city ?? '',
-      zip: profile?.zip ?? ''
-    });
-    
-    if (bankType === 'norwegian') {
-      resetNorwegianForm({
-        bank_account: profile?.bank_account ?? ''
-      });
-    } else {
-      resetInternationalForm({
-        bank_account: profile?.bank_account ?? '',
-        swift: profile?.swift ?? ''
-      });
-    }
-  };
 
-  
-
-  
 
   // Load membership options
   useEffect(() => {
@@ -238,29 +216,8 @@ const ProfileScreen = () => {
     }
   }, [user?.$id, isMembershipOpen]);
 
-  const openEditProfile = () => {
-    resetProfileForm({
-      phone: profile?.phone ?? '',
-      address: profile?.address ?? '',
-      city: profile?.city ?? '',
-      zip: profile?.zip ?? ''
-    });
-    setIsEditing(true);
-  };
   
-  const openEditPayment = () => {
-    if (bankType === 'norwegian') {
-      resetNorwegianForm({
-        bank_account: profile?.bank_account ?? ''
-      });
-    } else {
-      resetInternationalForm({
-        bank_account: profile?.bank_account ?? '',
-        swift: profile?.swift ?? ''
-      });
-    }
-    setIsEditingPayment(true);
-  };
+
 
   // Close membership sheet if user becomes a member
   useEffect(() => {
@@ -305,7 +262,7 @@ const ProfileScreen = () => {
         }
       }, 100);
     }
-  }, [isEditingPayment, bankType, profile]);
+  }, [isEditingPayment, bankType, profile, resetProfileForm, resetInternationalForm]);
 
   // Form submission handlers
   const onProfileSubmit = async (data: ProfileFormData) => {
@@ -587,6 +544,7 @@ const ProfileScreen = () => {
       )}
     </YStack>
   )});
+  EditableProfileField.displayName = 'EditableProfileField';
 
   const CustomSwitch = React.memo(({ checked, onCheckedChange }: { checked: boolean, onCheckedChange: (checked: boolean) => void }) => (
     <XStack
@@ -612,6 +570,7 @@ const ProfileScreen = () => {
       />
     </XStack>
   ));
+  CustomSwitch.displayName = 'CustomSwitch';
 
   const NotificationSection = React.memo(() => {
     const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
@@ -647,6 +606,7 @@ const ProfileScreen = () => {
       </YStack>
     );
   });
+  NotificationSection.displayName = 'NotificationSection';
 
   // Content Renderer
   const renderContent = () => {

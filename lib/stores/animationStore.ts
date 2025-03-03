@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQueryClient, QueryStatus } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 export type AnimationType = 
   | 'fadeIn'

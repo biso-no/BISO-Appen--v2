@@ -1,13 +1,12 @@
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Button, Card, View, Image, H6, Paragraph, YStack, XStack, Text, ScrollView } from "tamagui";
+import { Button, View, Image, H6, Paragraph, YStack, XStack, Text, ScrollView } from "tamagui";
 import { MotiView } from 'moti';
-import { databases, getDocument, getNews } from "@/lib/appwrite";
+import { databases } from "@/lib/appwrite";
 import { useRouter } from "expo-router";
-import { capitalizeFirstLetter, truncateString } from "@/lib/utils/helpers";
+import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models, Query } from "react-native-appwrite";
-import { MyStack } from "@/components/ui/MyStack";
 import { RenderHTML } from 'react-native-render-html';
 import { useWindowDimensions } from "react-native";
 import { useCampus } from "@/lib/hooks/useCampus";

@@ -3,24 +3,18 @@ import 'expo-dev-client';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Platform } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
-import * as Updates from 'expo-updates';
-import Constants from 'expo-constants';
 import 'react-native-gesture-handler';
-import { useLocalSearchParams } from 'expo-router';
 import { CampusProvider } from '@/components/context/core/campus-provider';
 import { ModalProvider } from '@/components/context/core/modal-manager';
 import { ModalProvider as MembershipModalProvider } from '@/components/context/membership-modal-provider';
-import { StatusBar } from 'expo-status-bar';
 import { LogBox } from 'react-native';
 import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
@@ -75,16 +69,6 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const isExpoGo = Constants.appOwnership === 'expo';
-
-  const onCopy = async (text: string) => {
-    try {
-      await Clipboard.setStringAsync(text);
-      return true;
-    } catch {
-      return false;
-    }
-  };
 
 
   return (

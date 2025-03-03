@@ -1,23 +1,18 @@
-import { useState, useEffect, memo, useCallback, useMemo } from 'react';
+import {  memo, useCallback, useMemo } from 'react';
 import { useWindowDimensions, useColorScheme, ScrollView, Pressable, Linking } from 'react-native';
 import {
   YStack,
   XStack,
-  H2,
   Text,
   Avatar,
   Theme,
-  useTheme,
   Button,
-  Separator,
 } from 'tamagui';
 import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Users, Mail, Phone, ChevronRight, MapPin } from '@tamagui/lucide-icons';
 import { functions } from '@/lib/appwrite';
 import { useCampus } from '@/lib/hooks/useCampus';
-import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { Image as ExpoImage } from 'expo-image';
 
@@ -87,7 +82,6 @@ const fetchDepartmentMembers = async ({
 
 // Optimize MemberCard with memo for preventing unnecessary re-renders
 const MemberCard = memo(({ member, index }: { member: DepartmentMember; index: number }) => {
-  const theme = useTheme();
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(width - 32, 300);
@@ -276,7 +270,7 @@ const MemberCard = memo(({ member, index }: { member: DepartmentMember; index: n
     </MotiView>
   );
 });
-
+MemberCard.displayName = 'MemberCard';
 // Memoized SkeletonCard component
 const SkeletonCard = memo(() => {
   const colorScheme = useColorScheme();
@@ -352,7 +346,7 @@ const SkeletonCard = memo(() => {
     </MotiView>
   );
 });
-
+SkeletonCard.displayName = 'SkeletonCard';
 export const DepartmentMembersShowcase = memo(({ 
   campusId,
   departmentId, 
@@ -487,3 +481,5 @@ export const DepartmentMembersShowcase = memo(({
     </Theme>
   );
 });
+
+DepartmentMembersShowcase.displayName = 'DepartmentMembersShowcase';

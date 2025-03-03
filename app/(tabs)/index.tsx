@@ -8,8 +8,6 @@ import {
   Text,
   ScrollView,
   Button,
-  Card,
-  styled,
   useTheme,
   Stack,
 } from 'tamagui';
@@ -23,8 +21,7 @@ import { MotiView } from 'moti';
 import axios from 'axios';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { functions } from '@/lib/appwrite';
-import { formatDate, parseISO, isAfter, isBefore, addDays } from 'date-fns';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { CampusHero } from '@/components/home/campus-hero';
 import { Event } from '@/types/event';
 import { HomeEvents } from '@/components/home/home-events';
@@ -99,7 +96,7 @@ const CategorySelector = memo(
     );
   }
 );
-
+CategorySelector.displayName = 'CategorySelector';
 
 export default function HomeScreen() {
   // Track initial load to prevent duplicate fetches

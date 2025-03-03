@@ -1,27 +1,14 @@
-import { Popover, Image, Avatar, Text, YGroup, styled, Button } from "tamagui";
+import { Popover, Avatar, Text, YGroup, styled, Button } from "tamagui";
 import { MyImagePicker } from "./image-picker";
-import { MyCamera } from "./camera";
-import { useEffect, useState } from "react";
-import { ID, Models } from "react-native-appwrite";
-import { Camera } from "@tamagui/lucide-icons";
-import { getUserAvatar, storage, updateDocument, uploadFile, avatars } from "@/lib/appwrite";
+import { useState } from "react";
+import { ID } from "react-native-appwrite";
+import { storage, updateDocument } from "@/lib/appwrite";
 import { uriToBlob } from "@/lib/utils/uriToBlob";
 import { useAuth } from "./context/core/auth-provider";
 import { useProfile } from "./context/core/profile-provider";
 import { launchCameraAsync } from "expo-image-picker";
 import { File } from "@/lib/file-utils";
 
-const CameraIcon = styled(Image, {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    opacity: 0.5,
-    tintColor: '#FFFFFF', // Adjust the color if needed
-    alignSelf: 'center',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -20 }]
-});
 
 const HighlightedAvatar = styled(Avatar, {
     variants: {
@@ -40,11 +27,11 @@ export function ImagePopover() {
     const [isPressed, setIsPressed] = useState(false);
     const [capturing, setCapturing] = useState(false);
 
-    const { user, isLoading } = useAuth();
+    const { user } = useAuth();
     const { profile } = useProfile();
     const [image, setImage] = useState(profile?.avatar || '');
 
-    const useInitials = (name: string) => {
+    const getInitials = (name: string) => {
         return name
           .split(' ')
           .map((n) => n[0])
@@ -122,7 +109,7 @@ export function ImagePopover() {
                 >
                     <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
                     <Avatar.Fallback backgroundColor="gray" alignItems='center' justifyContent='center' borderColor="white" borderWidth={2} borderRadius={50}>
-                        <Text fontSize={25}>{useInitials(user.name)}</Text>
+                        <Text fontSize={25}>{getInitials(user.name)}</Text>
                     </Avatar.Fallback>
                 </HighlightedAvatar>
             </Popover.Trigger>

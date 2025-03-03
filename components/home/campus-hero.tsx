@@ -1,7 +1,7 @@
 import { Card, Image, Stack, View, YStack, Text, styled, AnimatePresence } from "tamagui";
 import { LinearGradient } from "@tamagui/linear-gradient";
 import { Pressable, Animated, Platform } from "react-native";
-import React, { useEffect, useState, useRef, memo, useMemo } from "react";
+import React, { useEffect, useState, useRef, memo } from "react";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { router } from "expo-router";
 import CompactWeather from "@/components/CompactWeather";
@@ -75,6 +75,8 @@ const CampusCard = memo(({ children }: { children: React.ReactNode }) => (
     </StyledCard>
 ));
 
+CampusCard.displayName = 'CampusCard';
+
 // Separate the weather component to isolate its rendering
 const WeatherSection = memo(({ campusId }: { campusId: CampusId }) => (
     <CompactWeather 
@@ -83,7 +85,9 @@ const WeatherSection = memo(({ campusId }: { campusId: CampusId }) => (
     />
 ));
 
-function CampusHeroComponent() {
+WeatherSection.displayName = 'WeatherSection';
+
+export const CampusHero = memo(function CampusHero() {
     const { campus } = useCampus();
     const [isLoading, setIsLoading] = useState(true);
     const [isPressed, setIsPressed] = useState(false);
@@ -251,7 +255,4 @@ function CampusHeroComponent() {
             </CampusCard>
         </YStack>
     );
-}
-
-// Export memoized component to prevent unnecessary re-renders
-export const CampusHero = memo(CampusHeroComponent);
+});

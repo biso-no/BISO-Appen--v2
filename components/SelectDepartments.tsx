@@ -2,12 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { 
   YStack, Input, ScrollView, Card, XStack, 
   Button, Spinner, Text, H4,
-  AnimatePresence, View
 } from 'tamagui';
 import { Models, Query } from 'react-native-appwrite';
 import { Search, Check, X, Info } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
-import { useColorScheme } from 'react-native';
 
 interface DepartmentSelectorProps {
   campus: string | null | undefined;
@@ -24,7 +22,6 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [departments, setDepartments] = useState<Models.Document[]>([]);
   const [loading, setLoading] = useState(false);
-  const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
     if (campus) {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ID, Models, Query } from 'react-native-appwrite';
-import { databases, storage, createDocument, updateDocument, getDocuments, listDocuments } from '@/lib/appwrite';
+import { storage, createDocument, updateDocument, listDocuments } from '@/lib/appwrite';
 import { useExpenseStore, Expense, Attachment } from '@/lib/stores/expenseStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 

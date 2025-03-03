@@ -1,4 +1,4 @@
-import { ScrollView, View, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 import React, { useState } from 'react';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { MotiView } from 'moti';

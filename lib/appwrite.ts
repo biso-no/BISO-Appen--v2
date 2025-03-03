@@ -1,8 +1,6 @@
 import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod, RealtimeResponseEvent } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
-import { AuthContextType } from '@/components/context/core/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
-import { AnimatableStringValue } from 'react-native';
 
 export const client = new Client();
 

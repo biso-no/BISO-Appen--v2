@@ -55,7 +55,7 @@ export const PerformanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     
     // Log the results for development purposes
     console.log(`[Performance] ${id}: ${metrics.current[id].toFixed(2)}ms`);
-  }, []);
+  }, [isMonitoringEnabled]);
   
   // Get metrics for a specific ID
   const getMetrics = useCallback((id: string) => {
@@ -73,7 +73,7 @@ export const PerformanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setIsMonitoringEnabled(prev => !prev);
     clearMetrics();
     resetRenderCount();
-  }, [clearMetrics]);
+  }, [clearMetrics, resetRenderCount]);
   
   // Track component render counts
   const incrementRenderCount = useCallback(() => {

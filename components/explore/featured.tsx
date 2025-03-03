@@ -39,7 +39,6 @@ const wrap = (min: number, max: number, v: number) => {
 
 export function FeaturedPostsCarousel() {
   const [[page, going], setPage] = React.useState([0, 0]);
-  const [isLoading, setIsLoading] = useState(false);
   const { campus } = useCampus();
   const [featuredPosts, setFeaturedPosts] = useState<Models.DocumentList<Models.Document>>();
 

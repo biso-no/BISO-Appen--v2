@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
-  Keyboard,
   TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform,
@@ -14,34 +13,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopilotStore } from '../../lib/stores/copilotStore';
 import { Message } from '../../lib/mastra-api';
 import { BlurView } from 'expo-blur';
-import { Image } from 'expo-image';
 import {
   XStack,
   YStack,
   Text,
   Button,
-  Card,
   Avatar,
   Spinner,
-  H3,
-  H5,
   Paragraph,
-  Separator,
-  TooltipSimple,
   useTheme,
   AnimatePresence,
 } from 'tamagui';
 import {
   X,
   Send,
-  Mic,
-  Volume2,
-  VolumeX,
   Minimize2,
   Maximize2,
-  MessageSquare,
   Bot,
-  Settings,
   RefreshCcw,
   Sparkles,
   ChevronRight,

@@ -1,4 +1,4 @@
-import { Button, View, YStack, XStack, H3, Paragraph, Card, Text } from 'tamagui';
+import { YStack, XStack, H3, Paragraph, Card, Text } from 'tamagui';
 import React, { useState } from 'react';
 import { Input } from '@/components/auth/input';
 import { MotiView } from 'moti';
@@ -26,7 +26,7 @@ interface Step4Props {
 
 export function Step4({ phone, address, city, zipCode, setPhone, setAddress, setCity, setZipCode }: Step4Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   const isSmallDevice = width < 380;
   
   // Animation values
@@ -52,7 +52,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
       formOpacity.value = 0;
       formTranslateY.value = 20;
     };
-  }, []);
+  }, [formOpacity, formTranslateY, homeScale]);
   
   // Animated styles
   const homeAnimatedStyle = useAnimatedStyle(() => {

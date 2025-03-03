@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Select, XStack, YStack, Spinner, H4, Paragraph, Avatar } from 'tamagui';
 import { ChevronDown, RefreshCw } from '@tamagui/lucide-icons';
 import { getCampusWeather, Campus, getWeatherDescription, getWeatherIconUrl } from '../lib/get-weather';
@@ -38,7 +37,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   });
 
   // Fetch weather data for the selected campus
-  const fetchWeather = async (campus: Campus) => {
+  const fetchWeather = useCallback(async (campus: Campus) => {
     setLoading(true);
     setError(null);
     
@@ -71,12 +70,12 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [weatherCache]);
 
   // Fetch weather when the selected campus changes
   useEffect(() => {
     fetchWeather(selectedCampus);
-  }, [selectedCampus]);
+  }, [selectedCampus, fetchWeather]);
 
   // Handle campus selection change
   const handleCampusChange = (value: string) => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { databases, triggerFunction } from '@/lib/appwrite';
 import { Sheet } from '@tamagui/sheet';
 import { Models, Query } from 'react-native-appwrite';
-import { Button, H2, XStack, YStack, Label, RadioGroup, Image, Text } from 'tamagui';
+import { Button, H2, XStack, YStack, Label, RadioGroup, Text } from 'tamagui';
 import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from './context/core/auth-provider';
@@ -61,7 +61,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     fetchMemberships();
     }
 
-  }, []);
+  }, [user?.$id]);
 
   const initiatePurchase = async () => {
     if (!selectedMembership) {

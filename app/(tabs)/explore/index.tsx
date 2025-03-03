@@ -5,34 +5,27 @@ import {
   XStack, 
   Stack, 
   Text, 
-  Input, 
   ScrollView, 
   Button, 
   Image,
-  useTheme
+  useTheme,
+  View
 } from 'tamagui'
 import { 
-  Search, 
-  MapPin, 
   Calendar, 
-  Ticket, 
   ShoppingBag,
   Receipt, 
   Briefcase,
-  Bell,
   Lock,
   ChevronRight, 
   Users
 } from '@tamagui/lucide-icons'
 import { MotiView } from 'moti'
 import { Link, useRouter } from 'expo-router'
-import { Models, Query } from 'react-native-appwrite'
 import { useCampus } from '@/lib/hooks/useCampus'
-import { databases } from '@/lib/appwrite'
 import axios from 'axios'
 import { useAuth } from '@/components/context/core/auth-provider'
 import { useColorScheme } from 'react-native'
-import { format, parseISO } from 'date-fns'
 
 interface Event {
   id: number;
@@ -44,30 +37,6 @@ interface Event {
   venue: string | null;
   url: string;
   featured_image: string;
-}
-
-interface WordPressEvent {
-  id: number;
-  date: string;
-  slug: string;
-  status: string;
-  description: string;
-  link: string;
-  image: {
-    url: string;
-  }
-  title: {
-    rendered: string;
-  };
-  content: {
-    rendered: string;
-  };
-  _embedded?: {
-    'wp:featuredmedia'?: Array<{
-      source_url: string;
-    }>;
-  };
-  organizer_name: string;
 }
 
 type ExploreCategory = {
@@ -128,7 +97,6 @@ export default function ExploreScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
-  const [showAuthDialog, setShowAuthDialog] = useState(false)
   const { user } = useAuth()
   const { campus } = useCampus()
   const router = useRouter()
@@ -299,7 +267,6 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
   const theme = useTheme()
   const handlePress = () => {
     if (category.requiresAuth && !user) {
-      setShowAuthDialog(true)
       return
     }
     router.push(category.link as any)
@@ -418,7 +385,7 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
       >
         <YStack gap="$4">
           {events.length > 0 && (
-            <>
+            <View>
               <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
               {error ? (
                 <Stack
@@ -438,16 +405,16 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
                   </Button>
                 </Stack>
               ) : isLoading ? (
-                <>
+                <View>
                   <LoadingEventCard />
                   <LoadingEventCard />
-                </>
+                </View>
               ) : (
                 events.map(event => (
                   <EventCard key={event.id} event={event} />
                 ))
               )}
-            </>
+            </View>
           )}
         </YStack>
 

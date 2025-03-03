@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { 
   Button, Text, YStack, Input, Label, 
-  XStack, ScrollView, Card, Image,  
-  H6, Spinner, View, Sheet, useTheme 
+  XStack, ScrollView, Card,  
+  H6, Sheet 
 } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useExpenseStore, Attachment } from '@/lib/stores/expenseStore';
-import { StyleSheet, Platform, useColorScheme } from 'react-native';
+import { Attachment } from '@/lib/stores/expenseStore';
+import { Platform, useColorScheme } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useFormContext, Controller } from 'react-hook-form';
-import { ChevronDown, ChevronUp, Plus, X } from '@tamagui/lucide-icons';
+import { Plus, X } from '@tamagui/lucide-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { MotiView } from 'moti';
 import { FileIcon } from '@/components/ui/file-icon';
@@ -32,7 +32,6 @@ export function FileUpload() {
 
   const { control, formState: { errors }, watch, setValue } = useFormContext();
   const attachments = watch('expenseAttachments') || [];
-  const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 

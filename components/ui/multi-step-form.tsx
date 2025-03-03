@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme, KeyboardAvoidingView, Platform } from 'react-native';
-import { YStack, Button, Text, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
-import { MyStack } from './MyStack';
+import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme } from 'react-native';
+import { YStack, Button, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
 import { MotiView } from 'moti';
 import { ChevronRight, ChevronLeft, Check } from '@tamagui/lucide-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface Step {
   label: string;
@@ -21,7 +18,6 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -36,7 +32,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [currentStep, steps.length]);
+  }, [currentStep, steps.length, progressAnim]);
 
   const moveToNextStep = () => {
     if (currentStep < steps.length - 1) {

@@ -16,7 +16,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
   const [isFocused, setIsFocused] = useState(false);
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   
   // Start animation when component mounts
   React.useEffect(() => {
@@ -43,7 +43,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
       rotation.value = 0;
       scale.value = 1;
     };
-  }, []);
+  }, [rotation, scale]);
   
   const animatedStyle = useAnimatedStyle(() => {
     return {

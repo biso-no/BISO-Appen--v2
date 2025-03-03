@@ -57,8 +57,7 @@ export interface AnimationOptions {
   useNativeDriver?: boolean;
 }
 
-// Animation properties type
-type AnimationProperty = 'opacity' | 'scale' | 'translateX' | 'translateY' | 'rotate';
+
 
 // Type for animation values
 interface AnimationValues {
@@ -91,10 +90,11 @@ export function useAnimatedValue(
   
   // Clean up on unmount
   useEffect(() => {
+    const currentId = id.current; // Capture the current value
     return () => {
-      unregisterAnimation(id.current);
+      unregisterAnimation(currentId);
     };
-  }, []);
+  }, [unregisterAnimation]);
   
   // Function to animate the value
   const animate = (toValue: number, options: AnimationOptions = {}) => {
@@ -174,10 +174,11 @@ export function useAnimatedTransition(
   
   // Clean up on unmount
   useEffect(() => {
+    const currentId = id.current; // Capture the current value
     return () => {
-      unregisterAnimation(id.current);
+      unregisterAnimation(currentId);
     };
-  }, []);
+  }, [unregisterAnimation]);
   
   // Update progress when visibility changes
   useEffect(() => {
@@ -217,7 +218,7 @@ export function useAnimatedTransition(
         }
       }
     );
-  }, [visible]);
+  }, [visible, getAnimationDuration, preferences.disableAnimations, options.duration, options.easing, progress, registerAnimation, unregisterAnimation]);
   
   // Create animated styles based on animation values
   const animatedStyles = useAnimatedStyle(() => {

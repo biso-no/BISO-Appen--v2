@@ -40,6 +40,7 @@ const CategoryPill = styled(Button, {
       },
     },
   })
+CategoryPill.displayName = 'CategoryPill';
 
 // Memoized Category component for better performance
 const CategoryButton = memo(({ 
@@ -92,6 +93,7 @@ const CategoryButton = memo(({
     </CategoryPill>
   );
 });
+CategoryButton.displayName = 'CategoryButton';
 
 export const HomeCategories = memo(({ categories, activeCategory, setActiveCategory }: TabsProps) => {
     const theme = useTheme();
@@ -143,3 +145,4 @@ export const HomeCategories = memo(({ categories, activeCategory, setActiveCateg
         </ScrollView>
     );
 });
+HomeCategories.displayName = 'HomeCategories';

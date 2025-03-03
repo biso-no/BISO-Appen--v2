@@ -2,12 +2,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { MotiView } from 'moti';
 import { getDocument } from "@/lib/appwrite";
-import { YStack, H6, Paragraph, XStack, Card, Separator, Button, Text, View, Image, ScrollView } from "tamagui";
+import { YStack, H6, Paragraph, XStack, Card, Text, View, Image, ScrollView } from "tamagui";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
 import { getFormattedDateFromString } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
-import { MyStack } from "@/components/ui/MyStack";
-import { Frown } from "@tamagui/lucide-icons";
 import RenderHTML from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 
@@ -19,7 +17,6 @@ export default function EventsScreen() {
     const { width } = useWindowDimensions();
 
     const { id } = params;
-    const router = useRouter();
 
     const [event, setEvent] = useState<Models.Document>();  
 

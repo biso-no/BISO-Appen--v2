@@ -2,9 +2,6 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { Message, mastraApi } from '../mastra-api';
 
-// Import the system message generator
-import { useAgentSystemMessage } from '../hooks/useMastra';
-
 // Agent ID that will be used by the copilot
 const DEFAULT_AGENT_ID = process.env.EXPO_PUBLIC_MASTRA_DEFAULT_AGENT_ID || 'universalAgent';
 

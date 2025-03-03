@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { getDocuments, getExpensesDepartments } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
-import { Wallet, PlusCircle } from "@tamagui/lucide-icons";
+import { Wallet } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
 import { FlatList } from "react-native";
 
@@ -22,6 +22,7 @@ const StatusBadge = memo(({ status }: { status: string }) => (
         <Text fontWeight={"bold"}>{status}</Text>
     </View>
 ));
+StatusBadge.displayName = 'StatusBadge';
 
 const ExpenseCard = memo(({ expense, onPress }: { expense: Models.Document, onPress: () => void }) => {
     const { description, total, $createdAt: created_at, status } = expense;
@@ -53,21 +54,7 @@ const ExpenseCard = memo(({ expense, onPress }: { expense: Models.Document, onPr
         </Card>
     );
 });
-
-const CreateExpenseCard = memo(() => (
-    <Card bordered borderWidth={3}>
-        <YStack gap="$5" alignItems="flex-start" justifyContent="center">
-            <Card.Header>
-                <YStack>
-                    <XGroup marginRight={10}>
-                        <PlusCircle size={20} />
-                        <Text fontSize={15} fontWeight={"bold"}>Create new expense</Text>
-                    </XGroup>
-                </YStack>
-            </Card.Header>
-        </YStack>
-    </Card>
-));
+ExpenseCard.displayName = 'ExpenseCard';
 
 const NoExpensesPlaceholder = memo(() => (
     <YStack alignItems="center" justifyContent="center" marginTop={50} padding="$4">
@@ -78,7 +65,7 @@ const NoExpensesPlaceholder = memo(() => (
         </Paragraph>
     </YStack>
 ));
-
+NoExpensesPlaceholder.displayName = 'NoExpensesPlaceholder';
 export function ExpenseList({withFilters = true, profileScreen = false}: {withFilters?: boolean, profileScreen?: boolean}) {
     const [sortingOption, setSortingOption] = useState("date descending");
     const [expenses, setExpenses] = useState<Models.DocumentList<Models.Document>>();

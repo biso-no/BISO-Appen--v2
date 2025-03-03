@@ -1,10 +1,9 @@
 //A cool, feature-rich product details screen consisting of a list of products, each with a title, description, and price, using tamagui components.
-import { Card, H5, Paragraph, XStack, YStack, Image, Button, H3, Separator, Text, YGroup, ScrollView } from "tamagui";
+import { XStack, YStack, Image, Button, Separator, Text, YGroup, ScrollView } from "tamagui";
 import { useEffect, useState } from "react";
-import { Models, Query } from "react-native-appwrite";
-import { databases, functions, getDocument } from "@/lib/appwrite";
+import { functions } from "@/lib/appwrite";
 import { useWindowDimensions } from 'react-native';
-import { ExternalPathString, useLocalSearchParams, useRouter } from "expo-router";
+import { ExternalPathString, useRouter } from "expo-router";
 import RenderHtml from 'react-native-render-html';
 import { useTheme } from "tamagui";
 
@@ -35,9 +34,6 @@ export function ProductDetails({productId}: {productId: string}) {
             return;
         }
       const response = async () => {
-        const body = {
-            productId: productId
-        }
         const response = await functions.createExecution('webshop_product', productId, false)
 
         const data = JSON.parse(response.responseBody) as Product

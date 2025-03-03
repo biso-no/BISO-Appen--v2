@@ -19,7 +19,6 @@ export function useZustandDepartment() {
     userDepartment,
     followedDepartments,
     isLoading: storeLoading,
-    error,
     setUserDepartment,
     setFollowedDepartments,
     setLoading,

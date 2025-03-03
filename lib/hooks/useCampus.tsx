@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '@/components/context/core/auth-provider';
-import { useProfile } from '@/components/context/core/profile-provider';
+import React from 'react';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { Models } from 'react-native-appwrite';
-import { getDocuments } from '@/lib/appwrite';
 import { useCampusContext } from '@/components/context/core/campus-provider';
 
 type PartialCampus = {
@@ -11,10 +8,6 @@ type PartialCampus = {
     name: string;
 };
 
-type Campus = {
-    id: string;
-    name: string;
-};
 
 // Bridge hook that uses the new implementation but keeps the old API
 export const useCampus = () => {

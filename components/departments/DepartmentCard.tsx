@@ -1,7 +1,6 @@
 import React from "react";
-import { useWindowDimensions, useColorScheme } from 'react-native';
+import { useColorScheme } from 'react-native';
 import { MotiView } from 'moti';
-import RenderHTML from "react-native-render-html";
 import { Models } from "react-native-appwrite";
 import { 
   Text, 
@@ -29,7 +28,6 @@ interface DepartmentCardProps {
 
 export function DepartmentCard({ department, onPress, index }: DepartmentCardProps) {
   const theme = useTheme();
-  const { width } = useWindowDimensions();
   const colorScheme = useColorScheme();
   
   // Generate colors for departments based on index or name

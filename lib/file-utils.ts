@@ -1,6 +1,4 @@
 import * as DocumentPicker from 'expo-document-picker';
-import { uploadFile } from "./appwrite";
-import { Models } from 'react-native-appwrite';
 
 export interface File {
     name: string;

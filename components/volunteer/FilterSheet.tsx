@@ -1,5 +1,4 @@
 import React from "react";
-import { useColorScheme } from 'react-native';
 import { 
   Text, 
   YStack, 
@@ -51,7 +50,6 @@ export function FilterSheet({
   maxVisibleCategories = 5,
   maxVisibleInterests = 5
 }: FilterSheetProps) {
-  const colorScheme = useColorScheme();
   
   // Colors for interest buttons
   const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow', 'red', 'cyan'];

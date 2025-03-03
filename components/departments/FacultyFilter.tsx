@@ -8,11 +8,6 @@ import {
   Button, 
   ScrollView
 } from "tamagui";
-import {
-  ChevronDown,
-  ChevronUp,
-  Building
-} from "@tamagui/lucide-icons";
 import * as LucideIcons from "@tamagui/lucide-icons";
 
 interface FacultyFilterProps {
@@ -30,8 +25,6 @@ export function FacultyFilter({
   selectedFaculty,
   onSelectFaculty
 }: FacultyFilterProps) {
-  const colorScheme = useColorScheme();
-  
   // Predefined colors for faculties
   const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow'];
   

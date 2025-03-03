@@ -26,7 +26,6 @@ export function useZustandMembership() {
   const { 
     membership, 
     isLoading: storeLoading,
-    error,
     isBisoMember,
     membershipExpiry,
     setMembership, 

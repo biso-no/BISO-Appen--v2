@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUserPreferences, updateUserPreferences } from '@/lib/appwrite';
-import { Models } from 'react-native-appwrite';
 
 export function usePreferences() {
   return useQuery({

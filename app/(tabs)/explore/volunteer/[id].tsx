@@ -1,8 +1,8 @@
 import RenderHTML from "react-native-render-html";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { RelativePathString, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, YStack, useTheme, Card, Separator, H5, Spinner, ScrollView, Button } from "tamagui";
-import { useCampus } from "@/lib/hooks/useCampus";
+import { YStack, useTheme, Separator, Spinner, ScrollView, Button } from "tamagui";
+
 import axios from "axios";
 import { useWindowDimensions } from "react-native";
 import { MotiView } from 'moti';
@@ -17,7 +17,6 @@ export default function VolunteerScreen() {
     const router = useRouter();
 
     const theme = useTheme();
-    const { campus } = useCampus();
     const jobId = params.id;
 
 
@@ -50,7 +49,7 @@ export default function VolunteerScreen() {
                 console.error("Error fetching jobs:", error);
                 setLoading(false); // Ensure loading is set to false even on error
             });
-    }, [params.id]);
+    }, [params.id, jobId]);
 
     // If loading, show a large spinner in the center of the screen
     if (loading) {
@@ -75,7 +74,7 @@ export default function VolunteerScreen() {
                 contentWidth={width - 40}
                 tagsStyles={titleStyles}
             />
-            <Button onPress={() => router.push(job?.url)}>View on BISO.no</Button>
+            <Button onPress={() => router.push(job?.url as RelativePathString)}>View on BISO.no</Button>
             <Separator />
             <RenderHTML
                 source={{ html: job?.content }}

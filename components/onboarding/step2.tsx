@@ -1,9 +1,9 @@
-import { View, YStack, Text, H3, Paragraph, XStack, Card, ScrollView, Button } from 'tamagui';
+import { YStack, Text, H3, XStack, Card, ScrollView } from 'tamagui';
 import React from 'react';
 import CampusSelector from '@/components/SelectCampus';
 import { MotiView } from 'moti';
 import { StyleSheet, Dimensions } from 'react-native';
-import { MapPin, Building2, CheckCircle, ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
+import { MapPin, Building2, ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
 import { Models } from 'react-native-appwrite';
 import DepartmentSelector from '../SelectDepartments';
 

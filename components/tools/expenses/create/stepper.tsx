@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Button, Text, YStack, Input, H6, YGroup, Label,
   XStack, ScrollView, Spinner, Switch, Card
@@ -51,7 +51,9 @@ export function MultiStepForm() {
   const receivedPrepayment = watch('prepayment_amount') > 0;
   const description = watch('description');
   const eventName = watch('eventName');
-  const expenseAttachments = watch('expenseAttachments') || [];
+  const rawExpenseAttachments = watch('expenseAttachments');
+  
+  const expenseAttachments = useMemo(() => rawExpenseAttachments || [], [rawExpenseAttachments]);
   const [debouncedEventName] = useDebounce(eventName || '', 500);
   
   // Get store and query hooks

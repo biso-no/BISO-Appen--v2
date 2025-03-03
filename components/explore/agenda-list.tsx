@@ -17,7 +17,7 @@ import {
 } from 'tamagui';
 import { MotiView } from 'moti';
 import { Calendar, MapPin, Clock } from '@tamagui/lucide-icons';
-import { formatDate, parseISO, isToday, isTomorrow, isThisWeek, isThisMonth, format, addMonths } from 'date-fns';
+import { parseISO, isThisWeek, format, addMonths } from 'date-fns';
 import axios from 'axios';
 import { useCampus } from '@/lib/hooks/useCampus';
 import RenderHTML from 'react-native-render-html';

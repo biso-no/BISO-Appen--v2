@@ -4,10 +4,9 @@ import { MotiView } from 'moti';
 import { getDocument } from "@/lib/appwrite";
 import { YStack, H6, Paragraph, XStack, Card, Separator, Button, Text, View, Image, ScrollView, useTheme } from "tamagui";
 import { capitalizeFirstLetter } from "@/lib/utils/helpers";
-import { getFormattedDate, getFormattedDateFromString } from "@/lib/format-time";
+import { getFormattedDate } from "@/lib/format-time";
 import { Models } from "react-native-appwrite";
 import { MyStack } from "@/components/ui/MyStack";
-import { Frown } from "@tamagui/lucide-icons";
 import RenderHTML from "react-native-render-html";
 
 

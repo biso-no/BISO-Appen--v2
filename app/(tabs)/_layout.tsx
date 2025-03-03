@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Platform, Pressable, View, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, View, StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Avatar, XStack, Text, Button, Stack, YStack, AnimatePresence } from 'tamagui';
+import { Avatar, XStack, Button, Stack, YStack } from 'tamagui';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 // Remove Reanimated imports
@@ -10,29 +10,16 @@ import {
   UserRound, 
   LogIn, 
   Home, 
-  LayoutList, 
-  MessageSquare, 
-  ChevronLeft, 
-  Globe,
-  Search,
-  MapPin,
-  Bell,
   Compass
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
-import { useTheme } from 'tamagui';
 import * as Notifications from 'expo-notifications';
-import { router, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useNavigationState } from '@react-navigation/native';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import CampusPopover from '@/components/CampusPopover';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { capitalizeFirstLetter } from '@/lib/utils/helpers';
-import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'tamagui/linear-gradient';
-import { usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme as useNativeColorScheme } from 'react-native';
 import { useProfile } from '@/components/context/core/profile-provider';
 // Add moti imports
 import { MotiView } from 'moti';
@@ -46,8 +33,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Replace Animated.createAnimatedComponent with MotiPressable
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 interface TabBarIconProps {
   routeName: string;
@@ -55,14 +41,7 @@ interface TabBarIconProps {
   isActive: boolean;
 }
 
-interface BottomTabBarIconProps {
-  focused: boolean;
-  color: string;
-  size: number;
-  route: {
-    name: string;
-  };
-}
+
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -71,70 +50,10 @@ export default function TabLayout() {
   const avatarId = profile?.avatar;
   const [image, setImage] = useState(profile?.avatar || '');
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const navigationState = useNavigationState(state => state);
-  const pathname = usePathname();
-  
-  // Replace useSharedValue with useState for tracking scroll
-  const [scrollY, setScrollY] = useState(0);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
-  // Define dynamic styles that depend on insets
-  const dynamicStyles = StyleSheet.create({
-    headerContainer: {
-      position: 'relative',
-      height: Platform.select({
-        ios: 45 + (insets.top || 20),
-        android: 40 + (insets.top || 20),
-      }),
-      zIndex: 100,
-      backgroundColor: 'transparent',
-      shadowColor: Platform.select({
-        ios: 'rgba(0,0,0,0.15)',
-        android: 'rgba(0,0,0,0.3)',
-      }),
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 5,
-    },
-    headerBackgroundContainer: {
-      ...StyleSheet.absoluteFillObject,
-      overflow: 'hidden',
-    },
-    headerBlurView: {
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      overflow: 'hidden',
-    },
-    tabBar: {
-      position: 'absolute',
-      bottom: 20,
-      left: 20,
-      right: 20,
-      borderRadius: 24,
-      height: 65,
-      paddingBottom: 10,
-      backgroundColor: 'transparent',
-    },
-    content: {
-      flex: 1,
-      paddingTop: Platform.select({
-        ios: 45 + (insets.top || 20),
-        android: 40 + (insets.top || 20),
-      }),
-      paddingBottom: Platform.select({
-        ios: 50 + (insets.bottom || 20),
-        android: 60,
-      }),
-    },
-  });
 
-  if (!theme.background) return "#fff";
-  const backgroundColor = theme.background.val;
+
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (!user?.$id) {
@@ -155,26 +74,6 @@ export default function TabLayout() {
     ? ['index', 'explore/index', 'profile/index']
     : ['index', 'explore/index', 'auth/signIn/index'];
 
-  const isEventRoute = pathname.includes('/explore/events');
-
-  const eventIcon = () => {
-    return (
-      <Pressable onPress={() => router.push("https://biso.no/events/")}>
-        {({ pressed }) => (
-          <MaskedView maskElement={<Globe size={25} color={Colors[colorScheme ?? 'light'].text} />} style={{ width: 25, height: 25 }}>
-            <LinearGradient
-              start={[0, 0]}
-              end={[0, 1]}
-              themeInverse
-              theme="accent"
-              colors={['$color', '$color2']}
-              style={{ width: 25, height: 25 }}
-            />
-          </MaskedView>
-        )}
-      </Pressable>
-    );
-  };
 
   const generateScreens = () => {
     const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
@@ -185,7 +84,6 @@ export default function TabLayout() {
 
     return nestedRoutes.map((route, index) => {
       const isTab = tabNames.includes(route.name);
-      const showCampusPopover = routesWithCampusPopover.includes(route.name);
       const isAuthScreen = route.name === 'auth/signIn/index';
 
       const HeaderComponent = () => {
@@ -281,37 +179,7 @@ export default function TabLayout() {
     }
   };
 
-  // Replace useAnimatedStyle with Moti animation props
-  const tabBarAnimProps = {
-    from: {
-      translateY: 0,
-    },
-    animate: {
-      translateY: scrollY > lastScrollY ? 100 : 0,
-    },
-    transition: {
-      type: 'spring',
-    },
-    style: {
-      backgroundColor: 'transparent',
-    }
-  };
 
-  // Replace useAnimatedStyle with Moti animation props
-  const headerAnimProps = {
-    from: {
-      opacity: 1,
-      scale: 1,
-    },
-    animate: {
-      opacity: Math.max(0, 1 - scrollY / 100),
-      scale: Math.max(0.95, 1 - scrollY / 2000),
-    },
-    transition: {
-      type: 'timing',
-      duration: 300,
-    }
-  };
 
   const TabBarIcon: React.FC<TabBarIconProps> = ({ routeName, color, isActive }) => {
     const handlePress = () => {
