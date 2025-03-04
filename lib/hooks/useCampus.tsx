@@ -1,121 +1,54 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '@/components/context/auth-provider';
+import React from 'react';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { Models } from 'react-native-appwrite';
-import { getDocuments } from '@/lib/appwrite';
+import { useCampusContext } from '@/components/context/core/campus-provider';
 
 type PartialCampus = {
     $id: string;
     name: string;
 };
 
-type Campus = {
-    id: string;
-    name: string;
-};
 
-const CampusContext = createContext<{
-    campus: Models.Document | null,
-    setCampus: React.Dispatch<React.SetStateAction<Models.Document | null>>
-    availableCampuses: Campus[]
-} | undefined>(undefined);
-
+// Bridge hook that uses the new implementation but keeps the old API
 export const useCampus = () => {
-    const context = useContext(CampusContext);
-    if (context === undefined) {
-        throw new Error('useCampus must be used within a CampusProvider');
-    }
-    const { campus, setCampus, availableCampuses } = context;
+    const { currentCampus, campuses, changeCampus } = useCampusContext();
+    
+    // Map campuses to the old availableCampuses format
+    const availableCampuses = campuses?.map(c => ({
+        id: c.$id,
+        name: c.name
+    })) || [
+        { id: "1", name: 'Oslo' },
+        { id: "2", name: 'Bergen' },
+        { id: "3", name: 'Trondheim' },
+        { id: "4", name: 'Stavanger' },
+        { id: "5", name: 'National' },
+    ];
 
+    // Keep backward compatibility with the old interface
     const onChange = async (newCampus: Models.Document) => {
-        setCampus(newCampus);
+        await changeCampus(newCampus);
         try {
             const campusData: PartialCampus = {
                 $id: newCampus.$id,
                 name: newCampus.name
             };
             await AsyncStorage.default.setItem('campus', JSON.stringify(campusData));
-            console.log('Saved to storage:', campusData);
         } catch (error) {
             console.error('Error saving campus to async storage:', error);
         }
     };
 
-    return { campus, onChange, availableCampuses };
+    return { 
+        campus: currentCampus, 
+        onChange, 
+        availableCampuses 
+    };
 };
 
+// This is now a stub for backward compatibility - the real implementation
+// is in components/context/core/campus-provider.tsx
 export const CampusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [campus, setCampus] = useState<Models.Document | null>(null);
-    const availableCampuses = [
-        { id: "1", name: 'Oslo' },
-        { id: "2", name: 'Bergen' },
-        { id: "3", name: 'Trondheim' },
-        { id: "4", name: 'Stavanger' },
-        { id: "5", name: 'National' },
-    ]
-    const [loading, setLoading] = useState(true);
-    const { profile } = useAuth();
-
-    useEffect(() => {
-        const initializeCampus = async () => {
-            const storedCampus = await fetchCampusFromStorage();
-            if (storedCampus) {
-                setCampus(storedCampus);
-            } else if (profile && profile.campus) {
-                const appwriteCampus = await fetchCampusFromAppwrite(profile);
-                if (appwriteCampus) {
-                    setCampus(appwriteCampus);
-                }
-            }
-            setLoading(false);
-        };
-
-        initializeCampus();
-    }, [profile]);
-
-    if (loading) {
-        return null; // or a loading spinner
-    }
-
-    return (
-        <CampusContext.Provider value={{ campus, setCampus, availableCampuses }}>
-            {children}
-        </CampusContext.Provider>
-    );
-};
-
-const fetchCampusFromStorage = async (): Promise<Models.Document | null> => {
-    try {
-        const storedCampus = await AsyncStorage.default.getItem('campus');
-        if (storedCampus !== null) {
-            const campusData: PartialCampus = JSON.parse(storedCampus);
-            return {
-                $id: campusData.$id,
-                name: campusData.name,
-                $collectionId: '', // Provide default or fetch from somewhere
-                $databaseId: '', // Provide default or fetch from somewhere
-                $createdAt: '', // Provide default or fetch from somewhere
-                $updatedAt: '', // Provide default or fetch from somewhere
-                $permissions: [] // Provide default or fetch from somewhere
-            } as Models.Document;
-        }
-    } catch (error) {
-        console.error('Error fetching campus from async storage:', error);
-    }
-    return null;
-};
-
-const fetchCampusFromAppwrite = async (user?: Models.Document) => {
-    try {
-        const campus = user?.campus;
-
-        if (campus) {
-            return campus;
-        }
-    } catch (error) {
-        console.log("Found no campus in Appwrite", error);
-        return null;
-    }
-
-    return null;
+    // Just pass through to children - the real provider is added in _layout.tsx
+    return <>{children}</>;
 };

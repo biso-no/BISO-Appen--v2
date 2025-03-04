@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  YStack, Avatar, Card, H2, H4, Text, Input, Separator,
-  Label, YGroup, Switch, Button, XStack, useTheme, View, Sheet, ScrollView,
+  YStack, Card, H2, H4, Text, Input, Separator,
+  Label, Button, XStack, useTheme, View, Sheet, ScrollView,
   SizableText, RadioGroup, Stack, Form
 } from 'tamagui';
 import { 
@@ -9,9 +9,9 @@ import {
   CreditCard, Bell 
 } from '@tamagui/lucide-icons';
 import { MotiView, AnimatePresence } from 'moti';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from '@/components/context/core/auth-provider';
 import { useRouter } from 'expo-router';
-import { updateDocument, signOut, databases, triggerFunction } from '@/lib/appwrite';
+import { signOut, databases, triggerFunction } from '@/lib/appwrite';
 import { ExpenseList } from '@/components/tools/expenses/expense-list';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { Models, Query } from 'react-native-appwrite';
@@ -26,9 +26,16 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMembershipContext } from '@/components/context/core/membership-provider';
+import { useProfile } from '@/components/context/core/profile-provider';
+import { useAuthStore } from '@/lib/stores/authStore';
+import { useProfileStore } from '@/lib/stores/profileStore';
+import { useMembershipStore } from '@/lib/stores/membershipStore';
+import { queryClient } from '@/lib/react-query';
+import { CustomSwitch } from '@/components/custom-switch';
 
 // Type definitions
-type ProfileSection = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
+type ProfileSectionProps = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
 
 const paymentMethods = [
   { label: 'Credit Card', value: 'CARD', size: '$5' },
@@ -57,9 +64,11 @@ type NorwegianPaymentFormData = z.infer<typeof norwegianPaymentFormSchema>;
 type InternationalPaymentFormData = z.infer<typeof internationalPaymentFormSchema>;
 
 const ProfileScreen = () => {
-  const { profile, isLoading, data, isBisoMember, refetchUser, studentId, membership, updateUserPrefs, updateProfile } = useAuth();
+  const { user, isLoading } = useAuth();
+  const { profile, actions: profileActions } = useProfile();
+  const { membership, isBisoMember } = useMembershipContext();
   const router = useRouter();
-  const theme = useTheme();
+
   const pathName = usePathname();
   
   // Display States - Only for showing data
@@ -135,7 +144,7 @@ const ProfileScreen = () => {
   });
 
   // Section and UI States
-  const [currentSection, setCurrentSection] = useState<ProfileSection>('menu');
+  const [currentSection, setCurrentSection] = useState<ProfileSectionProps>('menu');
   const [bankType, setBankType] = useState<'norwegian' | 'international'>('norwegian');
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPayment, setIsEditingPayment] = useState(false);
@@ -188,33 +197,11 @@ const ProfileScreen = () => {
     fetchFollowedDepartments();
   }, [profile?.$id]);
 
-  const resetForms = () => {
-    resetProfileForm({
-      phone: profile?.phone ?? '',
-      address: profile?.address ?? '',
-      city: profile?.city ?? '',
-      zip: profile?.zip ?? ''
-    });
-    
-    if (bankType === 'norwegian') {
-      resetNorwegianForm({
-        bank_account: profile?.bank_account ?? ''
-      });
-    } else {
-      resetInternationalForm({
-        bank_account: profile?.bank_account ?? '',
-        swift: profile?.swift ?? ''
-      });
-    }
-  };
 
-  
-
-  
 
   // Load membership options
   useEffect(() => {
-    if (data?.$id && isMembershipOpen) {
+    if (user?.$id && isMembershipOpen) {
       const fetchMemberships = async () => {
         try {
           const response = await databases.listDocuments('app', 'memberships', [
@@ -229,31 +216,10 @@ const ProfileScreen = () => {
       };
       fetchMemberships();
     }
-  }, [data?.$id, isMembershipOpen]);
+  }, [user?.$id, isMembershipOpen]);
 
-  const openEditProfile = () => {
-    resetProfileForm({
-      phone: profile?.phone ?? '',
-      address: profile?.address ?? '',
-      city: profile?.city ?? '',
-      zip: profile?.zip ?? ''
-    });
-    setIsEditing(true);
-  };
   
-  const openEditPayment = () => {
-    if (bankType === 'norwegian') {
-      resetNorwegianForm({
-        bank_account: profile?.bank_account ?? ''
-      });
-    } else {
-      resetInternationalForm({
-        bank_account: profile?.bank_account ?? '',
-        swift: profile?.swift ?? ''
-      });
-    }
-    setIsEditingPayment(true);
-  };
+
 
   // Close membership sheet if user becomes a member
   useEffect(() => {
@@ -264,10 +230,10 @@ const ProfileScreen = () => {
 
   // Initialize local prefs
   useEffect(() => {
-    if (data?.prefs) {
-      setLocalPrefs(data.prefs);
+    if (user?.prefs) {
+      setLocalPrefs(user.prefs);
     }
-  }, [data?.prefs]);
+  }, [user?.prefs]);
 
   // Reset form values when opening edit modals
   useEffect(() => {
@@ -298,13 +264,13 @@ const ProfileScreen = () => {
         }
       }, 100);
     }
-  }, [isEditingPayment, bankType, profile]);
+  }, [isEditingPayment, bankType, profile, resetProfileForm, resetInternationalForm]);
 
   // Form submission handlers
   const onProfileSubmit = async (data: ProfileFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayProfile(data);
       setIsEditing(false);
     } catch (error) {
@@ -315,7 +281,7 @@ const ProfileScreen = () => {
   const onNorwegianPaymentSubmit = async (data: NorwegianPaymentFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayPayment(prev => ({ ...prev, ...data }));
       setIsEditingPayment(false);
     } catch (error) {
@@ -327,7 +293,7 @@ const ProfileScreen = () => {
   const onInternationalPaymentSubmit = async (data: InternationalPaymentFormData) => {
     if (!profile?.$id) return;
     try {
-      await updateProfile(data);
+      await profileActions.updateProfile(data);
       setDisplayPayment(data);
       setIsEditingPayment(false);
     } catch (error) {
@@ -417,7 +383,6 @@ const ProfileScreen = () => {
         const result = await WebBrowser.openAuthSessionAsync(url, '/profile');
         
         if (result.type === 'success') {
-          console.log("Purchase successful");
           setIsMembershipOpen(false);
         } else {
           setMembershipError("Purchase was not completed. Please try again.");
@@ -432,8 +397,28 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(refetchUser);
-    router.replace('/(tabs)');
+    try {
+      // Sign out from Appwrite
+      await signOut();
+      
+      // Reset auth store state
+      useAuthStore.getState().resetState();
+      
+      // Reset profile store state if it exists
+      useProfileStore.getState().resetState();
+      
+      // Reset membership store state if it exists
+      useMembershipStore.getState().resetState();
+      
+      // Clear all React Query cache
+      queryClient.clear();
+      
+      // Navigate to the home tab
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // You might want to show an error toast here
+    }
   };
 
   // Helper Components
@@ -561,41 +546,19 @@ const ProfileScreen = () => {
       )}
     </YStack>
   )});
+  EditableProfileField.displayName = 'EditableProfileField';
 
-  const CustomSwitch = React.memo(({ checked, onCheckedChange }: { checked: boolean, onCheckedChange: (checked: boolean) => void }) => (
-    <XStack
-      backgroundColor={checked ? "$blue5" : "$gray5"}
-      borderRadius="$10"
-      width={52}
-      height={28}
-      padding="$1"
-      animation="quick"
-      pressStyle={{ scale: 0.97 }}
-      onPress={() => onCheckedChange(!checked)}
-      borderWidth={1}
-      borderColor={checked ? "$blue8" : "$gray8"}
-    >
-      <Stack
-        animation="bouncy"
-        backgroundColor={checked ? "$blue10" : "white"}
-        borderRadius="$10"
-        width={24}
-        height={24}
-        x={checked ? 24 : 0}
-        scale={checked ? 1.1 : 1}
-      />
-    </XStack>
-  ));
+
 
   const NotificationSection = React.memo(() => {
     const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
-    const { data, updateUserPrefs } = useAuth();
+    const { user, actions } = useAuth();
 
     useEffect(() => {
-      if (data?.prefs) {
-        setLocalPrefs(data.prefs);
+      if (user?.prefs) {
+        setLocalPrefs(user.prefs);
       }
-    }, [data?.prefs]);
+    }, [user?.prefs]);
 
     return (
       <YStack gap="$3">
@@ -606,7 +569,7 @@ const ProfileScreen = () => {
             onCheckedChange={async (checked: boolean) => {
               setLocalPrefs(prev => ({ ...prev, expenses: checked }));
               try {
-                await updateUserPrefs('expenses', checked);
+                await actions.updatePreferences('expenses', checked);
               } catch (error) {
                 setLocalPrefs(prev => ({ ...prev, expenses: !checked }));
                 console.error('Failed to update notification settings:', error);
@@ -621,6 +584,7 @@ const ProfileScreen = () => {
       </YStack>
     );
   });
+  NotificationSection.displayName = 'NotificationSection';
 
   // Content Renderer
   const renderContent = () => {
@@ -988,7 +952,7 @@ const ProfileScreen = () => {
     }
   };
 
-  if (isLoading || !data) return null;
+  if (isLoading || !user) return null;
 
   // Welcome screen for new users
   if (!profile?.name) {
@@ -1029,7 +993,7 @@ const ProfileScreen = () => {
         <Text color="$gray10">{profile.email}</Text>
         
         {/* Membership Section */}
-        {!studentId ? (
+        {!profile.student_id ? (
           <BILoginButton />
         ) : membership ? (
           <YStack>

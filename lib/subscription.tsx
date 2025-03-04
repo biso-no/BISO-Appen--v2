@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Models, RealtimeResponseEvent } from 'react-native-appwrite';
+import { RealtimeResponseEvent } from 'react-native-appwrite';
 import { client } from './appwrite';
 
 export const useSubscription = (

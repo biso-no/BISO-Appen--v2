@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+
 import { Label, Separator, SizeTokens, Switch as TSwitch, XStack } from 'tamagui';
 
 interface Props {

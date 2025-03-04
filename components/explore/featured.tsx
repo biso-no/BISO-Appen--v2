@@ -39,7 +39,6 @@ const wrap = (min: number, max: number, v: number) => {
 
 export function FeaturedPostsCarousel() {
   const [[page, going], setPage] = React.useState([0, 0]);
-  const [isLoading, setIsLoading] = useState(false);
   const { campus } = useCampus();
   const [featuredPosts, setFeaturedPosts] = useState<Models.DocumentList<Models.Document>>();
 
@@ -58,7 +57,6 @@ export function FeaturedPostsCarousel() {
           filters,
         ]);
         setFeaturedPosts(featured);
-        console.log('Featured Posts: ', featured);
       } catch (error) {
         console.error('Error fetching featured posts: ', error);
       }
@@ -75,7 +73,6 @@ export function FeaturedPostsCarousel() {
   const currentPost = featuredPosts.documents[postIndex];
 
   if (!currentPost) {
-    console.log('Current post is undefined');
     return null;
   }
 

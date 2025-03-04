@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { XStack, Text, Spinner, Image } from 'tamagui';
 import { getCampusWeather, Campus } from '../lib/get-weather';
+import { storage } from '../lib/appwrite';
 
 // The user agent string for API requests
 const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
 
 // Cache duration in milliseconds (15 minutes)
 const CACHE_DURATION = 15 * 60 * 1000;
+
+// Appwrite bucket ID for weather icons
+const WEATHER_ICONS_BUCKET_ID = 'weather_icons';
 
 interface CompactWeatherProps {
   campus: Campus;
@@ -27,95 +31,37 @@ const weatherCache: Record<Campus, CachedWeatherData | null> = {
   [Campus.TRONDHEIM]: null,
 };
 
-// Import all weather icons as PNGs instead of SVGs
-const weatherIcons: Record<string, any> = {
-  'clearsky_day': require('../assets/weather/clearsky_day.png'),
-  'clearsky_night': require('../assets/weather/clearsky_night.png'),
-  'clearsky_polartwilight': require('../assets/weather/clearsky_polartwilight.png'),
-  'cloudy': require('../assets/weather/cloudy.png'),
-  'fair_day': require('../assets/weather/fair_day.png'),
-  'fair_night': require('../assets/weather/fair_night.png'),
-  'fair_polartwilight': require('../assets/weather/fair_polartwilight.png'),
-  'fog': require('../assets/weather/fog.png'),
-  'heavyrain': require('../assets/weather/heavyrain.png'),
-  'heavyrainandthunder': require('../assets/weather/heavyrainandthunder.png'),
-  'heavyrainshowers_day': require('../assets/weather/heavyrainshowers_day.png'),
-  'heavyrainshowers_night': require('../assets/weather/heavyrainshowers_night.png'),
-  'heavyrainshowers_polartwilight': require('../assets/weather/heavyrainshowers_polartwilight.png'),
-  'heavyrainshowersandthunder_day': require('../assets/weather/heavyrainshowersandthunder_day.png'),
-  'heavyrainshowersandthunder_night': require('../assets/weather/heavyrainshowersandthunder_night.png'),
-  'heavyrainshowersandthunder_polartwilight': require('../assets/weather/heavyrainshowersandthunder_polartwilight.png'),
-  'heavysleet': require('../assets/weather/heavysleet.png'),
-  'heavysleetandthunder': require('../assets/weather/heavysleetandthunder.png'),
-  'heavysleetshowers_day': require('../assets/weather/heavysleetshowers_day.png'),
-  'heavysleetshowers_night': require('../assets/weather/heavysleetshowers_night.png'),
-  'heavysleetshowers_polartwilight': require('../assets/weather/heavysleetshowers_polartwilight.png'),
-  'heavysleetshowersandthunder_day': require('../assets/weather/heavysleetshowersandthunder_day.png'),
-  'heavysleetshowersandthunder_night': require('../assets/weather/heavysleetshowersandthunder_night.png'),
-  'heavysleetshowersandthunder_polartwilight': require('../assets/weather/heavysleetshowersandthunder_polartwilight.png'),
-  'heavysnow': require('../assets/weather/heavysnow.png'),
-  'heavysnowandthunder': require('../assets/weather/heavysnowandthunder.png'),
-  'heavysnowshowers_day': require('../assets/weather/heavysnowshowers_day.png'),
-  'heavysnowshowers_night': require('../assets/weather/heavysnowshowers_night.png'),
-  'heavysnowshowers_polartwilight': require('../assets/weather/heavysnowshowers_polartwilight.png'),
-  'heavysnowshowersandthunder_day': require('../assets/weather/heavysnowshowersandthunder_day.png'),
-  'heavysnowshowersandthunder_night': require('../assets/weather/heavysnowshowersandthunder_night.png'),
-  'heavysnowshowersandthunder_polartwilight': require('../assets/weather/heavysnowshowersandthunder_polartwilight.png'),
-  'lightrain': require('../assets/weather/lightrain.png'),
-  'lightrainandthunder': require('../assets/weather/lightrainandthunder.png'),
-  'lightrainshowers_day': require('../assets/weather/lightrainshowers_day.png'),
-  'lightrainshowers_night': require('../assets/weather/lightrainshowers_night.png'),
-  'lightrainshowers_polartwilight': require('../assets/weather/lightrainshowers_polartwilight.png'),
-  'lightrainshowersandthunder_day': require('../assets/weather/lightrainshowersandthunder_day.png'),
-  'lightrainshowersandthunder_night': require('../assets/weather/lightrainshowersandthunder_night.png'),
-  'lightrainshowersandthunder_polartwilight': require('../assets/weather/lightrainshowersandthunder_polartwilight.png'),
-  'lightsleet': require('../assets/weather/lightsleet.png'),
-  'lightsleetandthunder': require('../assets/weather/lightsleetandthunder.png'),
-  'lightsleetshowers_day': require('../assets/weather/lightsleetshowers_day.png'),
-  'lightsleetshowers_night': require('../assets/weather/lightsleetshowers_night.png'),
-  'lightsleetshowers_polartwilight': require('../assets/weather/lightsleetshowers_polartwilight.png'),
-  'lightsnow': require('../assets/weather/lightsnow.png'),
-  'lightsnowandthunder': require('../assets/weather/lightsnowandthunder.png'),
-  'lightsnowshowers_day': require('../assets/weather/lightsnowshowers_day.png'),
-  'lightsnowshowers_night': require('../assets/weather/lightsnowshowers_night.png'),
-  'lightsnowshowers_polartwilight': require('../assets/weather/lightsnowshowers_polartwilight.png'),
-  'lightssleetshowersandthunder_day': require('../assets/weather/lightssleetshowersandthunder_day.png'),
-  'lightssleetshowersandthunder_night': require('../assets/weather/lightssleetshowersandthunder_night.png'),
-  'lightssleetshowersandthunder_polartwilight': require('../assets/weather/lightssleetshowersandthunder_polartwilight.png'),
-  'lightssnowshowersandthunder_day': require('../assets/weather/lightssnowshowersandthunder_day.png'),
-  'lightssnowshowersandthunder_night': require('../assets/weather/lightssnowshowersandthunder_night.png'),
-  'lightssnowshowersandthunder_polartwilight': require('../assets/weather/lightssnowshowersandthunder_polartwilight.png'),
-  'partlycloudy_day': require('../assets/weather/partlycloudy_day.png'),
-  'partlycloudy_night': require('../assets/weather/partlycloudy_night.png'),
-  'partlycloudy_polartwilight': require('../assets/weather/partlycloudy_polartwilight.png'),
-  'rain': require('../assets/weather/rain.png'),
-  'rainandthunder': require('../assets/weather/rainandthunder.png'),
-  'rainshowers_day': require('../assets/weather/rainshowers_day.png'),
-  'rainshowers_night': require('../assets/weather/rainshowers_night.png'),
-  'rainshowers_polartwilight': require('../assets/weather/rainshowers_polartwilight.png'),
-  'rainshowersandthunder_day': require('../assets/weather/rainshowersandthunder_day.png'),
-  'rainshowersandthunder_night': require('../assets/weather/rainshowersandthunder_night.png'),
-  'rainshowersandthunder_polartwilight': require('../assets/weather/rainshowersandthunder_polartwilight.png'),
-  'sleet': require('../assets/weather/sleet.png'),
-  'sleetandthunder': require('../assets/weather/sleetandthunder.png'),
-  'sleetshowers_day': require('../assets/weather/sleetshowers_day.png'),
-  'sleetshowers_night': require('../assets/weather/sleetshowers_night.png'),
-  'sleetshowers_polartwilight': require('../assets/weather/sleetshowers_polartwilight.png'),
-  'sleetshowersandthunder_day': require('../assets/weather/sleetshowersandthunder_day.png'),
-  'sleetshowersandthunder_night': require('../assets/weather/sleetshowersandthunder_night.png'),
-  'sleetshowersandthunder_polartwilight': require('../assets/weather/sleetshowersandthunder_polartwilight.png'),
-  'snow': require('../assets/weather/snow.png'),
-  'snowandthunder': require('../assets/weather/snowandthunder.png'),
-  'snowshowers_day': require('../assets/weather/snowshowers_day.png'),
-  'snowshowers_night': require('../assets/weather/snowshowers_night.png'),
-  'snowshowers_polartwilight': require('../assets/weather/snowshowers_polartwilight.png'),
-  'snowshowersandthunder_day': require('../assets/weather/snowshowersandthunder_day.png'),
-  'snowshowersandthunder_night': require('../assets/weather/snowshowersandthunder_night.png'),
-  'snowshowersandthunder_polartwilight': require('../assets/weather/snowshowersandthunder_polartwilight.png'),
-};
+// Cache for icon URLs to avoid redundant Appwrite calls
+interface IconUrlCache {
+  url: string;
+  timestamp: number;
+}
+const iconUrlCache: Record<string, IconUrlCache> = {};
 
-// Fallback icon in case the symbol code doesn't match any of our assets
-const fallbackIcon = require('../assets/weather/cloudy.png');
+// Function to shorten icon names to match those in Appwrite bucket
+function getShortenedIconName(iconName: string): string {
+  // Replace common phrases with abbreviations, matching the upload script logic
+  let shortened = iconName
+    .replace('showers', 'shwr')
+    .replace('andthunder', '_t')
+    .replace('polartwilight', 'pt')
+    .replace('clearsky', 'clear')
+    .replace('partly', 'p')
+    .replace('heavy', 'h')
+    .replace('light', 'l')
+    .replace('_day', '_d')
+    .replace('_night', '_n');
+  
+  // Ensure it's max 36 chars (accounting for .png extension)
+  if (shortened.length > 32) {
+    shortened = shortened.substring(0, 32);
+  }
+  
+  return shortened;
+}
+
+// Fallback icon URL for cases where the symbol code doesn't match or can't be fetched
+const FALLBACK_ICON_NAME = 'cloudy';
 
 const CompactWeather: React.FC<CompactWeatherProps> = ({ 
   campus,
@@ -125,6 +71,7 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
   const [weatherData, setWeatherData] = useState<Awaited<ReturnType<typeof getCampusWeather>> | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [iconUrl, setIconUrl] = useState<string | null>(null);
 
   // Fetch weather data for the specified campus
   const fetchWeather = async (campusName: Campus) => {
@@ -159,10 +106,64 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
     }
   };
 
+  // Get the weather icon URL from Appwrite
+  const getIconUrl = async (symbolCode: string) => {
+    try {
+      // Check if we have the URL cached and it's still valid
+      const now = Date.now();
+      if (iconUrlCache[symbolCode] && (now - iconUrlCache[symbolCode].timestamp < CACHE_DURATION)) {
+        return iconUrlCache[symbolCode].url;
+      }
+
+      // Get the shortened icon name to match what's in Appwrite
+      const shortenedName = getShortenedIconName(symbolCode);
+      const fileName = `${shortenedName}.png`;
+
+      // Create a preview URL for the icon
+      const previewUrl = storage.getFilePreview(WEATHER_ICONS_BUCKET_ID, fileName);
+      // Convert URL object to string if needed
+      const url = previewUrl.toString();
+      
+      // Cache the URL
+      iconUrlCache[symbolCode] = {
+        url,
+        timestamp: now
+      };
+      
+      return url;
+    } catch (err) {
+      console.error(`Failed to get icon URL for ${symbolCode}:`, err);
+      
+      // Try to use the fallback icon
+      try {
+        const fallbackFileName = `${getShortenedIconName(FALLBACK_ICON_NAME)}.png`;
+        const fallbackUrl = storage.getFilePreview(WEATHER_ICONS_BUCKET_ID, fallbackFileName);
+        return fallbackUrl.toString();
+      } catch (fallbackErr) {
+        console.error('Failed to get fallback icon URL:', fallbackErr);
+        return null;
+      }
+    }
+  };
+
   // Fetch weather when the component mounts or campus changes
   useEffect(() => {
     fetchWeather(campus);
   }, [campus]);
+
+  // Get the icon URL when weather data changes
+  useEffect(() => {
+    if (weatherData?.current?.symbolCode) {
+      getIconUrl(weatherData.current.symbolCode)
+        .then(url => {
+          if (url) setIconUrl(url);
+        })
+        .catch(err => {
+          console.error('Failed to set icon URL:', err);
+          setIconUrl(null);
+        });
+    }
+  }, [weatherData]);
 
   // Format temperature with no decimal places
   const formatTemperature = (temp: number) => {
@@ -181,19 +182,18 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
     return null; // Don't show anything if there's an error
   }
 
-  // Get the appropriate weather icon resource ID
-  const iconSource = weatherData.current.symbolCode in weatherIcons 
-    ? weatherIcons[weatherData.current.symbolCode] 
-    : fallbackIcon;
-
   return (
     <XStack alignItems="center" gap="$3">
-      <Image 
-        source={iconSource}
-        width={iconSize}
-        height={iconSize}
-        objectFit="contain"
-      />
+      {iconUrl ? (
+        <Image 
+          source={{ uri: iconUrl }}
+          width={iconSize}
+          height={iconSize}
+          objectFit="contain"
+        />
+      ) : (
+        <XStack width={iconSize} height={iconSize} />
+      )}
       <Text color={color} fontSize={24} fontWeight="600">
         {formatTemperature(weatherData.current.temperature)}
       </Text>

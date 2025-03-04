@@ -1,7 +1,7 @@
 import { MyStack } from "@/components/ui/MyStack";
 import { YStack, Label, YGroup, Input, Button, H3, Text, XStack, Separator, Image } from "tamagui";
 import { useState } from "react";
-import { useAuth } from "@/components/context/auth-provider";
+import { useAuth } from "@/components/context/core/auth-provider";
 import { databases, storage } from "@/lib/appwrite";
 import { ID } from "react-native-appwrite";
 import { pickFiles } from "@/lib/file-utils";
@@ -14,7 +14,7 @@ export interface File {
 }
 
 export default function BugReportScreen() {
-    const { data } = useAuth();
+    const { user } = useAuth();
 
     const [description, setDescription] = useState<string>("");
     const [images, setImages] = useState<File[]>([]);
@@ -34,7 +34,7 @@ export default function BugReportScreen() {
     };
 
     const handleSubmit = async () => {
-        if (!data) {
+        if (!user) {
             return;
         }
 
@@ -45,8 +45,8 @@ export default function BugReportScreen() {
 
         await databases.createDocument('app', 'bug_reports', ID.unique(), {
             description,
-            user: data.$id,
-            user_id: data.$id,
+            user: user.$id,
+            user_id: user.$id,
             images: uploadedImageUris,
         });
     };

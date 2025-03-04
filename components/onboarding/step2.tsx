@@ -1,9 +1,9 @@
-import { View, YStack, Text, H3, Paragraph, XStack, Card, ScrollView, Button } from 'tamagui';
+import { YStack, Text, H3, XStack, Card, ScrollView } from 'tamagui';
 import React from 'react';
 import CampusSelector from '@/components/SelectCampus';
 import { MotiView } from 'moti';
 import { StyleSheet, Dimensions } from 'react-native';
-import { MapPin, Building2, CheckCircle, ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
+import { MapPin, Building2, ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
 import { Models } from 'react-native-appwrite';
 import DepartmentSelector from '../SelectDepartments';
 
@@ -35,7 +35,7 @@ export function Step2({
           style={styles.container}
         >
           {/* Campus Section */}
-          <YStack space="$2" width="100%" marginBottom="$4">
+          <YStack gap="$2" width="100%" marginBottom="$4">
             <Card 
               bordered 
               animation="quick" 
@@ -44,7 +44,7 @@ export function Step2({
               onPress={() => setShowCampusSelector(!showCampusSelector)}
             >
               <XStack alignItems="center" justifyContent="space-between">
-                <XStack space="$2" alignItems="center">
+                <XStack gap="$2" alignItems="center">
                   <MapPin size={20} color="$primary" />
                   <Text fontWeight="600">
                     {selectedCampus ? selectedCampus.name : "Select your campus"}
@@ -86,8 +86,8 @@ export function Step2({
               transition={{ type: 'timing', duration: 500 }}
               style={styles.departmentsContainer}
             >
-              <YStack space="$2" flex={1} width="100%">
-                <XStack alignItems="center" space="$2">
+              <YStack gap="$2" flex={1} width="100%">
+                <XStack alignItems="center" gap="$2">
                   <Building2 size={24} color="$primary" />
                   <H3>Select Departments</H3>
                 </XStack>

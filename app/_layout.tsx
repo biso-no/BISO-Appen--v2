@@ -3,26 +3,23 @@ import 'expo-dev-client';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
 import { config } from '../tamag.config';
-import { AuthProvider } from '@/components/context/auth-provider';
-import * as Updates from 'expo-updates';
-import Constants from 'expo-constants';
 import 'react-native-gesture-handler';
-import { useLocalSearchParams } from 'expo-router';
-import { CampusProvider } from '@/lib/hooks/useCampus';
-import { ModalProvider } from '@/components/context/membership-modal-provider';
-import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { CampusProvider } from '@/components/context/core/campus-provider';
+import { ModalProvider } from '@/components/context/core/modal-manager';
+import { ModalProvider as MembershipModalProvider } from '@/components/context/membership-modal-provider';
 import { LogBox } from 'react-native';
-
-
-
+import { queryClient } from '@/lib/react-query';
+import { RootProvider } from '@/components/context/root-provider';
+import { PerformanceProvider } from '@/lib/performance';
+import { AICopilotProvider } from '@/components/ai';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -70,57 +67,37 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const isExpoGo = Constants.appOwnership === 'expo';
-
-
-
-  /*
-useEffect(() => {
-  if (!isExpoGo) {
-  async function onFetchUpdateAsync() {
-    try {
-      const update = await Updates.checkForUpdateAsync();
-
-      if (update.isAvailable) {
-        await Updates.fetchUpdateAsync();
-        await Updates.reloadAsync();
-      }
-    } catch (error) {
-      // You can also add an alert() to see the error message in case of an error when fetching updates.
-      alert(`Error fetching latest Expo update: ${error}`);
-
-    }
-  }
-  onFetchUpdateAsync();
-  }
-}, []);
-*/
-
 
 
   return (
-
-
-    <TamaguiProvider config={config}>
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-    <PortalProvider shouldAddRootHost>
-    <AuthProvider>
-    <CampusProvider>
-      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
-      <Stack initialRouteName='(tabs)'>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
-      </Stack>
-      </Theme>
-      </CampusProvider>
-      </AuthProvider>
-      </PortalProvider>
-    </ThemeProvider>
-    </TamaguiProvider>
+    <QueryClientProvider client={queryClient}>
+      <TamaguiProvider config={config}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <RootProvider>
+            <CampusProvider>
+            <AICopilotProvider>
+              <PortalProvider shouldAddRootHost>
+                <ModalProvider>
+                  <MembershipModalProvider>
+                    <PerformanceProvider>
+                      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                        <Stack initialRouteName='(tabs)'>
+                          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                          <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+                          <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
+                        </Stack>
+                      </Theme>
+                    </PerformanceProvider>
+                  </MembershipModalProvider>
+                </ModalProvider>
+              </PortalProvider>
+              </AICopilotProvider>
+            </CampusProvider>
+          </RootProvider>
+        </ThemeProvider>
+      </TamaguiProvider>
+    </QueryClientProvider>
   );
 }

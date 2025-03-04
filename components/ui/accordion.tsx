@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronDown } from '@tamagui/lucide-icons';
-import { Accordion as TAccordion, Paragraph, Square, Text } from 'tamagui';
+import { Accordion as TAccordion, Square } from 'tamagui';
 
 type AccordionItem = {
   value: string;

@@ -14,7 +14,6 @@ export const ProfileIcon = ({ data, avatarId, image, color }: { data: Models.Use
   } else if (!avatarId) {
     return <UserRound size={25} color={color} marginTop="$2" />;
   } else {
-    const avatarUrl = `https://appwrite.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
     return (
       <Avatar circular size={30} bordered marginTop="$2">
         <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
@@ -23,7 +22,7 @@ export const ProfileIcon = ({ data, avatarId, image, color }: { data: Models.Use
   }
 };
 
-export const EventIcon = ({ colorScheme }: { colorScheme: string }) => {
+export const EventIcon = ({ colorScheme }: { colorScheme?: 'light' | 'dark' }) => {
   return (
     <Pressable onPress={() => router.push("https://biso.no/events/")}>
       {({ pressed }) => (

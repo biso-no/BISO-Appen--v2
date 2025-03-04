@@ -1,6 +1,6 @@
-import type { CardProps } from 'tamagui'
-import { Button, Card as DefaultCard, H5, Paragraph, XStack, YStack, Image } from 'tamagui'
-import { useRouter } from 'expo-router'
+
+import { Button, Card as DefaultCard, H5, XStack, YStack, Image } from 'tamagui'
+import { RelativePathString, useRouter } from 'expo-router'
 
 
 interface NewsProps {
@@ -16,7 +16,7 @@ export function FeaturedCard(props: NewsProps) {
     const { push } = useRouter()
 
     return (
-      <DefaultCard bordered width="90%" height={300} onPress={() => push(props.url)}>
+      <DefaultCard bordered width="90%" height={300} onPress={() => push(props.url as RelativePathString)}>
         <DefaultCard.Header padded>
           <Image
             source={{ uri: props.urlToImage }}

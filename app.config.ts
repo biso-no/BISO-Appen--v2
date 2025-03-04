@@ -78,6 +78,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
+    'react-native-bottom-tabs',
+    'react-native-edge-to-edge',
+    'expo-asset',
     'expo-secure-store',
     [
       "expo-notifications",

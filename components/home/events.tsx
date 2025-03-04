@@ -1,27 +1,21 @@
-import { Card, Image, H6, Paragraph, YStack, XStack, View, SizableText, Button } from "tamagui";
-import { databases, getEvents } from "@/lib/appwrite";
+import { Card, Image, H6, Paragraph, YStack, XStack, Button } from "tamagui";
+import { databases } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import { Query, type Models } from "react-native-appwrite";
-import { formatDate, getFormattedDateFromString } from "@/lib/format-time";
-import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
-import { getEvents as getWebsiteEvents, Event } from "@/lib/get-events";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { useRouter } from "expo-router";
 import { useWindowDimensions } from "react-native";
 import { mapCampus } from "@/lib/utils/map-campus";
+
 export function Events() {
     const { width } = useWindowDimensions();
-
     const [events, setEvents] = useState<Models.Document[]>();
-
     const router = useRouter();
-
     const { campus } = useCampus();
 
     useEffect(() => {
         async function fetchEvents() {
-
             let query = [
                 //Select only the values used in the UI
                 Query.select(['title', 'short_description', 'image', 'event_date', '$id', 'campus_id', 'url', 'description']),
@@ -34,28 +28,21 @@ export function Events() {
 
             const fetchedEvents = await databases.listDocuments('app', 'event', query);
             setEvents(fetchedEvents.documents);
-            console.log(fetchedEvents);
         }
         fetchEvents();
     }, [campus]);
 
-
     const capitalizeFirstLetter = (str: string) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
     };
-
-    const useEventImageUri = (imageId: string) => {
-        return process.env.EXPO_PUBLIC_APPWRITE_URI + `storage/buckets/event/files/${imageId}/view?project=665313680028cb624457`
-    }
 
     if (!events || events.length === 0) {
         return (
             <MyStack justifyContent="center" alignItems="center" gap="$2" backgroundColor={"transparent"}>
               <H6>Stay tuned!</H6>
             </MyStack>
-          );
-        }
-        
+        );
+    }
 
     return (
         <YStack gap="$4" justifyContent="center" alignItems="center">

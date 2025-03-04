@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme, KeyboardAvoidingView, Platform } from 'react-native';
-import { YStack, Button, Text, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
-import { MyStack } from './MyStack';
+import { StyleSheet, Animated, Easing, Dimensions, useColorScheme } from 'react-native';
+import { YStack, Button, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
 import { MotiView } from 'moti';
 import { ChevronRight, ChevronLeft, Check } from '@tamagui/lucide-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface Step {
   label: string;
@@ -17,11 +14,9 @@ export interface Step {
 
 export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: () => void; }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const translateX = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -36,7 +31,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [currentStep, steps.length]);
+  }, [currentStep, steps.length, progressAnim]);
 
   const moveToNextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -55,17 +50,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 0.8,
             duration: 200,
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: -width * 0.3,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]),
       ]).start(() => {
         setCurrentStep((prev) => prev + 1);
-        translateX.setValue(width * 0.3);
         
         // Animate in the new step
         Animated.parallel([
@@ -78,12 +66,6 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 1,
             duration: 300,
             easing: Easing.out(Easing.back(1.5)),
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           })
         ]).start();
@@ -141,17 +123,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 0.8,
             duration: 200,
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: width * 0.3,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]),
       ]).start(() => {
         setCurrentStep((prev) => prev - 1);
-        translateX.setValue(-width * 0.3);
         
         // Animate in the new step
         Animated.parallel([
@@ -165,64 +140,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             duration: 300,
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]).start();
       });
     }
-  };
-
-  // Swipe gesture handler
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
-      onPanResponderMove: (_, gestureState) => {
-        translateX.setValue(gestureState.dx * 0.5);
-        const opacity = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.5]);
-        fadeAnim.setValue(opacity);
-        const scale = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.95]);
-        scaleAnim.setValue(scale);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const threshold = 80;
-        if (gestureState.dx < -threshold && currentStep < steps.length - 1) {
-          moveToNextStep();
-        } else if (gestureState.dx > threshold && currentStep > 0) {
-          moveToPreviousStep();
-        } else {
-          // Reset if threshold not reached
-          Animated.parallel([
-            Animated.spring(translateX, {
-              toValue: 0,
-              useNativeDriver: true,
-              friction: 5,
-            }),
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scaleAnim, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-      },
-    })
-  ).current;
-
-  // Helper function for interpolation
-  const interpolateValue = (value: number, inputRange: number[], outputRange: number[]) => {
-    return inputRange[0] === inputRange[1]
-      ? outputRange[0]
-      : outputRange[0] + ((value - inputRange[0]) / (inputRange[1] - inputRange[0])) * (outputRange[1] - outputRange[0]);
   };
 
   // Progress bar width calculation
@@ -234,7 +155,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
   return (
     <YStack flex={1}>
       {/* Progress indicator */}
-      <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
+      <XStack position="relative" justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
         {steps.map((_, index) => (
           <MotiView
             key={index}
@@ -264,7 +185,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         ))}
         
         {/* Progress line */}
-        <View style={styles.progressLineContainer}>
+        <View style={[styles.progressLineContainer, { zIndex: -1 }]}>
           <View style={[styles.progressLineBg, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]} />
           <Animated.View
             style={[
@@ -281,17 +202,15 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
       {/* Scrollable content area */}
       <ScrollView 
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         <Animated.View
-          {...panResponder.panHandlers}
           style={[
             styles.contentContainer,
             {
               transform: [
-                { translateX },
                 { scale: scaleAnim }
               ],
               opacity: fadeAnim,
@@ -321,13 +240,19 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         </Animated.View>
       </ScrollView>
 
-      {/* Navigation buttons */}
+      {/* Navigation buttons - Fixed at bottom */}
       <XStack 
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
         justifyContent="space-between" 
         paddingHorizontal="$4"
         paddingVertical="$4"
         borderTopWidth={1}
         borderTopColor="$borderColor"
+        backgroundColor="$background"
+        zIndex={1000}
       >
         <Button
           size={isSmallDevice ? "$3" : "$4"}
@@ -379,15 +304,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    minHeight: 350,
   },
   progressLineContainer: {
     position: 'absolute',
     top: '50%',
-    left: 0,
-    right: 0,
+    left: 24,
+    right: 24,
     height: 3,
-    zIndex: -1,
   },
   progressLineBg: {
     position: 'absolute',

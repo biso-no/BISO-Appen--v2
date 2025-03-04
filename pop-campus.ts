@@ -274,7 +274,6 @@ async function updateCampusData() {
             CAMPUS_IDS.BERGEN,
             bergenCampusData
         );
-        console.log('Bergen campus data updated successfully');
 
         // Trondheim Campus
         await databases.updateDocument(
@@ -283,7 +282,6 @@ async function updateCampusData() {
             CAMPUS_IDS.TRONDHEIM,
             trondheimCampusData
         );
-        console.log('Trondheim campus data updated successfully');
 
         // Stavanger Campus
         await databases.updateDocument(
@@ -292,9 +290,7 @@ async function updateCampusData() {
             CAMPUS_IDS.STAVANGER,
             stavangerCampusData
         );
-        console.log('Stavanger campus data updated successfully');
         
-        console.log('All campus data has been successfully updated!');
     } catch (error) {
         console.error('Error updating campus data:', error);
     }

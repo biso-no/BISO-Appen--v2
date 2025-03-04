@@ -1,4 +1,4 @@
-import { H1, H3, YStack, XStack, Button, Text } from 'tamagui';
+import { H1, H3, YStack, Button } from 'tamagui';
 import * as SecureStore from 'expo-secure-store';
 import { useState, useEffect } from 'react';
 

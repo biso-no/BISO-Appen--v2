@@ -16,7 +16,6 @@ import {
     Button,
     styled,
     AnimatePresence,
-    Theme,
 } from "tamagui";
 import { 
     Briefcase, 
@@ -77,7 +76,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
         body: { 
             fontSize: 16, 
             lineHeight: 24, 
-            color: theme.color.get(),
+            color: theme?.color?.get(),
             margin: 0,
             padding: 0,
         },
@@ -93,7 +92,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                 console.error("Error fetching jobs:", error);
                 setLoading(false);
             });
-    }, [campus]);
+    }, [campus, limit]);
 
     if (loading) {
         return (
@@ -117,7 +116,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                     gap="$4"
                     padding="$8"
                 >
-                    <HandHeart size={48} color={theme.color8.get()} />
+                    <HandHeart size={48} color={theme?.color8?.get()} />
                     <H2 color="$color11" textAlign="center">No positions available</H2>
                     <Paragraph color="$color9" textAlign="center">
                         Check back later for new opportunities at {campus?.name}
@@ -173,7 +172,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                 borderRadius="$4"
                             >
                                 <LinearGradient
-                                    colors={[theme.color4.get(), 'transparent']}
+                                    colors={[theme?.color4?.get(), 'transparent']}
                                     start={[0, 0]}
                                     end={[1, 0]}
                                     style={{
@@ -193,7 +192,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                             <StatusBadge>
                                                 <Briefcase 
                                                     size={14} 
-                                                    color={theme.color11.get()} 
+                                                    color={theme?.color11?.get()} 
                                                 />
                                                 <Text 
                                                     color="$color11" 
@@ -207,7 +206,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                             <LocationBadge>
                                                 <Building2 
                                                     size={14} 
-                                                    color={theme.color11.get()} 
+                                                    color={theme?.color11?.get()} 
                                                 />
                                                 <Text 
                                                     color="$color11" 
@@ -238,7 +237,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                         <XStack gap="$2" alignItems="center">
                                             <Clock 
                                                 size={14} 
-                                                color={theme.color11.get()} 
+                                                color={theme?.color11?.get()} 
                                             />
                                             <Text 
                                                 fontSize="$2" 
@@ -249,7 +248,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                         </XStack>
                                         <ChevronRight 
                                             size={16} 
-                                            color={theme.color11.get()} 
+                                            color={theme?.color11?.get()} 
                                         />
                                     </XStack>
                                 </Card.Footer>

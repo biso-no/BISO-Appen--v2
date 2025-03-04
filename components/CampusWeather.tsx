@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Select, XStack, YStack, Spinner, H4, Paragraph, Avatar } from 'tamagui';
 import { ChevronDown, RefreshCw } from '@tamagui/lucide-icons';
 import { getCampusWeather, Campus, getWeatherDescription, getWeatherIconUrl } from '../lib/get-weather';
@@ -38,7 +37,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   });
 
   // Fetch weather data for the selected campus
-  const fetchWeather = async (campus: Campus) => {
+  const fetchWeather = useCallback(async (campus: Campus) => {
     setLoading(true);
     setError(null);
     
@@ -71,12 +70,12 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [weatherCache]);
 
   // Fetch weather when the selected campus changes
   useEffect(() => {
     fetchWeather(selectedCampus);
-  }, [selectedCampus]);
+  }, [selectedCampus, fetchWeather]);
 
   // Handle campus selection change
   const handleCampusChange = (value: string) => {
@@ -97,7 +96,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
 
   return (
     <Card elevate size="$4" bordered padding="$4">
-      <YStack space="$3">
+      <YStack gap="$3">
         <XStack justifyContent="space-between" alignItems="center">
           <H4>Weather</H4>
           
@@ -128,8 +127,8 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
         ) : error ? (
           <Paragraph color="$red10">{error}</Paragraph>
         ) : weatherData ? (
-          <YStack space="$2">
-            <XStack space="$4" alignItems="center">
+          <YStack gap="$2">
+            <XStack gap="$4" alignItems="center">
               <Avatar circular size="$6">
                 <Avatar.Image 
                   src={getWeatherIconUrl(weatherData.current.symbolCode)} 
