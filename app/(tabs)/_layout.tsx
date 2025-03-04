@@ -302,12 +302,6 @@ export default function TabLayout() {
           header: () => <HeaderComponent />
         })}
       >
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-        {generateScreens()}
-=======
-=======
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117
         <Tabs.Screen
           name="index"
           options={{
@@ -331,27 +325,16 @@ export default function TabLayout() {
           name="profile/index"
           options={{
             title: '',
-<<<<<<< HEAD
             href: user?.$id ? '/(tabs)/profile' : null,
-=======
-            href: '/(tabs)/profile'
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117
           }}
         />
         <Tabs.Screen
           name="auth/signIn/index"
           options={{
             title: '',
-<<<<<<< HEAD
             href: user?.$id ? null : '/(tabs)/auth/signIn',
           }}
         />
->>>>>>> Stashed changes
-=======
-            href: user?.$id ? null : undefined,
-          }}
-        />
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117
       </Tabs>
     </>
   );

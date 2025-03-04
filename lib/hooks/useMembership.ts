@@ -17,7 +17,7 @@ export function useMembership(studentId: string | null | undefined) {
     queryFn: async () => {
       const execution = await functions.createExecution('verify_biso_membership', studentId!, false);
       const response = JSON.parse(execution.responseBody);
-      return response.membership as Membership;
+      return response.membership as Membership || null;
     },
     enabled: !!studentId,
   });

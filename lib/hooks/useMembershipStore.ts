@@ -44,7 +44,8 @@ export function useZustandMembership() {
     queryFn: async () => {
       const execution = await functions.createExecution('verify_biso_membership', studentId!, false);
       const response = JSON.parse(execution.responseBody);
-      return response.membership as Membership;
+      // Return null instead of undefined if membership doesn't exist
+      return response.membership as Membership || null;
     },
     enabled: !!studentId,
   });

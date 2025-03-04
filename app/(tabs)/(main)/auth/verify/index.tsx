@@ -1,19 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { YStack, H1, Text, Spinner } from "tamagui";
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons";
 import { MyStack } from "@/components/ui/MyStack";
 import { createSession } from "@/lib/appwrite";
-<<<<<<< HEAD:app/(tabs)/auth/verify/index.tsx
-<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
-import { useAuth } from "@/components/context/auth-provider";
-=======
 import { useAuth } from "@/lib/hooks/useAuthStore";
 import { queryClient } from '@/lib/react-query';
->>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
-=======
-import { useAuth } from "@/components/context/core/auth-provider";
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117:app/(tabs)/(main)/auth/verify/index.tsx
 
 //A callback screen that verifies the code from the email. If the code is valid, a large checkmark with animation is shown, and the user is redirected to the home screen.
 export default function VerifyScreen() {
@@ -25,17 +17,9 @@ export default function VerifyScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isVerified, setIsVerified] = useState(false);
     const [error, setError] = useState<string | null>(null);
-<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
-
-<<<<<<< HEAD:app/(tabs)/auth/verify/index.tsx
-    const { refetchUser } = useAuth();
-=======
     
     // Get the refetch function from useAuth to refresh user data after authentication
     const { actions } = useAuth();
->>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
-=======
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117:app/(tabs)/(main)/auth/verify/index.tsx
 
     useEffect(() => {
         async function verifyMagicLink() {
@@ -49,17 +33,10 @@ export default function VerifyScreen() {
                 const session = await createSession(userId, secret);
                 if (session.$id) {
                     setIsVerified(true);
-<<<<<<< HEAD:app/(tabs)/auth/verify/index.tsx
-<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
-                    await refetchUser();
-=======
                     // Invalidate the account query to refetch user data
                     queryClient.invalidateQueries({ queryKey: ['account'] });
                     // Also directly refetch the user data to ensure immediate state update
                     await actions.refetch();
->>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
-=======
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117:app/(tabs)/(main)/auth/verify/index.tsx
                 } else {
                     setError("Invalid or expired verification link");
                 }
@@ -71,53 +48,40 @@ export default function VerifyScreen() {
         }
 
         verifyMagicLink();
-<<<<<<< HEAD:app/(tabs)/auth/verify/index.tsx
-<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
-    }, [secret, userId, refetchUser]);
-=======
     }, [secret, userId, actions]);
->>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
-=======
-    }, [secret, userId]);
->>>>>>> 906bdf66e5a3db43e132aa69849a042e57188117:app/(tabs)/(main)/auth/verify/index.tsx
 
     useEffect(() => {
         if (isVerified) {
             const timer = setTimeout(() => {
                 router.replace("/");
             }, 2000);
-
             return () => clearTimeout(timer);
         }
     }, [isVerified, router]);
 
     return (
-        <MyStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
-            {isLoading ? (
-                <YStack gap="$4" alignItems="center">
-                    <Spinner size="large" color="$blue10" />
-                    <Text>Verifying your login...</Text>
-                </YStack>
-            ) : isVerified ? (
-                <YStack gap="$4" alignItems="center">
-                    <CheckCircle size={64} color="$green10" />
-                    <H1 color="$green10">Success!</H1>
-                    <Text>You'll be redirected shortly...</Text>
-                </YStack>
-            ) : (
-                <YStack gap="$4" alignItems="center">
-                    <XCircle size={64} color="$red10" />
-                    <H1 color="$red10">Verification Failed</H1>
-                    <Text color="$red10">{error}</Text>
-                    <Text 
-                        color="$blue10" 
-                        onPress={() => router.replace("/auth/signIn")}
-                        pressStyle={{ opacity: 0.8 }}
-                    >
-                        Try signing in again
-                    </Text>
-                </YStack>
-            )}
+        <MyStack>
+            <YStack alignItems="center" justifyContent="center" flex={1} space>
+                {isLoading ? (
+                    <>
+                        <Spinner size="large" />
+                        <Text>Verifying your account...</Text>
+                    </>
+                ) : isVerified ? (
+                    <>
+                        <CheckCircle size={100} color="$green10" />
+                        <H1>Success!</H1>
+                        <Text>Your account has been verified.</Text>
+                        <Text>You'll be redirected shortly...</Text>
+                    </>
+                ) : (
+                    <>
+                        <XCircle size={100} color="$red10" />
+                        <H1>Verification Failed</H1>
+                        <Text>{error || "Unknown error occurred"}</Text>
+                    </>
+                )}
+            </YStack>
         </MyStack>
     );
 }

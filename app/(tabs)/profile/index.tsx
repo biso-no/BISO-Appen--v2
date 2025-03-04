@@ -206,7 +206,7 @@ const ProfileScreen = () => {
         try {
           const response = await databases.listDocuments('app', 'memberships', [
             Query.select(['membership_id', 'price', 'name', '$id']),
-            Query.equal('status', true)
+            Query.equal('canPurchase', true)
           ]);
           setMembershipOptions(response);
         } catch (error) {
