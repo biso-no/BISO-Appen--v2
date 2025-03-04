@@ -173,11 +173,11 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     }), []);
 
     return (
-        <YStack flex={1}>
+        <YStack flex={1} padding="$2">
             {withFilters && (
-                <XGroup gap="$4" flex={1} alignItems="center" justifyContent="center" width="100%" padding="$2">
+                <XStack gap="$4" width="100%" padding="$2" alignItems="center">
                     <ExpenseFilter filtersConfig={filterConfigs} onFilterChange={handleFilterChange} />
-                    <View flex={1} maxWidth="300px">
+                    <View width="300px">
                         <CustomSelect
                             items={[
                                 { name: "Date Ascending" },
@@ -190,7 +190,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
                             initialSelected={sortingOption}
                         />
                     </View>
-                </XGroup>
+                </XStack>
             )}
 
             {!profileScreen && (

@@ -24,6 +24,8 @@ export const CustomSelect = ({ items, onValueChange, label, initialSelected }: C
       <Select.Trigger
         iconAfter={ChevronDown}
         flex={1}
+        size="$3"
+        paddingVertical="$1"
         >
             <Select.Value placeholder={label} />
         </Select.Trigger>
