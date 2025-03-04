@@ -335,7 +335,7 @@ export default function DepartmentsScreen() {
                 maxWidth={width * 0.85}
                 lineHeight="$6"
               >
-                Discover the various academic departments at {campus?.name || 'your university'} 
+                Discover the various academic departments at {campus?.name || 'BISO'} 
               </Paragraph>
             </MotiView>
           </YStack>

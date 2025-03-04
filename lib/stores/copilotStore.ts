@@ -83,9 +83,9 @@ export const useCopilotStore = create<CopilotState>()(
     
     // Initial suggestions
     suggestions: [
-      'What departments are at the university?',
-      'Can you help me find events this week?',
-      'Tell me about the BISO organization',
+      'Help me decide what unit to join',
+      'Can you suggest me any available roles based on my skills?',
+      'I have questions regarding the local laws on Campus'
     ],
     
     // UI Actions
@@ -117,7 +117,7 @@ export const useCopilotStore = create<CopilotState>()(
       // Get the system message
       const systemMessage: Message = { 
         role: 'system', 
-        content: "You are a helpful AI assistant for our university. You can search website content, find documents, match jobs, and provide department information. You'll understand the user's intent and provide relevant information."
+        content: "You are a helpful AI assistant for BISO. You can search website content, find documents, match jobs, and provide department information. You'll understand the user's intent and provide relevant information."
       };
       
       // Create a new message array to ensure we're not referencing a potentially empty array

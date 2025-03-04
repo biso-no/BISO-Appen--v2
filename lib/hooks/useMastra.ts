@@ -55,7 +55,7 @@ export function useAgentSuggestions(agentType: AgentType) {
   // Universal suggestions for all agent types
   return [
     'How can you help me?',
-    'Tell me about the university',
+    'Tell me about BISO',
     'Find available job openings',
     'Tell me about the Computer Science department',
     'Where can I find the student handbook?'
@@ -102,5 +102,5 @@ export function useSendMessage() {
  */
 export function useAgentSystemMessage(agentType: AgentType): string {
   // Universal system message for all agent types
-  return "You are a helpful AI assistant for our university. You can search website content, find documents, match jobs, and provide department information. You'll understand the user's intent and provide relevant information.";
+  return "You are a helpful AI assistant for BISO. You can search website content, find documents, match jobs, and provide department information. You'll understand the user's intent and provide relevant information.";
 } 

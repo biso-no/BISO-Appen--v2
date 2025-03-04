@@ -608,7 +608,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                         fontSize="$2" // Reduced from $3
                         lineHeight={18} // Reduced from 22
                       >
-                        Ask me anything about departments, events, or how to navigate the university.
+                        Ask me anything about departments, events, or how to navigate BISO.
                       </Paragraph>
                     </MotiView>
                   </YStack>

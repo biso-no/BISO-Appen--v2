@@ -16,8 +16,8 @@ export interface AgentMetadata {
 export const AGENT_METADATA: Record<string, AgentMetadata> = {
   'universalAgent': {
     id: 'universalAgent',
-    name: 'University Assistant',
-    description: 'A universal assistant that can help with all your university-related questions',
+    name: 'BISO Assistant',
+    description: 'A universal assistant that can help with all your BISO-related questions',
     capabilities: [
       'Search website content', 
       'Find documents', 
