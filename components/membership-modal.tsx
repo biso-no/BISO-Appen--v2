@@ -2,10 +2,11 @@ import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { databases, triggerFunction } from '@/lib/appwrite';
 import { Sheet } from '@tamagui/sheet';
 import { Models, Query } from 'react-native-appwrite';
-import { Button, H2, XStack, YStack, Label, RadioGroup, Image, Text } from 'tamagui';
+import { Button, H2, XStack, YStack, Label, RadioGroup, Text } from 'tamagui';
 import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuth } from '@/components/context/auth-provider';
+import { useAuth } from './context/core/auth-provider';
+import { useMembershipContext } from './context/core/membership-provider';
 
 const paymentMethods = [
   { label: 'Credit Card', value: 'CARD', size: '$5' },
@@ -35,7 +36,8 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const pathName = usePathname();
-  const { isBisoMember, data } = useAuth();
+  const { user } = useAuth();
+  const { isBisoMember} = useMembershipContext();
 
   useEffect(() => {
     if (isBisoMember === true) {
@@ -44,7 +46,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   }, [isBisoMember, setOpen]);
 
   useEffect(() => {
-    if (data?.$id) {
+    if (user?.$id) {
     const fetchMemberships = async () => {
       try {
         const response = await databases.listDocuments('app', 'memberships', [
@@ -59,7 +61,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
     fetchMemberships();
     }
 
-  }, []);
+  }, [user?.$id]);
 
   const initiatePurchase = async () => {
     if (!selectedMembership) {
@@ -99,11 +101,8 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         const result = await WebBrowser.openAuthSessionAsync(url, '/profile');
         
         if (result.type === 'success') {
-          // Handle successful purchase
-          console.log("Purchase successful");
           setOpen(false);
         } else {
-          // Handle cancelled or failed purchase
           setError("Purchase was not completed. Please try again.");
         }
       }

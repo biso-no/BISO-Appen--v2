@@ -1,11 +1,9 @@
 import { Card, Image, H6, Paragraph, YStack, XStack, Separator, Button } from "tamagui";
-import { databases, getNews } from "@/lib/appwrite";
+import { databases } from "@/lib/appwrite";
 import { useEffect, useState } from "react";
 import { Query, type Models } from "react-native-appwrite";
 import { getFormattedDateFromString } from "@/lib/format-time";
-import { Frown } from "@tamagui/lucide-icons";
 import { MyStack } from "../ui/MyStack";
-import { RenderHTML } from 'react-native-render-html';
 import { useRouter } from "expo-router";
 import { useCampus } from "@/lib/hooks/useCampus";
 import { View } from "react-native";
@@ -34,23 +32,11 @@ export function News() {
             const fetchedNews = await databases.listDocuments('app', 'news', query);
 
             setNews(fetchedNews);
-            //console.log("Fetched news: ", fetchedNews);
         }
         fetchNews();
         setLoading(false);
     }, [campus]);
 
-    const truncateDescription = (description: string | undefined, maxLength: number) => {
-        if (description && description.length > maxLength) {
-            return description.substring(0, maxLength) + "...";
-        }
-        return description || "";
-    };
-    
-
-    const capitalizeFirstLetter = (str: string) => {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      };
 
       if (!news || news.total === 0 || loading) {
         return (

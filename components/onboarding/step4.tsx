@@ -1,9 +1,7 @@
-import { Button, View, YStack, XStack, H3, Paragraph, Card, Text } from 'tamagui';
+import { YStack, XStack, H3, Paragraph, Card, Text } from 'tamagui';
 import React, { useState } from 'react';
 import { Input } from '@/components/auth/input';
 import { MotiView } from 'moti';
-import { databases, updateDocument } from '@/lib/appwrite';
-import { useAuth } from '../context/auth-provider';
 import { StyleSheet, Dimensions } from 'react-native';
 import { Home, MapPin, Phone, Mail, Building } from '@tamagui/lucide-icons';
 import Animated, { 
@@ -27,9 +25,8 @@ interface Step4Props {
 }
 
 export function Step4({ phone, address, city, zipCode, setPhone, setAddress, setCity, setZipCode }: Step4Props) {
-  const { data, profile, updateProfile } = useAuth();
   const [activeField, setActiveField] = useState<string | null>(null);
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   const isSmallDevice = width < 380;
   
   // Animation values
@@ -55,7 +52,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
       formOpacity.value = 0;
       formTranslateY.value = 20;
     };
-  }, []);
+  }, [formOpacity, formTranslateY, homeScale]);
   
   // Animated styles
   const homeAnimatedStyle = useAnimatedStyle(() => {
@@ -88,15 +85,15 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
   };
 
   return (
-    <YStack width="100%" alignItems="center" space="$2">
+    <YStack width="100%" alignItems="center" gap="$2">
       <MotiView 
         from={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
         style={styles.container}
       >
-        <YStack space="$2" width="100%" alignItems="center">
-          <XStack alignItems="center" space="$2">
+        <YStack gap="$2" width="100%" alignItems="center">
+          <XStack alignItems="center" gap="$2">
             <Animated.View style={homeAnimatedStyle}>
               <Home size={22} color="$primary" />
             </Animated.View>
@@ -134,7 +131,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="phone">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Phone 
                           size={16} 
                           color={activeField === 'phone' ? '$primary' : '$color'} 
@@ -167,7 +164,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="address">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <MapPin 
                           size={16} 
                           color={activeField === 'address' ? '$primary' : '$color'} 
@@ -199,7 +196,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="city">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Building 
                           size={16} 
                           color={activeField === 'city' ? '$primary' : '$color'} 
@@ -231,7 +228,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="zipCode">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Mail 
                           size={16} 
                           color={activeField === 'zipCode' ? '$primary' : '$color'} 

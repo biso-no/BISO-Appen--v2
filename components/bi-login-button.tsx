@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import {
-    DiscoveryDocument,
     exchangeCodeAsync,
     makeRedirectUri,
     useAuthRequest,
     useAutoDiscovery,
 } from 'expo-auth-session';
-import * as SecureStore from 'expo-secure-store';
-import { Button, Text, YStack, Spinner } from 'tamagui';
+import { Button, Text, Spinner } from 'tamagui';
 import { Alert } from 'react-native';
-import { useAuth } from './context/auth-provider';
-import { databases } from '@/lib/appwrite';
-import { useLocalSearchParams } from 'expo-router';
+import { useProfile } from './context/core/profile-provider';
+
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -37,16 +34,16 @@ async function fetchUserEmail(accessToken: string) {
 }
 
 export function BILoginButton() {
-    const params = useLocalSearchParams();
     const discovery = useAutoDiscovery('https://login.microsoftonline.com/adee44b2-91fc-40f1-abdd-9cc29351b5fd/v2.0');
     const redirectUri = makeRedirectUri({
         scheme: 'biso',
         path: 'profile',
     });
 
-    const { profile, addStudentId, data, isLoading, setIsLoading } = useAuth();
+    const { actions: profileActions } = useProfile();
     const clientId = '09d8bb72-2cef-4b98-a1d3-2414a7a40873';
     const [isReady, setIsReady] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [request, , promptAsync] = useAuthRequest({
         clientId,
@@ -54,12 +51,6 @@ export function BILoginButton() {
         redirectUri,
     }, discovery);
 
-    // Only log discovery info once when component mounts
-    useEffect(() => {
-        if (discovery) {
-            console.log('Auth discovery completed');
-        }
-    }, [discovery]);
 
     useEffect(() => {
         if (request && discovery) {
@@ -68,7 +59,7 @@ export function BILoginButton() {
     }, [request, discovery]);
 
     const handleLogin = async () => {
-        setIsLoading(true);
+        setLoading(true);
         try {
             const code = await promptAsync();
             if (code.type === 'success' && discovery) {
@@ -91,18 +82,18 @@ export function BILoginButton() {
                 }
 
                 const studentId = email.replace(/@bi.no|@biso.no/, '');
-                await addStudentId(studentId);
+                await profileActions.addStudentId(studentId);
             }
         } catch (error) {
             Alert.alert("Login Error", error instanceof Error ? error.message : "An error occurred during login");
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     return (
         <Button onPress={handleLogin} variant='outlined' disabled={!isReady}>
-            {isLoading && <Spinner size="small" />}
+            {loading && <Spinner size="small" />}
             <Text>Login with BI</Text>
         </Button>
     );

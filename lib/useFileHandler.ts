@@ -57,7 +57,7 @@ export const useFileHandler = (bucketId: string) => {
           setSuccess(`Files processed: ${formattedResults.filter(r => r.status === 'fulfilled').length}`);
           setError(`Failures: ${formattedResults.filter(r => r.status === 'rejected').length}`);
         } catch (error) {
-          setError("Error processing files.");
+          setError("Error processing files: " + error);
           setSuccess(null);
         } finally {
           setUploading(false);

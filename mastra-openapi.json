@@ -1,0 +1,1469 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Mastra API",
+        "description": "Mastra API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "operationId": "getApi",
+                "description": "Get API status",
+                "tags": [
+                    "system"
+                ]
+            }
+        },
+        "/api/agents": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all agents"
+                    }
+                },
+                "operationId": "getApiAgents",
+                "description": "Get all available agents",
+                "tags": [
+                    "agents"
+                ]
+            }
+        },
+        "/api/agents/{agentId}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Agent details"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "getApiAgentsByAgentId",
+                "description": "Get agent by ID",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/agents/{agentId}/evals/ci": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of evals"
+                    }
+                },
+                "operationId": "getApiAgentsByAgentIdEvalsCi",
+                "description": "Get CI evals by agent ID",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/agents/{agentId}/evals/live": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of evals"
+                    }
+                },
+                "operationId": "getApiAgentsByAgentIdEvalsLive",
+                "description": "Get live evals by agent ID",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/agents/{agentId}/generate": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Generated response"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdGenerate",
+                "description": "Generate a response from an agent",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "threadId": {
+                                        "type": "string"
+                                    },
+                                    "resourceId": {
+                                        "type": "string",
+                                        "description": "The resource ID for the conversation"
+                                    },
+                                    "resourceid": {
+                                        "type": "string",
+                                        "description": "The resource ID for the conversation (deprecated, use resourceId instead)",
+                                        "deprecated": true
+                                    },
+                                    "runId": {
+                                        "type": "string"
+                                    },
+                                    "output": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "messages"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/stream": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Streamed response"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdStream",
+                "description": "Stream a response from an agent",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "threadId": {
+                                        "type": "string"
+                                    },
+                                    "resourceId": {
+                                        "type": "string",
+                                        "description": "The resource ID for the conversation"
+                                    },
+                                    "resourceid": {
+                                        "type": "string",
+                                        "description": "The resource ID for the conversation (deprecated, use resourceId instead)",
+                                        "deprecated": true
+                                    },
+                                    "runId": {
+                                        "type": "string"
+                                    },
+                                    "output": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "messages"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/instructions": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Instructions updated successfully"
+                    },
+                    "403": {
+                        "description": "Not allowed in non-playground environment"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdInstructions",
+                "description": "Update an agent's instructions",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "instructions": {
+                                        "type": "string",
+                                        "description": "New instructions for the agent"
+                                    }
+                                },
+                                "required": [
+                                    "instructions"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/instructions/enhance": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Generated system prompt and analysis",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "explanation": {
+                                            "type": "string",
+                                            "description": "Detailed analysis of the instructions"
+                                        },
+                                        "new_prompt": {
+                                            "type": "string",
+                                            "description": "The enhanced system prompt"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid request parameters"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    },
+                    "500": {
+                        "description": "Internal server error or model response parsing error"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdInstructionsEnhance",
+                "description": "Generate an improved system prompt from instructions",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "ID of the agent whose model will be used for prompt generation"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "instructions": {
+                                        "type": "string",
+                                        "description": "Instructions to generate a system prompt from"
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "description": "Optional comment for the enhanced prompt"
+                                    }
+                                },
+                                "required": [
+                                    "instructions"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/speakers": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of available speakers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Speaker information depending on the voice provider",
+                                        "properties": {
+                                            "voiceId": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Agent does not have voice capabilities"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "getApiAgentsByAgentIdSpeakers",
+                "description": "Get available speakers for an agent",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/agents/{agentId}/speak": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Audio stream",
+                        "content": {
+                            "audio/mpeg": {
+                                "schema": {
+                                    "format": "binary",
+                                    "description": "Audio stream containing the generated speech"
+                                }
+                            },
+                            "audio/*": {
+                                "schema": {
+                                    "format": "binary",
+                                    "description": "Audio stream depending on the provider"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Agent does not have voice capabilities or invalid request"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdSpeak",
+                "description": "Convert text to speech using the agent's voice provider",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "text": {
+                                        "type": "string",
+                                        "description": "Text to convert to speech"
+                                    },
+                                    "options": {
+                                        "type": "object",
+                                        "description": "Provider-specific options for speech generation",
+                                        "properties": {
+                                            "speaker": {
+                                                "type": "string",
+                                                "description": "Speaker ID to use for speech generation"
+                                            }
+                                        },
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "required": [
+                                    "text"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/listen": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Transcription result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "text": {
+                                            "type": "string",
+                                            "description": "Transcribed text"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Agent does not have voice capabilities or invalid request"
+                    },
+                    "404": {
+                        "description": "Agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdListen",
+                "description": "Convert speech to text using the agent's voice provider. Additional provider-specific options can be passed as query parameters.",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "audio/mpeg": {
+                            "schema": {
+                                "format": "binary",
+                                "description": "Audio data stream to transcribe (supports various formats depending on provider like mp3, wav, webm, flac)"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/agents/{agentId}/tools/{toolId}/execute": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Tool execution result"
+                    },
+                    "404": {
+                        "description": "Tool or agent not found"
+                    }
+                },
+                "operationId": "postApiAgentsByAgentIdToolsByToolIdExecute",
+                "description": "Execute a tool through an agent",
+                "tags": [
+                    "agents"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toolId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/memory/status": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Memory status"
+                    }
+                },
+                "operationId": "getApiMemoryStatus",
+                "description": "Get memory status",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/memory/threads": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all threads"
+                    }
+                },
+                "operationId": "getApiMemoryThreads",
+                "description": "Get all threads",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "resourceid",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Created thread"
+                    }
+                },
+                "operationId": "postApiMemoryThreads",
+                "description": "Create a new thread",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "metadata": {
+                                        "type": "object"
+                                    },
+                                    "resourceid": {
+                                        "type": "string"
+                                    },
+                                    "threadId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/memory/threads/{threadId}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Thread details"
+                    },
+                    "404": {
+                        "description": "Thread not found"
+                    }
+                },
+                "operationId": "getApiMemoryThreadsByThreadId",
+                "description": "Get thread by ID",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "threadId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "patch": {
+                "responses": {
+                    "200": {
+                        "description": "Updated thread"
+                    },
+                    "404": {
+                        "description": "Thread not found"
+                    }
+                },
+                "operationId": "patchApiMemoryThreadsByThreadId",
+                "description": "Update a thread",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "threadId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Thread deleted"
+                    },
+                    "404": {
+                        "description": "Thread not found"
+                    }
+                },
+                "operationId": "deleteApiMemoryThreadsByThreadId",
+                "description": "Delete a thread",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "threadId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/memory/threads/{threadId}/messages": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of messages"
+                    }
+                },
+                "operationId": "getApiMemoryThreadsByThreadIdMessages",
+                "description": "Get messages for a thread",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "threadId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/memory/save-messages": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Messages saved"
+                    }
+                },
+                "operationId": "postApiMemorySave-messages",
+                "description": "Save messages",
+                "tags": [
+                    "memory"
+                ],
+                "parameters": [
+                    {
+                        "name": "agentId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "messages"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/telemetry": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all traces (paged)"
+                    }
+                },
+                "operationId": "getApiTelemetry",
+                "description": "Get all traces",
+                "tags": [
+                    "telemetry"
+                ]
+            }
+        },
+        "/api/workflows": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all workflows"
+                    }
+                },
+                "operationId": "getApiWorkflows",
+                "description": "Get all workflows",
+                "tags": [
+                    "workflows"
+                ]
+            }
+        },
+        "/api/workflows/{workflowId}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Workflow details"
+                    },
+                    "404": {
+                        "description": "Workflow not found"
+                    }
+                },
+                "operationId": "getApiWorkflowsByWorkflowId",
+                "description": "Get workflow by ID",
+                "tags": [
+                    "workflows"
+                ],
+                "parameters": [
+                    {
+                        "name": "workflowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/workflows/{workflowId}/execute": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Workflow execution result"
+                    },
+                    "404": {
+                        "description": "Workflow not found"
+                    }
+                },
+                "operationId": "postApiWorkflowsByWorkflowIdExecute",
+                "description": "Execute/Start a workflow",
+                "tags": [
+                    "workflows"
+                ],
+                "parameters": [
+                    {
+                        "name": "workflowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "input": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/workflows/{workflowId}/resume": {
+            "post": {
+                "responses": {},
+                "operationId": "postApiWorkflowsByWorkflowIdResume",
+                "description": "Resume a suspended workflow step",
+                "tags": [
+                    "workflows"
+                ],
+                "parameters": [
+                    {
+                        "name": "workflowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "stepId": {
+                                        "type": "string"
+                                    },
+                                    "runId": {
+                                        "type": "string"
+                                    },
+                                    "context": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/workflows/{workflowId}/watch": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Workflow transitions in real-time"
+                    }
+                },
+                "operationId": "getApiWorkflowsByWorkflowIdWatch",
+                "description": "Watch workflow transitions in real-time",
+                "parameters": [
+                    {
+                        "name": "workflowId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "workflows"
+                ]
+            }
+        },
+        "/api/logs": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all logs"
+                    }
+                },
+                "operationId": "getApiLogs",
+                "description": "Get all logs",
+                "tags": [
+                    "logs"
+                ],
+                "parameters": [
+                    {
+                        "name": "transportId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/logs/transports": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all log transports"
+                    }
+                },
+                "operationId": "getApiLogsTransports",
+                "description": "List of all log transports",
+                "tags": [
+                    "logs"
+                ]
+            }
+        },
+        "/api/logs/{runId}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of logs for run ID"
+                    }
+                },
+                "operationId": "getApiLogsByRunId",
+                "description": "Get logs by run ID",
+                "tags": [
+                    "logs"
+                ],
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transportId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/tools": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of all tools"
+                    }
+                },
+                "operationId": "getApiTools",
+                "description": "Get all tools",
+                "tags": [
+                    "tools"
+                ]
+            }
+        },
+        "/api/tools/{toolId}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Tool details"
+                    },
+                    "404": {
+                        "description": "Tool not found"
+                    }
+                },
+                "operationId": "getApiToolsByToolId",
+                "description": "Get tool by ID",
+                "tags": [
+                    "tools"
+                ],
+                "parameters": [
+                    {
+                        "name": "toolId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/tools/{toolId}/execute": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Tool execution result"
+                    },
+                    "404": {
+                        "description": "Tool not found"
+                    }
+                },
+                "operationId": "postApiToolsByToolIdExecute",
+                "description": "Execute a tool",
+                "tags": [
+                    "tools"
+                ],
+                "parameters": [
+                    {
+                        "name": "toolId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "data"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vector/{vectorName}/upsert": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Vectors upserted successfully"
+                    }
+                },
+                "operationId": "postApiVectorByVectorNameUpsert",
+                "description": "Upsert vectors into an index",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "indexName": {
+                                        "type": "string"
+                                    },
+                                    "vectors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    },
+                                    "metadata": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "indexName",
+                                    "vectors"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vector/{vectorName}/create-index": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Index created successfully"
+                    }
+                },
+                "operationId": "postApiVectorByVectorNameCreate-index",
+                "description": "Create a new vector index",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "indexName": {
+                                        "type": "string"
+                                    },
+                                    "dimension": {
+                                        "type": "number"
+                                    },
+                                    "metric": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cosine",
+                                            "euclidean",
+                                            "dotproduct"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "indexName",
+                                    "dimension"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vector/{vectorName}/query": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Query results"
+                    }
+                },
+                "operationId": "postApiVectorByVectorNameQuery",
+                "description": "Query vectors from an index",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "indexName": {
+                                        "type": "string"
+                                    },
+                                    "queryVector": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "topK": {
+                                        "type": "number"
+                                    },
+                                    "filter": {
+                                        "type": "object"
+                                    },
+                                    "includeVector": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "indexName",
+                                    "queryVector"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vector/{vectorName}/indexes": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of indexes"
+                    }
+                },
+                "operationId": "getApiVectorByVectorNameIndexes",
+                "description": "List all indexes for a vector store",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/api/vector/{vectorName}/indexes/{indexName}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Index details"
+                    }
+                },
+                "operationId": "getApiVectorByVectorNameIndexesByIndexName",
+                "description": "Get details about a specific index",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "indexName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Index deleted successfully"
+                    }
+                },
+                "operationId": "deleteApiVectorByVectorNameIndexesByIndexName",
+                "description": "Delete a specific index",
+                "tags": [
+                    "vector"
+                ],
+                "parameters": [
+                    {
+                        "name": "vectorName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "indexName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {}
+    }
+}

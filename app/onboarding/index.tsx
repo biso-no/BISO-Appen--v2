@@ -1,23 +1,22 @@
-import { H1, YStack, Text, H5, Theme, useTheme } from 'tamagui';
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/components/context/auth-provider';
+import { H1, YStack, Theme } from 'tamagui';
+import React, { useState, useRef } from 'react';
+import { useAuth } from '@/components/context/core/auth-provider';
 import { MultiStepForm, Step } from '@/components/ui/multi-step-form'; // Assuming the Stepper component is in this path
 import { Step1 } from '@/components/onboarding/step1';
 import { Step2 } from '@/components/onboarding/step2';
 import { Step3 } from '@/components/onboarding/step3';
 import { Step4 } from '@/components/onboarding/step4';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MyStack } from '@/components/ui/MyStack';
-import { useCampus } from '@/lib/hooks/useCampus';
+import { useRouter } from 'expo-router';
 import { StyleSheet, Dimensions, useColorScheme, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PartyPopper, User, Building2, MapPin } from '@tamagui/lucide-icons';
+import { User, Building2, MapPin } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
+import { useProfile } from '@/components/context/core/profile-provider';
 
 enum Campus {
   Bergen = "bergen",
@@ -35,65 +34,39 @@ interface UserPreferences {
 }
 
 export default function Onboarding() {
-  const params = useLocalSearchParams<{ initialStep: string }>();
   const [preferences, setPreferences] = useState<UserPreferences>({
     features: [],
     studentID: '',
     isVolunteer: false,
     departments: [],
   });
-  const { data, profile, isLoading, error, updateName, updateUserPrefs, updateProfile, setProfile } = useAuth();
+  const { user, actions } = useAuth();
+  const { profile, actions: profileActions } = useProfile();
   const [name, setName] = useState(profile?.name ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [address, setAddress] = useState(profile?.address ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
   const [zipCode, setZipCode] = useState(profile?.zip ?? '');
-  const [documentId, setDocumentId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiRef = useRef<ConfettiCannon>(null);
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(null);
   const [selectedDepartments, setSelectedDepartments] = useState<Models.Document[]>([]);
   const router = useRouter();
 
-  const { campus } = useCampus();
 
   const handleUpdateName = async (name: string) => {
     setName(name);
   };
 
-  const handleUpdate = async (field: string, value: any) => {
-    // Store values locally without making API calls
-    switch (field) {
-      case 'name':
-        setName(value);
-        break;
-      case 'phone':
-        setPhone(value);
-        break;
-      case 'address':
-        setAddress(value);
-        break;
-      case 'city':
-        setCity(value);
-        break;
-      case 'zipCode':
-        setZipCode(value);
-        break;
-      case 'campus':
-        updateUserPrefs(field, value);
-        break;
-    }
-  };
 
   const handleCampusChange = (campus: Models.Document | null) => {
     setSelectedCampus(campus);
     if (campus) {
-      updateUserPrefs('campus', campus.$id);
+      actions.updatePreferences('campus', campus.$id);
     }
   };
 
@@ -159,30 +132,29 @@ export default function Onboarding() {
     // Show confetti animation
     setShowConfetti(true);
     
-    if (!data) {
+    if (!user) {
       console.error('User data not found');
       return;
     }
 
     try {
       // Create/Update profile with all collected information
-      const response = await databases.createDocument('app', 'user', data.$id, { 
+      const response = await databases.createDocument('app', 'user', user.$id, { 
         name,
         phone, 
         address,
-        email: data.email,
+        email: user.email,
         city, 
         zip: zipCode,
         campus: selectedCampus?.$id,
         departments: selectedDepartments.map(d => d.$id),
       });
 
-      await updateName(name);
+      await actions.updateName(name);
       
-      console.log('Profile created/updated successfully:', response);
 
       if (response.$id) {
-        setProfile(response);
+        profileActions.updateProfile(response);
       }
       
       // Wait for animation to complete before redirecting

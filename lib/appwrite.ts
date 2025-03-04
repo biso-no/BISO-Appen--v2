@@ -1,8 +1,6 @@
 import { Models, Query, Client, OAuthProvider, Role, ExecutionMethod, RealtimeResponseEvent } from 'react-native-appwrite';
 import { ID, Account, Databases, Storage, Avatars, Messaging, Permission, Teams, Functions } from 'react-native-appwrite';
-import { AuthContextType } from '@/components/context/auth-provider';
 import { capitalizeFirstLetter } from './utils/helpers';
-import { AnimatableStringValue } from 'react-native';
 
 export const client = new Client();
 
@@ -33,11 +31,10 @@ export async function signIn(email: string) {
     return userId;
   }
   
-  export async function signOut(refetchUser: AuthContextType['refetchUser']) {
+  export async function signOut() {
     const response = await account.deleteSession("current");
-    console.log(response);
-  
-    await refetchUser();
+
+    return response;
   }
 
 export async function getUserPreferences() {
@@ -82,14 +79,12 @@ export async function verifyMagicUrl(email: string, token: string) {
 export async function getUser() {
     try {
         const user = await account.get();
-        console.log("User Object: ", user);
 
         let profile;
 
         if (user.$id) {
             try {
                 profile = await databases.getDocument('app', 'user', user.$id);
-                console.log("Profile Object: ", profile);
             } catch (error) {
                 console.error("Error fetching profile:", error);
             }
@@ -181,9 +176,10 @@ export async function getDocuments(collectionId: string, filters?: Record<string
   }
 
 export async function createDocument(collectionId: string, data?: any, id?: string) {
-
+    
     const documentId = id ?? ID.unique();
 
+    console.log(`Creating document in collection ${collectionId}:`, JSON.stringify(data, null, 2));
     const response = await databases.createDocument('app', collectionId, documentId, data);
     return response;
 }
@@ -210,7 +206,6 @@ interface File {
 }
 
 export async function uploadFile(bucketId: string, file: File, refCollection: string, refField: string, refDocument?: string) {
-    console.log("Uploading file: ", file); 
     const fileId = ID.unique();
     try {
         const response = await storage.createFile(bucketId, fileId, file);
@@ -233,7 +228,6 @@ export function getUserAvatar(fileId: string) {
         100,
         100
     )
-    console.log(result)
     return result;
 }
 
@@ -249,7 +243,6 @@ export function signInWithBI() {
         'biso://(tabs)/index',
         'biso://(tabs)/auth/signIn/failed',
     )
-    console.log(response)
     return response;
 }
 
@@ -293,14 +286,12 @@ export const updateSubscription = async (userId: string, topic: string, subscrib
         const response = await databases.updateDocument('app', 'subs', documents.documents[0].$id, {
           subscribed,
         });
-        console.log("Updated subscription:", response);
       } else {
         const response = await databases.createDocument('app', 'subs', ID.unique(), {
           user_id: userId,
           topic,
           subscribed,
         });
-        console.log("Created subscription:", response);
       }
     } catch (error) {
       console.error("Error updating subscription:", error);
@@ -379,14 +370,12 @@ export async function getTeam(teamId: string) {
 
 export async function getChats() {
     const fetchedChats = await databases.listDocuments('app', 'chats');
-    console.log(fetchedChats.documents)
     return fetchedChats
 }
 
 export function subScribeToChat(callback: (response: any) => void) {
 
     const unsubscribe = client.subscribe(['databases.app.collections.chats.documents', 'databases.app.collections.chat_messages.documents'], (response) => {
-      console.log(response);
       callback(response);
     });
   
@@ -413,7 +402,6 @@ export function subScribeToChat(callback: (response: any) => void) {
     }
 
     const unsubscribe = client.subscribe(subscriptionsArray, (response: RealtimeResponseEvent<Models.Document>) => {
-      console.log(response);
       callback(response);
     });
   

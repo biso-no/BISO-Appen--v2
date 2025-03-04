@@ -1,7 +1,6 @@
-import { Sheet, Input, YStack, Button, H5, XStack, SizableText, Theme } from "tamagui";
-import React, { useState } from "react";
+import { Sheet, Input, YStack, Button, H5, XStack, SizableText } from "tamagui";
+import React from "react";
 import { Tabs } from "tamagui";
-import { useTheme } from "tamagui";
 
 interface SearchProps {
     modalOpen: boolean;
@@ -9,8 +8,6 @@ interface SearchProps {
 }
 
 export function Search({ modalOpen, setModalOpen }: SearchProps) {
-
-    const theme = useTheme();
 
 
     return (

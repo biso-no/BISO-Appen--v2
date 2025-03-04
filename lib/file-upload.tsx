@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   YStack, Text, XStack, Image, ScrollView,
   Stack, Button, Sheet, styled,
-  Theme, Card,
   Label,
   Input,
   AnimatePresence
@@ -95,13 +94,9 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
     const [selectedDocument, setSelectedDocument] = useState<Attachment | null>(null);
     const [showEditSheet, setShowEditSheet] = useState(false);
 
-  const getTotalAmount = () => {
-    return ocrResults
-      .filter(result => result.status === 'success')
-      .reduce((sum, item) => sum + item.amount, 0);
-  };
 
-  const processFile = async (file: File) => {
+
+  const processFile = useCallback(async (file: File) => {
     const newAttachment: Attachment = {
       url: file.uri,
       description: '',
@@ -153,7 +148,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
           : item
       ));
     }
-  };
+  }, [setOcrResults]);
 
   const handleDocumentPress = (document: Attachment) => {
     setSelectedDocument(document);
@@ -214,7 +209,7 @@ export function FileUpload({ ocrResults, setOcrResults }: FileUploadProps) {
       }
     };
     processQueue();
-  }, [processingQueue]);
+  }, [processingQueue, processFile]);
 
   const memoizedTotal = useMemo(() => {
     return ocrResults
