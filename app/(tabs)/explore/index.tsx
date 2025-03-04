@@ -26,6 +26,7 @@ import { useCampus } from '@/lib/hooks/useCampus'
 import axios from 'axios'
 import { useAuth } from '@/components/context/core/auth-provider'
 import { useColorScheme } from 'react-native'
+import { useAppNavigation } from '@/lib/navigation'
 
 interface Event {
   id: number;
@@ -99,7 +100,7 @@ export default function ExploreScreen() {
   const [events, setEvents] = useState<Event[]>([])
   const { user } = useAuth()
   const { campus } = useCampus()
-  const router = useRouter()
+  const { navigateToMainScreen } = useAppNavigation()
   const [error, setError] = useState<string | null>(null)
 
   const colorScheme = useColorScheme();
@@ -266,10 +267,10 @@ export default function ExploreScreen() {
 const CategoryCard = ({ category }: { category: ExploreCategory }) => {
   const theme = useTheme()
   const handlePress = () => {
-    if (category.requiresAuth && !user) {
-      return
-    }
-    router.push(category.link as any)
+    // Use our custom navigation utility instead of router.push
+    // This will improve performance by avoiding unnecessary re-renders
+    const screenPath = category.link.replace('/explore/', '');
+    navigateToMainScreen(`explore/${screenPath}`);
   }
 
   // Get correct background and border colors based on theme

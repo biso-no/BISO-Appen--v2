@@ -14,9 +14,7 @@ import {
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
-import { Tabs } from 'expo-router';
-import { useNavigationState } from '@react-navigation/native';
-import CampusPopover from '@/components/CampusPopover';
+import { Tabs, Stack as ExpoStack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +22,7 @@ import { useProfile } from '@/components/context/core/profile-provider';
 // Add moti imports
 import { MotiView } from 'moti';
 import { CopilotButton } from '@/components/ai';
+import CampusPopover from '@/components/CampusPopover';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -33,15 +32,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
-
 interface TabBarIconProps {
   routeName: string;
   color: string;
   isActive: boolean;
 }
-
-
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -50,10 +45,7 @@ export default function TabLayout() {
   const avatarId = profile?.avatar;
   const [image, setImage] = useState(profile?.avatar || '');
   const insets = useSafeAreaInsets();
-  const navigationState = useNavigationState(state => state);
-
-
-
+  const router = useRouter();
 
   const profileIcon = (color = Colors[colorScheme ?? 'light'].text) => {
     if (!user?.$id) {
@@ -70,99 +62,61 @@ export default function TabLayout() {
     }
   };
 
-  const tabNames = user?.$id
-    ? ['index', 'explore/index', 'profile/index']
-    : ['index', 'explore/index', 'auth/signIn/index'];
-
-
-  const generateScreens = () => {
-    const tabsRoute = navigationState.routes.find(route => route.name === '(tabs)');
-    if (!tabsRoute || !tabsRoute.state || !tabsRoute.state.routes) return null;
-
-    const nestedRoutes = tabsRoute.state.routes;
-    const routesWithCampusPopover = ['index', 'explore/index', 'explore/units/index'];
-
-    return nestedRoutes.map((route, index) => {
-      const isTab = tabNames.includes(route.name);
-      const isAuthScreen = route.name === 'auth/signIn/index';
-
-      const HeaderComponent = () => {
-        if (isAuthScreen) return null;
-        
-        return (
-          <View style={{ 
-            width: '100%', 
+  const HeaderComponent = () => (
+    <View style={{ 
+      width: '100%', 
+      overflow: 'hidden',
+      borderRadius: 16,
+      paddingTop: insets.top 
+    }}>
+      <BlurView
+        intensity={colorScheme === 'dark' ? 40 : 80}
+        tint={colorScheme === 'dark' ? 'dark' : 'light'}
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
             overflow: 'hidden',
-            borderRadius: 16,
-            paddingTop: insets.top 
-          }}>
-            <BlurView
-              intensity={colorScheme === 'dark' ? 40 : 80}
-              tint={colorScheme === 'dark' ? 'dark' : 'light'}
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  borderBottomLeftRadius: 24,
-                  borderBottomRightRadius: 24,
-                  overflow: 'hidden',
-                }
-              ]}
-            />
-            <MotiView 
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  backgroundColor: colorScheme === 'dark' 
-                    ? 'rgba(0,0,0,0.3)' 
-                    : 'rgba(255,255,255,0.3)',
-                  borderBottomLeftRadius: 24,
-                  borderBottomRightRadius: 24,
-                }
-              ]} 
-            />
-      
-            <StatusBar style="auto" />
-            <Stack
-              paddingBottom="$4"
-              paddingHorizontal="$4"
-              width="100%"
-            >
-              <XStack justifyContent="space-between" alignItems="center">
-                {/* Left side - empty for balance */}
-                <XStack flex={1} justifyContent="flex-start">
-                </XStack>
-                
-                {/* Center - Campus selector */}
-                <XStack flex={2} justifyContent="center" alignItems="center">
-                  <XStack gap="$4" alignItems="center">
-                    <CampusPopover />
-                  </XStack>
-                </XStack>
-                
-                {/* Right side - Copilot Button */}
-                <XStack flex={1} justifyContent="flex-end">
-                  <CopilotButton />
-                </XStack>
-              </XStack>
-            </Stack>
-          </View>
-        );
-      };
+          }
+        ]}
+      />
+      <MotiView 
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: colorScheme === 'dark' 
+              ? 'rgba(0,0,0,0.3)' 
+              : 'rgba(255,255,255,0.3)',
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          }
+        ]} 
+      />
 
-      return (
-        <Tabs.Screen
-          key={`${route.key}-${index}`}
-          name={route.name}
-          options={{
-            title: '',
-            tabBarIcon: isTab ? ({ color }: { color: string }) => getIconForRoute(route.name, color) : undefined,
-            href: isTab ? undefined : null,
-            header: () => <HeaderComponent />
-          }}
-        />
-      );
-    });
-  };
+      <StatusBar style="auto" />
+      <Stack
+        paddingBottom="$4"
+        paddingHorizontal="$4"
+        width="100%"
+      >
+        <XStack justifyContent="space-between" alignItems="center">
+          <XStack flex={1} justifyContent="flex-start">
+          </XStack>
+          
+          <XStack flex={2} justifyContent="center" alignItems="center">
+            <XStack gap="$4" alignItems="center">
+              <CampusPopover />
+            </XStack>
+          </XStack>
+          
+          <XStack flex={1} justifyContent="flex-end">
+            <CopilotButton />
+          </XStack>
+        </XStack>
+      </Stack>
+    </View>
+  );
 
   const getIconForRoute = (routeName: string, color: string) => {
     switch (routeName) {
@@ -179,11 +133,27 @@ export default function TabLayout() {
     }
   };
 
-
-
   const TabBarIcon: React.FC<TabBarIconProps> = ({ routeName, color, isActive }) => {
     const handlePress = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Add navigation logic based on route name
+      switch (routeName) {
+        case 'index':
+          router.navigate('/(tabs)');
+          break;
+        case 'explore/index':
+          router.navigate('/(tabs)/explore');
+          break;
+        case 'profile/index':
+          router.navigate('/(tabs)/profile');
+          break;
+        case 'auth/signIn/index':
+          router.navigate('/(tabs)/auth/signIn');
+          break;
+        default:
+          break;
+      }
     };
 
     return (
@@ -262,6 +232,8 @@ export default function TabLayout() {
               android: 40 + (insets.top || 20),
             }),
           },
+          lazy: true,
+          unmountOnBlur: Platform.OS !== 'web',
           tabBarBackground: () => (
             <View style={[StyleSheet.absoluteFill]}>
               <BlurView
@@ -325,9 +297,42 @@ export default function TabLayout() {
             />
           ),
           tabBarLabel: () => null,
+          header: () => <HeaderComponent />
         })}
       >
-        {generateScreens()}
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: '',
+          }}
+        />
+        <Tabs.Screen
+          name="explore/index"
+          options={{
+            title: '',
+          }}
+        />
+        <Tabs.Screen
+          name="(main)"
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: '',
+            href: '/(tabs)/profile'
+          }}
+        />
+        <Tabs.Screen
+          name="auth/signIn/index"
+          options={{
+            title: '',
+            href: user?.$id ? null : undefined,
+          }}
+        />
       </Tabs>
     </>
   );
