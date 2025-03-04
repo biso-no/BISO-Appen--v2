@@ -155,7 +155,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
   return (
     <YStack flex={1}>
       {/* Progress indicator */}
-      <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
+      <XStack position="relative" justifyContent="space-between" alignItems="center" paddingHorizontal="$4" marginBottom="$3">
         {steps.map((_, index) => (
           <MotiView
             key={index}
@@ -185,7 +185,7 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         ))}
         
         {/* Progress line */}
-        <View style={styles.progressLineContainer}>
+        <View style={[styles.progressLineContainer, { zIndex: -1 }]}>
           <View style={[styles.progressLineBg, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]} />
           <Animated.View
             style={[
@@ -202,9 +202,9 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
       {/* Scrollable content area */}
       <ScrollView 
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         <Animated.View
           style={[
@@ -240,13 +240,19 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         </Animated.View>
       </ScrollView>
 
-      {/* Navigation buttons */}
+      {/* Navigation buttons - Fixed at bottom */}
       <XStack 
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
         justifyContent="space-between" 
         paddingHorizontal="$4"
         paddingVertical="$4"
         borderTopWidth={1}
         borderTopColor="$borderColor"
+        backgroundColor="$background"
+        zIndex={1000}
       >
         <Button
           size={isSmallDevice ? "$3" : "$4"}
@@ -298,15 +304,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    minHeight: 350,
   },
   progressLineContainer: {
     position: 'absolute',
     top: '50%',
-    left: 0,
-    right: 0,
+    left: 24,
+    right: 24,
     height: 3,
-    zIndex: -1,
   },
   progressLineBg: {
     position: 'absolute',

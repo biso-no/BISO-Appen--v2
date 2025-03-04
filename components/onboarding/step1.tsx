@@ -65,7 +65,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
   };
 
   return (
-    <YStack width="100%" alignItems="center" space="$4">
+    <YStack width="100%" alignItems="center" gap="$4">
       <MotiView 
         from={{ opacity: 0, translateY: 20 }} 
         animate={{ opacity: 1, translateY: 0 }} 
@@ -105,7 +105,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
           </MotiView>
         </Animated.View>
         
-        <YStack space="$1" marginTop="$3" width="100%" alignItems="center">
+        <YStack gap="$1" marginTop="$3" width="100%" alignItems="center">
           <H3 textAlign="center" fontWeight="bold">Welcome!</H3>
           <Paragraph textAlign="center" opacity={0.8} paddingHorizontal="$4">
             Let's get to know you better. What should we call you?

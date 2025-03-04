@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button, Text, YStack, Input, H6, YGroup, Label,
   XStack, ScrollView, Spinner, Switch, Card
@@ -17,6 +17,9 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { MotiView } from 'moti';
 import { useDebounce } from 'use-debounce';
 import { Check } from '@tamagui/lucide-icons';
+import { CustomSwitch } from '@/components/custom-switch';
+import { useAIAssistanceStore } from './FileUpload';
+import { functions } from '@/lib/appwrite';
 
 export function MultiStepForm() {
   const router = useRouter();
@@ -28,8 +31,9 @@ export function MultiStepForm() {
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       bank_account: profile?.bank_account || "",
-      campus: profile?.campus || "",
-      department: profile?.department || "",
+      user: user?.$id,
+      campus: profile?.campus_id || "",
+      department: profile?.departments_id?.[0] || "",
       expenseAttachments: [],
       description: "",
       prepayment_amount: 0,
@@ -48,13 +52,15 @@ export function MultiStepForm() {
   } = methods;
   
   // Get form values
-  const receivedPrepayment = watch('prepayment_amount') > 0;
+  const [receivedPrepayment, setReceivedPrepayment] = useState(false);
   const description = watch('description');
   const eventName = watch('eventName');
   const rawExpenseAttachments = watch('expenseAttachments');
   
   const expenseAttachments = useMemo(() => rawExpenseAttachments || [], [rawExpenseAttachments]);
   const [debouncedEventName] = useDebounce(eventName || '', 500);
+
+  const { isEnabled: isAIAssistanceEnabled } = useAIAssistanceStore();
   
   // Get store and query hooks
   const {
@@ -85,13 +91,24 @@ export function MultiStepForm() {
   const handleNextStep = () => {
     actions.nextStep();
   };
-  
+
   const handlePrevStep = () => {
     actions.prevStep();
   };
+
+  const handleLastStep = () => {
+    if (isAIAssistanceEnabled) {
+      handleGenerateDescription().then(() => {
+        actions.nextStep()
+      })
+    } else {
+      actions.nextStep()
+    }
+  }
   
   // Handle prepayment toggle
   const handlePrepaymentToggle = (value: boolean) => {
+    setReceivedPrepayment(value);
     if (!value) {
       setValue('prepayment_amount', 0);
     }
@@ -100,8 +117,13 @@ export function MultiStepForm() {
   // Handle campus selection
   const handleCampusChange = (campus: any) => {
     if (campus) {
+      console.log('Selected campus:', campus);
+      
+      // Set the campus in the form
       setValue('campus', campus.name);
       setValue('department', ''); // Reset department when campus changes
+      
+      // Set the campus in the store
       actions.setSelectedCampus(campus);
     }
   };
@@ -109,7 +131,7 @@ export function MultiStepForm() {
   // Handle department selection
   const handleDepartmentChange = (department: any) => {
     if (department) {
-      setValue('department', department.Name || department.name);
+      setValue('department', department.$id);
       actions.setSelectedDepartment(department);
     }
   };
@@ -129,6 +151,7 @@ export function MultiStepForm() {
   // Submit the form
   const onSubmit = async (data: any) => {
     if (!user?.$id) return;
+    console.log('data', data)
     
     // Update the store with form data
     actions.setCurrentExpense({
@@ -165,9 +188,9 @@ export function MultiStepForm() {
       label: 'Payment Details',
       content: (
         <ScrollView>
-          <YStack space="$4" padding="$4">
+          <YStack gap="$4" padding="$4">
             <H6 fontWeight="bold">Payment Details</H6>
-            <YGroup>
+            <YGroup gap="$2">
               <YGroup.Item>
                 <Label>Bank Account</Label>
                 <Input
@@ -180,11 +203,10 @@ export function MultiStepForm() {
                 )}
               </YGroup.Item>
               <YGroup.Item>
-                <XStack space="$2" alignItems="center">
-                  <Switch 
+                <XStack gap="$2" alignItems="center">
+                  <CustomSwitch 
                     checked={receivedPrepayment} 
                     onCheckedChange={handlePrepaymentToggle} 
-                    size="$4" 
                   />
                   <Text>Did you receive a prepayment?</Text>
                 </XStack>
@@ -213,8 +235,9 @@ export function MultiStepForm() {
       label: 'Department',
       content: (
         <ScrollView>
-          <YStack space="$4" padding="$4">
+          <YStack gap="$4" padding="$4">
             <H6 fontWeight="bold">Department Information</H6>
+            {console.log('Department step - selectedCampus:', form.selectedCampus)}
             <YGroup>
               <YGroup.Item>
                 <Label>Campus</Label>
@@ -227,12 +250,12 @@ export function MultiStepForm() {
                   <Text color="$red10">{errors.campus.message as string}</Text>
                 )}
               </YGroup.Item>
-              {watch('campus') && (
+              {form.selectedCampus && (
                 <YGroup.Item>
                   <Label>Department</Label>
                   <DepartmentSelector
                     title=""
-                    campus={form.selectedCampus?.$id}
+                    campus={form.selectedCampus.$id}
                     onSelect={handleDepartmentChange}
                     selectedDepartments={form.selectedDepartment ? [form.selectedDepartment] : []}
                   />
@@ -252,7 +275,7 @@ export function MultiStepForm() {
       label: 'Attachments',
       content: (
         <ScrollView>
-          <YStack space="$4" padding="$4">
+          <YStack gap="$4" padding="$4" width="100%">
             <FileUpload />
             {errors.expenseAttachments && (
               <Text color="$red10">{errors.expenseAttachments.message as string}</Text>
@@ -267,18 +290,21 @@ export function MultiStepForm() {
       label: 'Event',
       content: (
         <ScrollView>
-          <YStack space="$4" padding="$4">
+          <YStack gap="$4" padding="$4">
             <H6 fontWeight="bold">Event Information (Optional)</H6>
             <Text>Is this expense related to a specific event?</Text>
             <YGroup marginTop="$2">
               <YGroup.Item>
-                <XStack space="$2" alignItems="center">
-                  <Switch 
+                <XStack gap="$2" alignItems="center">
+                  <CustomSwitch 
                     checked={!!eventName} 
                     onCheckedChange={(val: boolean) => {
-                      if (!val) setValue('eventName', '');
+                      if (!val) {
+                        setValue('eventName', '');
+                      } else {
+                        setValue('eventName', 'Event'); // Set default value when toggled on
+                      }
                     }} 
-                    size="$4" 
                   />
                   <Text>Expense for event?</Text>
                 </XStack>
@@ -299,28 +325,19 @@ export function MultiStepForm() {
           </YStack>
         </ScrollView>
       ),
-      onNext: handleNextStep,
+      onNext: handleLastStep,
       onPrevious: handlePrevStep,
     },
     {
       label: 'Overview',
       content: (
         <ScrollView>
-          <YStack space="$4" padding="$4">
+          <YStack gap="$4" padding="$4">
             <H6 fontWeight="bold">Description & Review</H6>
             
-            <YStack space="$2">
+            <YStack gap="$2">
               <XStack justifyContent="space-between">
                 <Label>Description</Label>
-                {showGenerateButton && (
-                  <Button
-                    size="$2"
-                    onPress={handleGenerateDescription}
-                    disabled={isGeneratingDescription}
-                  >
-                    {isGeneratingDescription ? <Spinner /> : 'AI Generate'}
-                  </Button>
-                )}
               </XStack>
               <Input
                 placeholder="Expense Description"
@@ -336,11 +353,11 @@ export function MultiStepForm() {
               )}
             </YStack>
             
-            <YStack space="$4" marginTop="$4">
+            <YStack gap="$4" marginTop="$4">
               <H6>Expense Summary</H6>
               
               <Card bordered padding="$4">
-                <YStack space="$3">
+                <YStack gap="$3">
                   <XStack justifyContent="space-between">
                     <Text color="$gray11">Bank Account:</Text>
                     <Text>{watch('bank_account') || 'Not provided'}</Text>
@@ -383,26 +400,6 @@ export function MultiStepForm() {
               </Card>
             </YStack>
             
-            <XStack space="$2" marginTop="$4">
-              <Button
-                flex={1}
-                onPress={handleSaveDraft}
-                disabled={isSavingDraft || !isDirty}
-              >
-                {isSavingDraft ? <Spinner /> : 'Save as Draft'}
-              </Button>
-              
-              <Button
-                flex={1}
-                backgroundColor="$green9"
-                color="white"
-                onPress={handleSubmit(onSubmit)}
-                disabled={isCreating || !isValid}
-                icon={isValid ? <Check size={16} color="white" /> : undefined}
-              >
-                {isCreating ? <Spinner /> : 'Submit Expense'}
-              </Button>
-            </XStack>
           </YStack>
         </ScrollView>
       ),

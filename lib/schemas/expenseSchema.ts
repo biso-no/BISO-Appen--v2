@@ -12,6 +12,7 @@ export const attachmentSchema = z.object({
 // Expense schema for form validation
 export const expenseFormSchema = z.object({
   bank_account: z.string().min(1, 'Bank account information is required'),
+  user: z.string().min(1, 'User is required'),
   campus: z.string().min(1, 'Campus is required'),
   department: z.string().min(1, 'Department is required'),
   expenseAttachments: z.array(attachmentSchema).min(1, 'At least one attachment is required'),

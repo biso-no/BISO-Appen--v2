@@ -59,7 +59,8 @@ export async function uploadAttachment(attachment: Attachment) {
 export function useExpenses() {
   const queryClient = useQueryClient();
   const userId = useAuthStore(state => state.user?.$id);
-  
+  const userEmail = useAuthStore(state => state.user?.email);
+
   // Get expenses from Zustand store
   const expenseStore = useExpenseStore();
   
@@ -107,10 +108,13 @@ export function useExpenses() {
         const newExpenseData = {
           ...expenseStore.currentExpense,
           expenseAttachments: updatedAttachments,
+          email: userEmail,
           status: 'pending',
           userId,
-          user: userId,
+          user: userId
         };
+        
+        console.log('Creating expense with data:', JSON.stringify(newExpenseData, null, 2));
         
         const documentId = ID.unique();
         const newExpense = await createDocument('expense', newExpenseData, documentId);

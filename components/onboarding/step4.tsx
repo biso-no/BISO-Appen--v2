@@ -85,15 +85,15 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
   };
 
   return (
-    <YStack width="100%" alignItems="center" space="$2">
+    <YStack width="100%" alignItems="center" gap="$2">
       <MotiView 
         from={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
         exit={{ opacity: 0 }}
         style={styles.container}
       >
-        <YStack space="$2" width="100%" alignItems="center">
-          <XStack alignItems="center" space="$2">
+        <YStack gap="$2" width="100%" alignItems="center">
+          <XStack alignItems="center" gap="$2">
             <Animated.View style={homeAnimatedStyle}>
               <Home size={22} color="$primary" />
             </Animated.View>
@@ -131,7 +131,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="phone">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Phone 
                           size={16} 
                           color={activeField === 'phone' ? '$primary' : '$color'} 
@@ -164,7 +164,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="address">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <MapPin 
                           size={16} 
                           color={activeField === 'address' ? '$primary' : '$color'} 
@@ -196,7 +196,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="city">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Building 
                           size={16} 
                           color={activeField === 'city' ? '$primary' : '$color'} 
@@ -228,7 +228,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                 >
                   <Input size={isSmallDevice ? "$3" : "$4"}>
                     <Input.Label htmlFor="zipCode">
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Mail 
                           size={16} 
                           color={activeField === 'zipCode' ? '$primary' : '$color'} 

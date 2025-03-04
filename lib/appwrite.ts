@@ -176,9 +176,10 @@ export async function getDocuments(collectionId: string, filters?: Record<string
   }
 
 export async function createDocument(collectionId: string, data?: any, id?: string) {
-
+    
     const documentId = id ?? ID.unique();
 
+    console.log(`Creating document in collection ${collectionId}:`, JSON.stringify(data, null, 2));
     const response = await databases.createDocument('app', collectionId, documentId, data);
     return response;
 }

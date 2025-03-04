@@ -8,7 +8,7 @@ interface BISCOLogoProps {
 
 export function BISCOLogo({ width = 120, height = 30 }: BISCOLogoProps) {
   return (
-    <XStack alignItems="center" space="$2">
+    <XStack alignItems="center" gap="$2">
       <Stack>
         <Text
           fontSize={height * 0.8}

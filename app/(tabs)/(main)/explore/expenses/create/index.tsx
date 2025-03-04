@@ -1,11 +1,11 @@
 import React from 'react';
 import { MultiStepForm } from '@/components/tools/expenses/create/stepper';
-import { View } from 'tamagui';
+import { ScrollView, View } from 'tamagui';
 
 export default function CreateExpenseScreen() {
   return (
-    <View flex={1}>
+    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 80 }}>
       <MultiStepForm />
-    </View>
+    </ScrollView>
   );
 }

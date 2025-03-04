@@ -312,14 +312,6 @@ export default function DepartmentsScreen() {
               transition={{ type: 'spring', delay: 200 }}
             >
               <YStack>
-                <Text 
-                  color="rgba(255,255,255,0.9)" 
-                  fontSize="$5" 
-                  fontWeight="600"
-                  letterSpacing={1}
-                >
-                  ACADEMIC DEPARTMENTS
-                </Text>
                 <H1 
                   color="white" 
                   size="$10" 

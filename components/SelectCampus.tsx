@@ -5,7 +5,7 @@ import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import { databases, getDocuments } from '@/lib/appwrite';
 import { Models, Query } from 'react-native-appwrite';
 import { Image } from 'tamagui';
-import { MapPin } from '@tamagui/lucide-icons';
+import { MapPin, Check } from '@tamagui/lucide-icons';
 import { LinearGradient } from '@tamagui/linear-gradient';
 
 interface CampusSelectorProps {
@@ -20,8 +20,9 @@ const CampusCard = styled(Stack, {
   borderWidth: 1,
   borderColor: '$borderColor',
   overflow: 'hidden',
-  marginHorizontal: '$2',
-  width: 160,
+  margin: '$1',
+  flex: 1,
+  minWidth: 140,
   animation: 'quick',
   pressStyle: {
     scale: 0.98,
@@ -35,7 +36,8 @@ const CampusItem = React.memo(({
   onSelect,
   colorScheme,
   theme,
-  image
+  image,
+  width
 }: { 
   campus: Models.Document;
   isSelected: boolean;
@@ -43,6 +45,7 @@ const CampusItem = React.memo(({
   colorScheme: ColorSchemeName;
   theme: any;
   image: any;
+  width: number;
 }) => {
   const backgroundColor = colorScheme === 'dark' 
     ? isSelected ? '$blue7' : '$gray3'
@@ -53,15 +56,12 @@ const CampusItem = React.memo(({
     : isSelected ? '$blue5' : '$gray3';
 
   return (
-    <Button
-      unstyled
-      onPress={onSelect}
-    >
       <CampusCard
         backgroundColor={backgroundColor}
         borderColor={borderColor}
+        onPress={onSelect}
       >
-        <Stack height={100} width="100%">
+        <Stack height={80} width="100%">
           <Image
             source={image}
             alt={`${campus.name} campus`}
@@ -79,18 +79,30 @@ const CampusItem = React.memo(({
             ]}
             position="absolute"
           />
+          {isSelected && (
+            <XStack 
+              position="absolute" 
+              top={5} 
+              right={5} 
+              backgroundColor="$blue8" 
+              borderRadius="$full" 
+              padding="$1"
+            >
+              <Check size={14} color="white" />
+            </XStack>
+          )}
         </Stack>
         <YStack 
-          padding="$3"
+          padding="$2"
           gap="$1"
         >
-          <XStack gap="$2" alignItems="center">
+          <XStack gap="$1" alignItems="center">
             <MapPin 
-              size={16} 
+              size={14} 
               color={isSelected ? 'white' : theme?.color?.val || '$color'} 
             />
             <Text
-              fontSize={14}
+              fontSize={13}
               fontWeight="600"
               color={isSelected ? 'white' : '$color'}
               numberOfLines={1}
@@ -100,17 +112,17 @@ const CampusItem = React.memo(({
           </XStack>
         </YStack>
       </CampusCard>
-    </Button>
   );
 });
 
 CampusItem.displayName = 'CampusItem';
 
 const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect, campus, initialCampus }) => {
-  const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(initialCampus ? initialCampus : null);
+  const [selectedCampusId, setSelectedCampusId] = useState<string | null>(initialCampus?.$id || null);
   const theme = useTheme();
   const [campuses, setCampuses] = useState<Models.DocumentList<Models.Document>>();
   const colorScheme = useColorScheme();
+  const { width: screenWidth } = useWindowDimensions();
 
   const logoLight = require('@/assets/logo-light.png');
   const logoDark = require('@/assets/logo-dark.png');
@@ -124,10 +136,11 @@ const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect, campus, initi
   } as const), [colorScheme, logoDark, logoLight]);
 
   const handleSelect = useCallback((campus: Models.Document) => {
-    const newSelection = selectedCampus?.$id === campus.$id ? null : campus;
-    setSelectedCampus(newSelection);
-    onSelect(newSelection);
-  }, [selectedCampus, onSelect]);
+    // Update the selected campus ID
+    setSelectedCampusId(campus.$id);
+    // Call the onSelect callback with the campus
+    onSelect(campus);
+  }, [onSelect]);
 
   useEffect(() => {
     databases.listDocuments('app', 'campus', 
@@ -135,26 +148,45 @@ const CampusSelector: React.FC<CampusSelectorProps> = ({ onSelect, campus, initi
     ).then(setCampuses);
   }, []);
 
+  // Update selected campus when initialCampus changes
+  useEffect(() => {
+    if (initialCampus) {
+      setSelectedCampusId(initialCampus.$id);
+    }
+  }, [initialCampus]);
+
+  // Calculate item width based on screen size
+  const itemWidth = (screenWidth - 32) / 2; // 32px for padding (16px on each side)
+
+  // Group campuses into pairs for the grid
+  const campusPairs = useMemo(() => {
+    if (!campuses?.documents) return [];
+    
+    const pairs = [];
+    for (let i = 0; i < campuses.documents.length; i += 2) {
+      pairs.push(campuses.documents.slice(i, i + 2));
+    }
+    return pairs;
+  }, [campuses]);
+
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      paddingVertical="$2"
-    >
-      <XStack paddingHorizontal="$2">
-        {campuses?.documents.map((campus) => (
-          <CampusItem
-            key={campus.$id}
-            campus={campus}
-            isSelected={selectedCampus?.$id === campus.$id}
-            onSelect={() => handleSelect(campus)}
-            colorScheme={colorScheme}
-            theme={theme}
-            image={CAMPUS_IMAGES[campus.name.toLowerCase() as keyof typeof CAMPUS_IMAGES] || CAMPUS_IMAGES.national}
-          />
+    <YStack padding="$2">
+      <XStack flexWrap="wrap" justifyContent="space-between">
+        {campuses?.documents.map((campusItem) => (
+          <Stack key={campusItem.$id} width="48%" marginBottom="$2">
+            <CampusItem
+              campus={campusItem}
+              isSelected={selectedCampusId === campusItem.$id}
+              onSelect={() => handleSelect(campusItem)}
+              colorScheme={colorScheme}
+              theme={theme}
+              image={CAMPUS_IMAGES[campusItem.name.toLowerCase() as keyof typeof CAMPUS_IMAGES] || CAMPUS_IMAGES.national}
+              width={itemWidth}
+            />
+          </Stack>
         ))}
       </XStack>
-    </ScrollView>
+    </YStack>
   );
 };
 

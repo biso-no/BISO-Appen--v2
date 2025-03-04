@@ -96,7 +96,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
 
   return (
     <Card elevate size="$4" bordered padding="$4">
-      <YStack space="$3">
+      <YStack gap="$3">
         <XStack justifyContent="space-between" alignItems="center">
           <H4>Weather</H4>
           
@@ -127,8 +127,8 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
         ) : error ? (
           <Paragraph color="$red10">{error}</Paragraph>
         ) : weatherData ? (
-          <YStack space="$2">
-            <XStack space="$4" alignItems="center">
+          <YStack gap="$2">
+            <XStack gap="$4" alignItems="center">
               <Avatar circular size="$6">
                 <Avatar.Image 
                   src={getWeatherIconUrl(weatherData.current.symbolCode)} 

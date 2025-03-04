@@ -107,16 +107,19 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
   const colorScheme = useColorScheme();
 
   useEffect(() => {
+    console.log('DepartmentSelector received campus:', campus);
     if (campus) {
       const fetchDepartments = async () => {
         setLoading(true);
         try {
+          console.log('Fetching departments with campus_id:', campus);
           const response = await databases.listDocuments('app', 'departments', [
             Query.equal('campus_id', campus),
             Query.equal('active', true),
             Query.select(['Name', '$id', 'campus_id']),
             Query.limit(200),
           ]);
+          console.log('Departments response:', response);
           setDepartments(response.documents);
         } catch (error) {
           console.error('Error fetching departments:', error);
