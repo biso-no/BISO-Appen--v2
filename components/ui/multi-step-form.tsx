@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, PanResponder, Easing, Dimensions, useColorScheme } from 'react-native';
+import { StyleSheet, Animated, Easing, Dimensions, useColorScheme } from 'react-native';
 import { YStack, Button, View, H2, XStack, Circle, Theme, useTheme, ScrollView } from 'tamagui';
 import { MotiView } from 'moti';
 import { ChevronRight, ChevronLeft, Check } from '@tamagui/lucide-icons';
@@ -14,7 +14,6 @@ export interface Step {
 
 export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: () => void; }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const translateX = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -51,17 +50,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 0.8,
             duration: 200,
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: -width * 0.3,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]),
       ]).start(() => {
         setCurrentStep((prev) => prev + 1);
-        translateX.setValue(width * 0.3);
         
         // Animate in the new step
         Animated.parallel([
@@ -74,12 +66,6 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 1,
             duration: 300,
             easing: Easing.out(Easing.back(1.5)),
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           })
         ]).start();
@@ -137,17 +123,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             toValue: 0.8,
             duration: 200,
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: width * 0.3,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]),
       ]).start(() => {
         setCurrentStep((prev) => prev - 1);
-        translateX.setValue(-width * 0.3);
         
         // Animate in the new step
         Animated.parallel([
@@ -161,64 +140,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
             duration: 300,
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
           })
         ]).start();
       });
     }
-  };
-
-  // Swipe gesture handler
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
-      onPanResponderMove: (_, gestureState) => {
-        translateX.setValue(gestureState.dx * 0.5);
-        const opacity = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.5]);
-        fadeAnim.setValue(opacity);
-        const scale = interpolateValue(Math.abs(gestureState.dx), [0, 100], [1, 0.95]);
-        scaleAnim.setValue(scale);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const threshold = 80;
-        if (gestureState.dx < -threshold && currentStep < steps.length - 1) {
-          moveToNextStep();
-        } else if (gestureState.dx > threshold && currentStep > 0) {
-          moveToPreviousStep();
-        } else {
-          // Reset if threshold not reached
-          Animated.parallel([
-            Animated.spring(translateX, {
-              toValue: 0,
-              useNativeDriver: true,
-              friction: 5,
-            }),
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scaleAnim, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-      },
-    })
-  ).current;
-
-  // Helper function for interpolation
-  const interpolateValue = (value: number, inputRange: number[], outputRange: number[]) => {
-    return inputRange[0] === inputRange[1]
-      ? outputRange[0]
-      : outputRange[0] + ((value - inputRange[0]) / (inputRange[1] - inputRange[0])) * (outputRange[1] - outputRange[0]);
   };
 
   // Progress bar width calculation
@@ -282,12 +207,10 @@ export function MultiStepForm({ steps, onSubmit }: { steps: Step[]; onSubmit: ()
         showsVerticalScrollIndicator={false}
       >
         <Animated.View
-          {...panResponder.panHandlers}
           style={[
             styles.contentContainer,
             {
               transform: [
-                { translateX },
                 { scale: scaleAnim }
               ],
               opacity: fadeAnim,

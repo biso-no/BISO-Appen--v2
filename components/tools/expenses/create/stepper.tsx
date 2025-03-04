@@ -231,6 +231,7 @@ export function MultiStepForm() {
                 <YGroup.Item>
                   <Label>Department</Label>
                   <DepartmentSelector
+                    title=""
                     campus={form.selectedCampus?.$id}
                     onSelect={handleDepartmentChange}
                     selectedDepartments={form.selectedDepartment ? [form.selectedDepartment] : []}

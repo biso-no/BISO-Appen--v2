@@ -18,7 +18,7 @@ import { ModalProvider as MembershipModalProvider } from '@/components/context/m
 import { LogBox } from 'react-native';
 import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
-import { PerformanceProvider, PerformanceToggle } from '@/lib/performance';
+import { PerformanceProvider } from '@/lib/performance';
 import { AICopilotProvider } from '@/components/ai';
 
 export {
@@ -85,7 +85,6 @@ function RootLayoutNav() {
                       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
                           <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
                           <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
                         </Stack>

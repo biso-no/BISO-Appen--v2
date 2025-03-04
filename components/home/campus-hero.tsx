@@ -3,7 +3,7 @@ import { LinearGradient } from "@tamagui/linear-gradient";
 import { Pressable, Animated, Platform } from "react-native";
 import React, { useEffect, useState, useRef, memo } from "react";
 import { useCampus } from "@/lib/hooks/useCampus";
-import { router } from "expo-router";
+import { RelativePathString, router } from "expo-router";
 import CompactWeather from "@/components/CompactWeather";
 import { Campus } from "@/lib/get-weather";
 
@@ -152,7 +152,7 @@ export const CampusHero = memo(function CampusHero() {
     };
 
     const handlePress = () => {
-        router.push(`/campus/${campusName}`);
+        router.push(`/campus/${campusName}` as RelativePathString);
     };
 
     return (
