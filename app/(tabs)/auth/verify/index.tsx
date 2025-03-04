@@ -4,7 +4,12 @@ import { YStack, H1, Text, Spinner } from "tamagui";
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons";
 import { MyStack } from "@/components/ui/MyStack";
 import { createSession } from "@/lib/appwrite";
+<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
 import { useAuth } from "@/components/context/auth-provider";
+=======
+import { useAuth } from "@/lib/hooks/useAuthStore";
+import { queryClient } from '@/lib/react-query';
+>>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
 
 //A callback screen that verifies the code from the email. If the code is valid, a large checkmark with animation is shown, and the user is redirected to the home screen.
 export default function VerifyScreen() {
@@ -16,8 +21,14 @@ export default function VerifyScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isVerified, setIsVerified] = useState(false);
     const [error, setError] = useState<string | null>(null);
+<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
 
     const { refetchUser } = useAuth();
+=======
+    
+    // Get the refetch function from useAuth to refresh user data after authentication
+    const { actions } = useAuth();
+>>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
 
     useEffect(() => {
         async function verifyMagicLink() {
@@ -31,7 +42,14 @@ export default function VerifyScreen() {
                 const session = await createSession(userId, secret);
                 if (session.$id) {
                     setIsVerified(true);
+<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
                     await refetchUser();
+=======
+                    // Invalidate the account query to refetch user data
+                    queryClient.invalidateQueries({ queryKey: ['account'] });
+                    // Also directly refetch the user data to ensure immediate state update
+                    await actions.refetch();
+>>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
                 } else {
                     setError("Invalid or expired verification link");
                 }
@@ -43,7 +61,11 @@ export default function VerifyScreen() {
         }
 
         verifyMagicLink();
+<<<<<<< Updated upstream:app/(tabs)/auth/verify/index.tsx
     }, [secret, userId, refetchUser]);
+=======
+    }, [secret, userId, actions]);
+>>>>>>> Stashed changes:app/(tabs)/(main)/auth/verify/index.tsx
 
     useEffect(() => {
         if (isVerified) {

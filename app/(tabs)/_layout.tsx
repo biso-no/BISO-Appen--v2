@@ -267,6 +267,8 @@ export default function TabLayout() {
         return profileIcon(color);
       case 'auth/signIn/index':
         return <LogIn color={color} marginTop="$2" />;
+      case '(main)':
+        return null;
       default:
         return null;
     }
@@ -458,7 +460,43 @@ export default function TabLayout() {
           tabBarLabel: () => null,
         })}
       >
+<<<<<<< Updated upstream
         {generateScreens()}
+=======
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: '',
+          }}
+        />
+        <Tabs.Screen
+          name="explore/index"
+          options={{
+            title: '',
+          }}
+        />
+        <Tabs.Screen
+          name="(main)"
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: '',
+            href: user?.$id ? '/(tabs)/profile' : null,
+          }}
+        />
+        <Tabs.Screen
+          name="auth/signIn/index"
+          options={{
+            title: '',
+            href: user?.$id ? null : '/(tabs)/auth/signIn',
+          }}
+        />
+>>>>>>> Stashed changes
       </Tabs>
     </ChatProvider>
   );
