@@ -60,7 +60,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     adaptiveIcon: {
       foregroundImage: './assets/adaptive_icon.png',
     },
-    permissions: ['com.google.android.gms.permission.AD_ID'],
   },
   
   web: {
