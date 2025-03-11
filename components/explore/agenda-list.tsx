@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, useColorScheme } from 'react-native';
 import { router } from 'expo-router';
 import { 
@@ -76,7 +76,7 @@ const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
     const style = { 
       body: { 
         fontSize: 28, 
-        lineHeight: 24, 
+        lineHeight: 30, 
         color: textColor, 
       }, 
     };
@@ -187,7 +187,7 @@ export function EventsList() {
   const { campus } = useCampus();
   const theme = useTheme();
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -219,7 +219,7 @@ export function EventsList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [campus]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -229,7 +229,7 @@ export function EventsList() {
 
   useEffect(() => {
     fetchEvents();
-  }, [campus]);
+  }, [campus, fetchEvents]);
 
   // Helper function to categorize events
   const categorizeEvents = () => {
@@ -276,6 +276,9 @@ export function EventsList() {
 
   return (
     <ScrollView
+    contentContainerStyle={{
+      paddingBottom: 100
+    }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
