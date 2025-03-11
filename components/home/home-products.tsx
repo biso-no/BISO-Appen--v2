@@ -95,7 +95,7 @@ export const HomeProducts = memo(({ products }: HomeProductsProps) => {
     }, [products]);
 
     return (
-        <YStack gap="$4">
+        <YStack gap="$4" padding="$4">
             <XStack justifyContent="space-between" alignItems="center">
                 <H3>Featured Products</H3>
                 <Button

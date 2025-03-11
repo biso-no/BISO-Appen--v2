@@ -1,103 +1,336 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { MotiView } from 'moti';
-import { getDocument } from "@/lib/appwrite";
-import { YStack, H6, Paragraph, XStack, Card, Separator, Button, Text, View, Image, ScrollView, useTheme } from "tamagui";
-import { capitalizeFirstLetter } from "@/lib/utils/helpers";
-import { getFormattedDate } from "@/lib/format-time";
-import { Models } from "react-native-appwrite";
-import { MyStack } from "@/components/ui/MyStack";
+import { MotiScrollView, MotiView } from 'moti';
+import { YStack, XStack, H3, H5, Button, Text, View, Image, ScrollView, useTheme, Spinner, Stack, useWindowDimensions } from "tamagui";
+import axios from "axios";
+import { format, parseISO } from "date-fns";
+import { Calendar, Clock, MapPin, Globe, User } from "@tamagui/lucide-icons";
 import RenderHTML from "react-native-render-html";
 
+// Event interfaces matching our new structure
+interface Thumbnail {
+  id: number;
+  url: string;
+  width: number;
+  height: number;
+}
 
+interface Organizer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  website: string;
+  slug: string;
+}
 
-export default function EventsScreen() {
+interface Venue {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  country: string;
+  zip: string;
+  phone: string;
+  website: string;
+  slug: string;
+}
+
+interface Event {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  excerpt: string;
+  start_date: string;
+  end_date: string;
+  all_day: boolean;
+  cost: string;
+  website: string;
+  thumbnail: Thumbnail;
+  organizer: Organizer;
+  venue: Venue;
+  categories: string[];
+  tags: string[];
+}
+
+export default function EventDetailsScreen() {
     const params = useLocalSearchParams();
-
     const { id } = params;
     const router = useRouter();
     const theme = useTheme();
     const textColor = theme?.color?.val;
-    const [event, setEvent] = useState<Models.Document>();  
+    // Use safe color values with fallbacks
+    const blueColor = theme?.blue10?.val || '#0077CC';
+
+    const { height: windowHeight, width } = useWindowDimensions();
+
+    const [event, setEvent] = useState<Event | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Format date and time in a readable way
+    const formatEventTime = (dateString: string) => {
+        if (!dateString) return "";
+        const date = parseISO(dateString);
+        return format(date, 'h:mm a');
+    };
 
     useEffect(() => {
-        getDocument('event', id as string).then(
-            (data) => setEvent(data),
-            (error) => console.log(error)
-        );
-    }, [id])
+        const fetchEventDetails = async () => {
+            setIsLoading(true);
+            setError(null);
+            
+            try {
+                // Fetch the event from the API using the ID
+                const response = await axios.get(`https://biso.no/wp-json/biso/v1/events/${id}`);
+                console.log("Fetched event details:", response.data);
+                setEvent(response.data);
+            } catch (err) {
+                console.error("Failed to fetch event details:", err);
+                setError("Could not load event details. Please try again later.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    if (!event?.$id) {
-        return (
-            <View>
-                <MotiView
-                    from={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    <Text>Event not found</Text>
-                </MotiView> 
-            </View>
-        )
-    }
+        if (id) {
+            fetchEventDetails();
+        } else {
+            setError("No event ID provided");
+            setIsLoading(false);
+        }
+    }, [id]);
 
     const htmlStyles = {
         body: { 
-          fontSize: 16, 
-          lineHeight: 24, 
+            fontSize: 16, 
+            lineHeight: 24, 
+            color: textColor,
+        },
+        p: { 
+            marginVertical: 10, 
+        },
+        a: { 
+            color: blueColor,
+            textDecorationLine: 'underline' as const,
+        },
+        li: { 
+            marginBottom: 8, 
+        },
+    };
+    
+    // Title specific styles with improved line height and padding
+    const titleStyles = { 
+        body: { 
+          fontSize: 26, 
+          lineHeight: 34,  // Increased line height
           color: textColor,
-        },    
-      };
+          paddingTop: 4,
+          paddingBottom: 4
+        },
+        h1: {
+          marginBottom: 8,
+          marginTop: 8
+        },
+        h2: {
+          marginBottom: 8,
+          marginTop: 8
+        },
+        p: {
+          marginBottom: 0,
+          marginTop: 0
+        }
+    };
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <View flex={1} justifyContent="center" alignItems="center">
+                <Spinner size="large" color="$blue10" />
+                <Text marginTop="$4" color="$gray700">Loading event details...</Text>
+            </View>
+        );
+    }
+
+    // Error state
+    if (error || !event) {
+        return (
+            <View flex={1} justifyContent="center" alignItems="center" padding="$4">
+                <MotiView
+                    from={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'timing', duration: 300 }}
+                >
+                    <YStack alignItems="center" gap="$4">
+                        <Text fontSize="$6" fontWeight="bold" color="$gray700">Event Not Found</Text>
+                        <Text textAlign="center" color="$gray600">
+                            {error || "We couldn't find the event you're looking for."}
+                        </Text>
+                        <Button
+                            backgroundColor="$blue9"
+                            color="white"
+                            onPress={() => router.back()}
+                        >
+                            Go Back
+                        </Button>
+                    </YStack>
+                </MotiView> 
+            </View>
+        );
+    }
+    
+    // Handle external URL opening
+    const handleOpenUrl = (url: string) => {
+        if (typeof url === 'string') {
+            // You might want to use Linking from react-native here
+            // or a more sophisticated approach for handling external URLs
+            console.log('Opening URL:', url);
+            // Using type assertion to satisfy TypeScript
+            router.push(url as any);
+        }
+    };
     
     return (
-        <ScrollView>
-            <MotiView
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-            >
-                <Card
-                    chromeless
-                    width={400}
-                    margin="$4"
-                    borderRadius="$10"
+        <MotiScrollView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            contentContainerStyle={{
+                minHeight: windowHeight,
+                paddingBottom: 100
+            }}
+            // Add some top padding to prevent content from being under status bar
+            contentInsetAdjustmentBehavior="automatic"
+        >
+            {/* Hero Image */}
+            {event.thumbnail?.url && (
+                <Image
+                    source={{ uri: event.thumbnail.url }}
+                    alt={event.title}
+                    height={250}
+                    width="100%"
+                    objectFit="cover"
+                />
+            )}
+
+            {/* Event Header with improved padding */}
+            <YStack padding="$4" gap="$3" paddingTop="$5">
+                {/* Title with improved rendering */}
+                <View marginBottom="$2">
+                    <RenderHTML 
+                        source={{ html: event.title }} 
+                        contentWidth={width - 40}
+                        tagsStyles={titleStyles}
+                        baseStyle={{ margin: 0, padding: 0 }}
+                    />
+                </View>
+                
+                {/* Event Time and Location Details */}
+                <YStack gap="$3" marginVertical="$2">
+                    <XStack alignItems="center" gap="$2">
+                        <Calendar size={18} color={blueColor} />
+                        <Text fontSize="$4" color="$gray900">
+                            {format(parseISO(event.start_date), 'EEEE, MMMM d, yyyy')}
+                        </Text>
+                    </XStack>
                     
-                >
-                    {event.image && (
-                    <Card.Header>
-                        <Image
-                            source={{ uri: event.image}}
-                            alt="image"
-                            height={200}
-                            width="100%"
-                            borderRadius="$10"
-                        />
-                    </Card.Header>
+                    <XStack alignItems="center" gap="$2">
+                        <Clock size={18} color={blueColor} />
+                        <Text fontSize="$4" color="$gray900">
+                            {event.all_day 
+                                ? 'All Day' 
+                                : `${formatEventTime(event.start_date)} - ${formatEventTime(event.end_date)}`
+                            }
+                        </Text>
+                    </XStack>
+                    
+                    {event.venue && (event.venue.name || event.venue.address) && (
+                        <XStack alignItems="center" gap="$2">
+                            <MapPin size={18} color={blueColor} />
+                            <Text fontSize="$4" color="$gray900">
+                                {event.venue.name}
+                                {event.venue.address && `, ${event.venue.address}`}
+                            </Text>
+                        </XStack>
                     )}
-                    <Card.Footer>
-                        <YStack gap="$1">
-                            <H6>{event.title}</H6>
-                            <XStack justifyContent="space-between"> 
-                                <Paragraph>{capitalizeFirstLetter(event.campus.name)} </Paragraph>
-                                <Paragraph>{getFormattedDate(event.event_date)}</Paragraph>
-                            </XStack>
-                        </YStack>
-                    </Card.Footer>
-                </Card>
-                {event.description && (
-                    <MyStack gap="$3">
-                        <H6>Description</H6>
-                        <RenderHTML
-                            source={{ html: event.description }}
-                            contentWidth={400}
-                            tagsStyles={htmlStyles}
-                        />
-                        {event.url && (
-                        <Button onPress={() => router.push(event.url)}>View on BISO.no</Button>
-                        )}
-                    </MyStack>
+                    
+                    {event.organizer && event.organizer.name && (
+                        <XStack alignItems="center" gap="$2">
+                            <User size={18} color={blueColor} />
+                            <Text fontSize="$4" color="$gray900">
+                                {event.organizer.name}
+                            </Text>
+                        </XStack>
+                    )}
+                </YStack>
+
+                {/* Cost badge if applicable */}
+                {event.cost && (
+                    <View>
+                        <Stack
+                            backgroundColor={event.cost === "Free" ? "$green2" : "$blue2"}
+                            paddingHorizontal="$3"
+                            paddingVertical="$1"
+                            borderRadius="$4"
+                            alignSelf="flex-start"
+                        >
+                            <Text
+                                color={event.cost === "Free" ? "$green9" : "$blue9"}
+                                fontWeight="600"
+                            >
+                                {event.cost === "Free" ? "Free" : event.cost}
+                            </Text>
+                        </Stack>
+                    </View>
                 )}
-            </MotiView>
-        </ScrollView>
+
+                {/* Category tags */}
+                {event.categories && event.categories.length > 0 && (
+                    <XStack flexWrap="wrap" gap="$2" marginVertical="$2">
+                        {event.categories.map((category) => (
+                            <Stack
+                                key={category}
+                                backgroundColor="$gray100"
+                                paddingHorizontal="$2"
+                                paddingVertical="$1"
+                                borderRadius="$2"
+                            >
+                                <Text fontSize="$2" color="$gray700">
+                                    {category}
+                                </Text>
+                            </Stack>
+                        ))}
+                    </XStack>
+                )}
+            </YStack>
+            
+            {/* Description Section */}
+            <YStack padding="$4" paddingTop={0} gap="$3">
+                <H5>About this event</H5>
+                
+                {event.description ? (
+                    <RenderHTML
+                        source={{ html: event.description }}
+                        contentWidth={width - 40}
+                        tagsStyles={htmlStyles}
+                    />
+                ) : (
+                    <Text color="$gray700">No description available.</Text>
+                )}
+                
+                {/* Website link if available */}
+                {event.website && (
+                    <Button
+                        marginTop="$4"
+                        backgroundColor="$blue9"
+                        color="white"
+                        icon={<Globe size={16} color="white" />}
+                        onPress={() => handleOpenUrl(event.website)}
+                    >
+                        View Event Website
+                    </Button>
+                )}
+            </YStack>
+        </MotiScrollView>
     );
-}   
+}

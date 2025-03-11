@@ -105,7 +105,7 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     // Handle empty state
     if (!jobs || jobs.length === 0) {
         return (
-            <YStack gap="$4">
+            <YStack gap="$4" paddingHorizontal="$4">
                 <XStack justifyContent="space-between" alignItems="center">
                     <H3>Volunteer Positions</H3>
                     <Button
@@ -123,7 +123,7 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     }
     
     return (
-        <YStack gap="$4">
+        <YStack gap="$4" padding="$4">
             <XStack justifyContent="space-between" alignItems="center">
                 <H3>Volunteer Positions</H3>
                 <Button

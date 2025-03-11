@@ -85,7 +85,9 @@ export const useCopilotStore = create<CopilotState>()(
     suggestions: [
       'Help me decide what unit to join',
       'Can you suggest me any available roles based on my skills?',
-      'I have questions regarding the local laws on Campus'
+      'I have questions regarding the local laws on Campus',
+      'I would like to submit a feature request',
+      'I need to report a bug'
     ],
     
     // UI Actions

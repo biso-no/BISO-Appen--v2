@@ -8,12 +8,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   version: "1.0.0",
   orientation: 'portrait',
-  icon: "./assets/icon-notrans.png",
+  icon: "./assets/ios_icon.png",
   scheme: 'biso',
   userInterfaceStyle: 'automatic',
   backgroundColor: "#fff",
   splash: {
-    image: './assets/splash.png',
+    image: './assets/logo-light.png',
     resizeMode: 'contain',
     backgroundColor: '#ffffff',
   },
@@ -58,8 +58,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     versionCode: 54,
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     adaptiveIcon: {
-      foregroundImage: './assets/ic_foreground.png',
-      backgroundImage: './assets/ic_background.png',
+      foregroundImage: './assets/adaptive_icon.png',
     },
     permissions: ['com.google.android.gms.permission.AD_ID'],
   },
@@ -78,6 +77,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
+    ["expo-splash-screen", {
+      backgroundColor: "#232323",
+      image: "./assets/logo-light.png",
+      dark: {
+        image: "./assets/logo-dark.png",
+        backgroundColor: "#000000"
+      },
+      imageWidth: 200
+    }],
     'react-native-bottom-tabs',
     'react-native-edge-to-edge',
     'expo-asset',

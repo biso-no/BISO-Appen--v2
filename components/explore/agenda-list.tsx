@@ -13,7 +13,8 @@ import {
   Paragraph,
   Separator,
   Stack,
-  useTheme
+  useTheme,
+  useWindowDimensions
 } from 'tamagui';
 import { MotiView } from 'moti';
 import { Calendar, MapPin, Clock } from '@tamagui/lucide-icons';
@@ -61,11 +62,24 @@ const LoadingCard = () => (
     />
   </MotiView>
 );
+
+
+
 const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-  const textColor = colorScheme === 'dark' ? 'white' : 'black';
   const date = parseISO(event.start_date);
+
+  const { height: windowHeight, width } = useWindowDimensions();
+
+  const textColor = theme?.color?.val;
+    const style = { 
+      body: { 
+        fontSize: 28, 
+        lineHeight: 24, 
+        color: textColor, 
+      }, 
+    };
 
   return (
     <MotiView
@@ -104,7 +118,11 @@ const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
         
         <Card.Footer padding="$4">
           <YStack gap="$2">
-            <H3>{event.title}</H3>
+          <RenderHTML 
+              source={{ html: event.title }} 
+              contentWidth={width - 40} 
+              tagsStyles={style}
+              />
             
             <XStack gap="$4" alignItems="center" flexWrap="wrap">
               <XStack gap="$2" alignItems="center">

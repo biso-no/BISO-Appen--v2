@@ -14,7 +14,7 @@ import {
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
-import { Tabs, Stack as ExpoStack, useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { StatusBar } from 'expo-status-bar';

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { RefreshControl, useColorScheme, useWindowDimensions, Platform, Pressable } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { RefreshControl, useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -21,9 +21,8 @@ import { MotiView } from 'moti';
 import axios from 'axios';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { functions } from '@/lib/appwrite';
-import { parseISO, isAfter, isBefore, addDays } from 'date-fns';
+import { parseISO, isAfter } from 'date-fns';
 import { CampusHero } from '@/components/home/campus-hero';
-import { Event } from '@/types/event';
 import { HomeEvents } from '@/components/home/home-events';
 import { HomeProducts } from '@/components/home/home-products';
 import { HomeJobs } from '@/components/home/home-jobs';
@@ -31,7 +30,53 @@ import type { Job } from '@/types/jobs';
 import { useScreenPerformance } from '@/lib/performance';
 import { BISCOLogo } from '@/components/BISCOLogo';
 
-// Types remain the same as before
+// Updated Event interface based on the provided JSON structure
+interface Thumbnail {
+  id: number;
+  url: string;
+  width: number;
+  height: number;
+}
+
+interface Organizer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  website: string;
+  slug: string;
+}
+
+interface Venue {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  country: string;
+  zip: string;
+  phone: string;
+  website: string;
+  slug: string;
+}
+
+interface Event {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  excerpt: string;
+  start_date: string;
+  end_date: string;
+  all_day: boolean;
+  cost: string;
+  website: string;
+  thumbnail: Thumbnail;
+  organizer: Organizer;
+  venue: Venue;
+  categories: string[];
+  tags: string[];
+}
+
 interface Product {
   id: number;
   name: string;
@@ -99,9 +144,6 @@ const CategorySelector = memo(
 CategorySelector.displayName = 'CategorySelector';
 
 export default function HomeScreen() {
-  // Track initial load to prevent duplicate fetches
-  const initialLoadCompleted = useRef(false);
-
   // State management
   const [events, setEvents] = useState<Event[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -153,7 +195,9 @@ export default function HomeScreen() {
   // Original fetch functions
   const fetchProducts = useCallback(async () => {
     try {
-      const body = { campus: campus?.$id };
+      if (!campus?.$id) return [];
+      
+      const body = { campus: campus.$id };
       const response = await functions.createExecution(
         'sync_webshop_products',
         JSON.stringify(body),
@@ -169,8 +213,10 @@ export default function HomeScreen() {
 
   const fetchJobs = useCallback(async () => {
     try {
+      if (!campus?.name) return [];
+      
       const response = await axios.get(
-        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=3&campus=${campus?.name}`
+        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=3&campus=${campus.name}`
       );
       return response.data;
     } catch (error) {
@@ -179,40 +225,32 @@ export default function HomeScreen() {
     }
   }, [campus?.name]);
 
+  // Updated fetchEvents function to use the new Event interface
   const fetchEvents = useCallback(async () => {
     try {
+      if (!campus?.name) return [];
+      
       let url = 'https://biso.no/wp-json/biso/v1/events';
       
       const params: Record<string, string | number> = {
         per_page: 25
       };
   
-      if (campus?.name) {
-        params.organizer = 'biso-' + campus.name.toLowerCase();
-      }
-  
-      const response = await axios.get(url, { params });
+      // Append the organizer parameter with campus name
+      params.organizer = "biso-" + campus.name.toLowerCase();
       
-      // Transform the events to match the Event interface
-      const transformedEvents = response.data.map((event: any) => ({
-        id: event.id,
-        title: event.title,
-        content: event.content,
-        excerpt: event.excerpt,
-        date: event.date,
-        end_date: event.end_date,
-        venue: event.venue,
-        url: event.url,
-        featured_image: event.featured_image
-      }));
-  
-      //remove events that have date and time in the past
+      console.log("Fetching events with params:", params);
+      const response = await axios.get(url, { params });
+      console.log(`Fetched ${response.data.length} events for campus ${campus.name}`);
+      
+      // Filter out past events
       const today = new Date();
-      const filteredEvents = transformedEvents.filter((event: any) => {
-        const eventDate = parseISO(event.date);
-        return eventDate > today;
+      const filteredEvents = response.data.filter((event: Event) => {
+        const eventDate = parseISO(event.start_date);
+        return isAfter(eventDate, today);
       });
-  
+      
+      console.log(`${filteredEvents.length} upcoming events after filtering`);
       return filteredEvents;
       
     } catch (err) {
@@ -221,33 +259,13 @@ export default function HomeScreen() {
     }
   }, [campus?.name]);
 
-  // Get featured event helper function
-  const getFeaturedEvent = useCallback(() => {
-    if (!events.length) return null;
-    // Find an event within the next 7 days
-    return events.find(event => {
-      const eventDate = parseISO(event.date);
-      return isAfter(eventDate, new Date()) && isBefore(eventDate, addDays(new Date(), 7));
-    });
-  }, [events]);
-
-  // Get regular events helper function
-  const getRegularEvents = useCallback(() => {
-    const featuredEvent = getFeaturedEvent();
-    if (!featuredEvent) return events.slice(0, 3);
-    
-    // Return up to 3 non-featured events
-    return events
-      .filter(event => event.id !== featuredEvent.id)
-      .slice(0, 3);
-  }, [events, getFeaturedEvent]);
-
   // Optimized data loading with parallel requests
   const loadAllData = useCallback(async () => {
     if (!campus) return;
     
     setIsLoading(true);
     try {
+      console.log(`Loading data for campus: ${campus.name}`);
       // Use Promise.all to load data in parallel
       const [eventsData, productsData, jobsData] = await Promise.all([
         fetchEvents(),
@@ -273,26 +291,14 @@ export default function HomeScreen() {
     loadAllData();
   }, [loadAllData]);
   
-  // Initialize data on mount or campus change
+  // Initialize data on mount and reload when campus changes
   useEffect(() => {
-    if (campus && !initialLoadCompleted.current) {
+    if (campus) {
+      console.log(`Campus changed to: ${campus.name}, reloading data...`);
+      setIsLoading(true);
       loadAllData();
-      initialLoadCompleted.current = true;
     }
   }, [campus, loadAllData]);
-  
-  // Filtered events based on active category
-  const filteredEvents = useMemo(() => {
-    return activeCategory === 'all' || activeCategory === 'events' 
-      ? getRegularEvents() 
-      : [];
-  }, [activeCategory, getRegularEvents]);
-  
-  const featuredEvent = useMemo(() => {
-    return activeCategory === 'all' || activeCategory === 'events'
-      ? getFeaturedEvent()
-      : null;
-  }, [activeCategory, getFeaturedEvent]);
   
   // Filtered products based on active category
   const filteredProducts = useMemo(() => {
@@ -331,10 +337,6 @@ export default function HomeScreen() {
       >
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         
-        {/* Hero and Header */}
-
-
-
         {isLoading ? (
           LoadingComponent
         ) : (
@@ -350,7 +352,7 @@ export default function HomeScreen() {
           >
             {/* Categories Selector */}
             <YStack padding="$3" marginTop="$1" marginBottom="$4" gap="$4">
-            <CampusHero />
+              <CampusHero />
               <CategorySelector
                 categories={categories}
                 activeCategory={activeCategory}
@@ -358,9 +360,12 @@ export default function HomeScreen() {
               />
             </YStack>
 
-            {/* Events Section */}
+            {/* Events Section - Pass isFullView to control the display mode */}
             {(activeCategory === 'all' || activeCategory === 'events') && (
-              <HomeEvents events={filteredEvents} featuredEvent={featuredEvent} />
+              <HomeEvents 
+                events={events}
+                isFullView={activeCategory === 'events'} 
+              />
             )}
             
             {/* Marketplace Section */}

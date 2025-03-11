@@ -8,6 +8,7 @@ import {
   FlatList,
   Pressable,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopilotStore } from '../../lib/stores/copilotStore';
@@ -41,6 +42,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'react-native';
 import { MotiView, MotiText, AnimatePresence as MotiAnimatePresence } from 'moti';
 import { Easing } from 'react-native-reanimated';
+import Markdown from 'react-native-markdown-display';
 
 interface AICopilotPanelProps {}
 
@@ -51,6 +53,9 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   const theme = useTheme();
   const inputRef = useRef<RNTextInput>(null);
   const flatListRef = useRef<FlatList>(null);
+  const windowDimensions = Dimensions.get('window');
+
+  
   
   const {
     isExpanded,
@@ -123,15 +128,131 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   const aiBubbleGradient: [string, string] = isDark 
     ? ['#2A2D3E', '#3D4055'] 
     : ['#E8EDFF', '#D1E0FF'];
+
+  // Determine panel dimensions based on screen size
+  const panelWidth = Math.min(windowDimensions.width * 0.9, 480);
+  const panelHeight = Math.min(windowDimensions.height * 0.7, 700);
+  const minimizedHeight = 80;
+
+  // Setup markdown styling
+  const markdownStyles = {
+    body: {
+      color: isDark ? 'white' : theme.gray12?.val || '#333333',
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    paragraph: {
+      marginVertical: 8,
+    },
+    heading1: {
+      fontSize: 24,
+      fontWeight: 'bold' as const,
+      marginVertical: 12,
+      color: isDark ? 'white' : theme.gray12?.val || '#333333',
+    },
+    heading2: {
+      fontSize: 20,
+      fontWeight: 'bold' as const,
+      marginVertical: 10,
+      color: isDark ? 'white' : theme.gray12?.val || '#333333',
+    },
+    heading3: {
+      fontSize: 18,
+      fontWeight: 'bold' as const,
+      marginVertical: 8,
+      color: isDark ? 'white' : theme.gray12?.val || '#333333',
+    },
+    link: {
+      color: primaryColor,
+      textDecorationLine: 'underline' as const,
+    },
+    blockquote: {
+      borderLeftWidth: 4,
+      borderLeftColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+      paddingLeft: 12,
+      marginLeft: 8,
+      fontStyle: 'italic' as const,
+      color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+    },
+    code_block: {
+      backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)',
+      padding: 10,
+      borderRadius: 4,
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+    },
+    code_inline: {
+      backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)',
+      padding: 4,
+      borderRadius: 4,
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+    },
+    bullet_list: {
+      marginVertical: 8,
+    },
+    ordered_list: {
+      marginVertical: 8,
+    },
+    list_item: {
+      flexDirection: 'row' as const,
+      marginVertical: 4,
+    },
+    hr: {
+      backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+      height: 1,
+      marginVertical: 16,
+    },
+    image: {
+      borderRadius: 8,
+      marginVertical: 8,
+    },
+    table: {
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+      borderRadius: 4,
+      marginVertical: 8,
+    },
+    tr: {
+      borderBottomWidth: 1,
+      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+      flexDirection: 'row' as const,
+    },
+    th: {
+      padding: 8,
+      fontWeight: 'bold' as const,
+    },
+    td: {
+      padding: 8,
+    },
+  };
+  
+  // Helper function to detect if content is Markdown
+  const containsMarkdown = (text: string): boolean => {
+    // Check for common markdown patterns
+    const markdownPatterns = [
+      /^#+\s+/m,              // Headers
+      /\*{1,2}[^*]+\*{1,2}/,  // Bold/Italic
+      /\[.*?\]\(.*?\)/,       // Links
+      /```[\s\S]*?```/,       // Code blocks
+      /^\s*[-*+]\s+/m,        // Unordered lists
+      /^\s*\d+\.\s+/m,        // Ordered lists
+      /^\s*>\s+/m,            // Blockquotes
+      /!\[.*?\]\(.*?\)/,      // Images
+      /\|.*\|.*\|/,           // Tables
+      /^-{3,}$/m,             // Horizontal rules
+      /`[^`]+`/,              // Inline code
+    ];
+
+    return markdownPatterns.some(pattern => pattern.test(text));
+  };
   
   // Render message item with enhanced styling and animation
   const renderMessageItem = ({ item, index }: { item: Message; index: number }) => {
     const isUser = item.role === 'user';
     const isLast = index === messages.length - 1;
     const isAiThinking = isLoading && isLast && !isUser;
-    
-    // Add debugging to check the message content
-    console.log('Rendering message:', JSON.stringify(item));
+    const hasMarkdown = !isUser && item.content && containsMarkdown(item.content);
     
     return (
       <MotiView
@@ -169,7 +290,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
         )}
         
         <YStack 
-          maxWidth="80%"
+          maxWidth={isUser ? "80%" : "85%"}
           padding="$3"
           paddingVertical="$3.5"
           borderRadius="$4"
@@ -209,15 +330,29 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
             </MotiView>
           )}
           
-          <Paragraph 
-            color={isUser ? 'white' : textColor} 
-            fontWeight={isUser ? '500' : '400'}
-            selectable
-            letterSpacing={0.2}
-            lineHeight={22}
-          >
-            {item.content || <Text color="$red9">No content available</Text>}
-          </Paragraph>
+          {item.content ? (
+            hasMarkdown ? (
+              <View style={{ padding: 4 }}>
+                <Markdown 
+                  style={markdownStyles}
+                >
+                  {item.content}
+                </Markdown>
+              </View>
+            ) : (
+              <Paragraph 
+                color={isUser ? 'white' : textColor} 
+                fontWeight={isUser ? '500' : '400'}
+                selectable
+                letterSpacing={0.2}
+                lineHeight={22}
+              >
+                {item.content}
+              </Paragraph>
+            )
+          ) : (
+            <Text color="$red9">No content available</Text>
+          )}
         </YStack>
         
         {isUser && (
@@ -311,7 +446,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
           animate={{ 
             opacity: 1,
             translateY: 0,
-            height: isMinimized ? 80 : Platform.OS === 'ios' ? 600 : 550,
+            height: isMinimized ? minimizedHeight : panelHeight,
             scale: 1,
           }}
           exit={{ 
@@ -327,10 +462,10 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
           }}
           style={[styles.container, {
             position: 'absolute',
-            right: 16,
-            top: Platform.OS === 'ios' ? 120 : 100,
-            width: 360,
-            maxWidth: '90%',
+            width: panelWidth,
+            left: (windowDimensions.width - panelWidth) / 2, // Center horizontally
+            top: (windowDimensions.height - panelHeight) / 2 - 50, // Center vertically with slight offset
+            maxHeight: windowDimensions.height * 0.8, // Cap maximum height
             borderRadius: 24,
             overflow: 'hidden',
             zIndex: 1000,
@@ -355,8 +490,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   height: 4,
                   borderRadius: 2,
                   backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                  top: Math.random() * 600,
-                  left: Math.random() * 360,
+                  top: Math.random() * panelHeight,
+                  left: Math.random() * panelWidth,
                 }}
               />
             ))}
@@ -368,8 +503,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   width: 30 + Math.random() * 60,
                   height: 1,
                   backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                  top: Math.random() * 600,
-                  left: Math.random() * 360,
+                  top: Math.random() * panelHeight,
+                  left: Math.random() * panelWidth,
                   transform: [{ rotate: `${Math.random() * 180}deg` }],
                 }}
               />
@@ -428,7 +563,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   </Avatar>
                 </MotiView>
                 <YStack>
-                  <Text fontWeight="700" fontSize="$4" color={textColor}>AI Copilot</Text>
+                  <Text fontWeight="700" fontSize="$4" color={textColor}>BISO Copilot</Text>
                   <Text fontSize="$2" color={textMutedColor}>Ready to assist</Text>
                 </YStack>
               </XStack>
@@ -483,7 +618,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                     </Avatar>
                   </MotiView>
                   <YStack>
-                    <Text fontWeight="700" fontSize="$5" color={textColor}>AI Copilot</Text>
+                    <Text fontWeight="700" fontSize="$5" color={textColor}>BISO Copilot</Text>
                     <XStack alignItems="center" gap="$1">
                       <MotiView
                         from={{ opacity: 0.5, scale: 1 }}
@@ -867,4 +1002,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     zIndex: 2,
   },
-}); 
+});
