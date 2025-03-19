@@ -5,9 +5,10 @@ import { useRouter } from 'expo-router';
 import { MyStack } from '@/components/ui/MyStack';
 import { MotiView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'tamagui/linear-gradient';
-import { Mail, Check } from '@tamagui/lucide-icons';
+import { Mail, Check, ExternalLink } from '@tamagui/lucide-icons';
 import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
+import * as Linking from 'expo-linking';
 
 // Company Colors
 const COLORS = {
@@ -230,25 +231,45 @@ export default function LoginScreen() {
                     >
                       We've sent a magic link to your email. Please check your inbox and click the link to sign in.
                     </Text>
-                    <Button
-                      backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
-                      color="white"
-                      size="$4"
-                      fontWeight="600"
-                      onPress={handleResend}
-                      disabled={cooldownTime > 0 || isLoading}
-                      pressStyle={{ 
-                        backgroundColor: COLORS.accentBlue,
-                        scale: 0.98,
-                      }}
-                      opacity={cooldownTime > 0 ? 0.7 : 1}
-                    >
-                      <Text color="white" fontSize={14} fontWeight="600">
-                        {isLoading ? 'Sending...' : 
-                         cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
-                         'Resend Link'}
-                      </Text>
-                    </Button>
+                    <XStack gap="$2" width="100%">
+                      <Button
+                        flex={1}
+                        backgroundColor={COLORS.accentBlue}
+                        color="white"
+                        size="$4"
+                        fontWeight="600"
+                        onPress={() => Linking.openURL('mailto:')}
+                        pressStyle={{ 
+                          backgroundColor: COLORS.defaultBlue,
+                          scale: 0.98,
+                        }}
+                      >
+                        <ExternalLink size={16} color="white" />
+                        <Text color="white" fontSize={14} fontWeight="600" marginLeft="$1">
+                          Open Email App
+                        </Text>
+                      </Button>
+                      <Button
+                        flex={1}
+                        backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
+                        color="white"
+                        size="$4"
+                        fontWeight="600"
+                        onPress={handleResend}
+                        disabled={cooldownTime > 0 || isLoading}
+                        pressStyle={{ 
+                          backgroundColor: COLORS.accentBlue,
+                          scale: 0.98,
+                        }}
+                        opacity={cooldownTime > 0 ? 0.7 : 1}
+                      >
+                        <Text color="white" fontSize={14} fontWeight="600">
+                          {isLoading ? 'Sending...' : 
+                           cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
+                           'Resend Link'}
+                        </Text>
+                      </Button>
+                    </XStack>
                   </YStack>
                 ) : (
                   <Button

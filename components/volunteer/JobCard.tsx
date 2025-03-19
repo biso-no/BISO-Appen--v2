@@ -51,6 +51,8 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
   };
   
   const jobColor = colors[getColorIndex()];
+
+  const textColor = theme?.color?.val;
   
   const getCardBorderColor = () => {
     return colorScheme === 'dark' 
@@ -63,6 +65,28 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
       ? `$${jobColor}1` 
       : `$${jobColor}1`;
   };
+
+  const titleStyles = { 
+    body: { 
+      fontSize: 26, 
+      lineHeight: 34,  // Increased line height
+      color: textColor,
+      paddingTop: 4,
+      paddingBottom: 4
+    },
+    h1: {
+      marginBottom: 8,
+      marginTop: 8
+    },
+    h2: {
+      marginBottom: 8,
+      marginTop: 8
+    },
+    p: {
+      marginBottom: 0,
+      marginTop: 0
+    }
+};
 
   return (
     <MotiView
@@ -93,14 +117,12 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
             {/* Top section with title and icon */}
             <XStack gap="$3" alignItems="center" justifyContent="space-between">
               <YStack flex={1} gap="$1">
-                <SizableText 
-                  size="$5" 
-                  fontWeight="800" 
-                  numberOfLines={2} 
-                  color={colorScheme === 'dark' ? `$${jobColor}11` : '$color'}
-                >
-                  {job.title}
-                </SizableText>
+              <RenderHTML 
+                        source={{ html: job.title }} 
+                        contentWidth={width - 40}
+                        tagsStyles={titleStyles}
+                        baseStyle={{ margin: 0, padding: 0 }}
+                    />
                 
                 {/* Campus tags */}
                 <XStack flexWrap="wrap" gap="$2" marginTop="$1">

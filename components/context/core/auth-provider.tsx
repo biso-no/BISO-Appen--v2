@@ -8,7 +8,7 @@ export interface AuthContextType {
   error: string | null;
   actions: {
     updateName: (name: string) => Promise<void>;
-    updatePreferences: (key: string, value: any) => Promise<void>;
+    updatePreferences: (key: string, value: any, preventNavigation?: boolean) => Promise<void>;
     refetch: () => Promise<unknown>;
   };
 }

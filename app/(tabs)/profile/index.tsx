@@ -264,7 +264,7 @@ const ProfileScreen = () => {
         }
       }, 100);
     }
-  }, [isEditingPayment, bankType, profile, resetProfileForm, resetInternationalForm]);
+  }, [isEditingPayment, bankType, profile, resetProfileForm, resetInternationalForm, resetNorwegianForm]);
 
   // Form submission handlers
   const onProfileSubmit = async (data: ProfileFormData) => {
@@ -560,26 +560,76 @@ const ProfileScreen = () => {
       }
     }, [user?.prefs]);
 
+    const updatePreference = async (key: string, checked: boolean) => {
+      setLocalPrefs(prev => ({ ...prev, [key]: checked }));
+      try {
+        await actions.updatePreferences(key, checked, true);
+      } catch (error) {
+        // Revert local state if update fails
+        setLocalPrefs(prev => ({ ...prev, [key]: !checked }));
+        console.error(`Failed to update ${key} notification settings:`, error);
+        Alert.alert('Error', 'Failed to update notification settings');
+      }
+    };
+
     return (
       <YStack gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
           <Text>Expense Updates</Text>
           <CustomSwitch
             checked={localPrefs?.expenses ?? false}
-            onCheckedChange={async (checked: boolean) => {
-              setLocalPrefs(prev => ({ ...prev, expenses: checked }));
-              try {
-                await actions.updatePreferences('expenses', checked);
-              } catch (error) {
-                setLocalPrefs(prev => ({ ...prev, expenses: !checked }));
-                console.error('Failed to update notification settings:', error);
-                Alert.alert('Error', 'Failed to update notification settings');
-              }
+            onCheckedChange={(checked: boolean) => {
+              updatePreference('expenses', checked);
             }}
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
           Receive notifications when expenses are approved, rejected or need attention
+        </Text>
+
+        <Separator marginVertical="$2" />
+
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text>Events</Text>
+          <CustomSwitch
+            checked={localPrefs?.events ?? false}
+            onCheckedChange={(checked: boolean) => {
+              updatePreference('events', checked);
+            }}
+          />
+        </XStack>
+        <Text theme="alt2" fontSize="$2">
+          Receive notifications about upcoming events and activities
+        </Text>
+
+        <Separator marginVertical="$2" />
+
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text>News</Text>
+          <CustomSwitch
+            checked={localPrefs?.news ?? false}
+            onCheckedChange={(checked: boolean) => {
+              updatePreference('news', checked);
+            }}
+          />
+        </XStack>
+        <Text theme="alt2" fontSize="$2">
+          Receive notifications about organization news and announcements
+        </Text>
+
+        <Separator marginVertical="$2" />
+
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text>Products</Text>
+          <CustomSwitch
+            checked={localPrefs?.products ?? false}
+            onCheckedChange={(checked: boolean) => {
+              updatePreference('products', checked);
+            }}
+          />
+        </XStack>
+        <Text theme="alt2" fontSize="$2">
+          Receive notifications about new products, offers and promotions
         </Text>
       </YStack>
     );

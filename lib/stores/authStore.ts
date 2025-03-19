@@ -16,7 +16,7 @@ interface AuthState {
   
   // Operations
   updateName: (name: string) => Promise<void>;
-  updatePreferences: (key: string, value: any) => Promise<void>;
+  updatePreferences: (key: string, value: any, preventNavigation?: boolean) => Promise<void>;
   resetState: () => void;
 }
 
@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   
-  updatePreferences: async (key, value) => {
+  updatePreferences: async (key, value, preventNavigation = false) => {
     try {
       set({ isLoading: true, error: null });
       
@@ -73,8 +73,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user: updatedUser, isLoading: false });
       
       // Invalidate queries that might depend on user preferences
-      queryClient.invalidateQueries({ queryKey: ['account'] });
-      queryClient.invalidateQueries({ queryKey: ['preferences'] });
+      // Skip invalidation if preventNavigation is true to avoid re-renders
+      if (!preventNavigation) {
+        queryClient.invalidateQueries({ queryKey: ['account'] });
+        queryClient.invalidateQueries({ queryKey: ['preferences'] });
+      }
     } catch (err: unknown) {
       set({ 
         error: err instanceof Error ? err.message : 'An unknown error occurred', 

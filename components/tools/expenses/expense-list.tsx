@@ -258,6 +258,8 @@ ExpenseCard.displayName = 'ExpenseCard';
 const NoExpensesPlaceholder = memo(() => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
+
+  const router = useRouter();
   
   return (
     <MotiView
@@ -324,6 +326,7 @@ const NoExpensesPlaceholder = memo(() => {
             fontWeight="600"
             borderRadius="$4"
             paddingHorizontal="$6"
+            onPress={() =>router.push("/explore/expenses/create")}
           >
             Create New Expense
           </Button>

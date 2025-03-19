@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { RefreshControl } from 'react-native'
 import { 
   YStack, 
@@ -26,7 +26,6 @@ import { useCampus } from '@/lib/hooks/useCampus'
 import axios from 'axios'
 import { useAuth } from '@/components/context/core/auth-provider'
 import { useColorScheme } from 'react-native'
-import { useAppNavigation } from '@/lib/navigation'
 
 interface Event {
   id: number;
@@ -100,16 +99,12 @@ export default function ExploreScreen() {
   const [events, setEvents] = useState<Event[]>([])
   const { user } = useAuth()
   const { campus } = useCampus()
-  const { navigateToMainScreen } = useAppNavigation()
   const [error, setError] = useState<string | null>(null)
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   const colorScheme = useColorScheme();
 
-  useEffect(() => {
-    loadEvents()
-  }, [campus])
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -131,26 +126,34 @@ export default function ExploreScreen() {
         title: event.title,
         content: event.description,
         excerpt: event.excerpt,
-        date: event.start_date,         // Changed from date to start_date
+        date: event.start_date,
         end_date: event.end_date,
         venue: event.venue?.name,
         url: event.website,
-        featured_image: event.thumbnail?.url  // Changed to use thumbnail.url
+        featured_image: event.thumbnail?.url
       }));
       setEvents(transformedEvents);
+      setHasLoaded(true);
     } catch (err) {
       setError('Failed to load events');
       console.error('Error loading events:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [campus]);
 
-  const onRefresh = async () => {
+  useEffect(() => {
+    if (!hasLoaded) {
+      loadEvents()
+    }
+  }, [hasLoaded, loadEvents])
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true)
+    setHasLoaded(false)
     await loadEvents()
     setRefreshing(false)
-  }
+  }, [loadEvents])
 
   const LoadingEventCard = () => (
     <MotiView
@@ -171,7 +174,7 @@ export default function ExploreScreen() {
     </MotiView>
   )
 
-  const EventCard = ({ event }: { event: Event }) => {
+  const EventCard = ({ event, index }: { event: Event, index: number }) => {
     const router = useRouter()
     
     const formatEventDate = (dateString: string) => {
@@ -202,8 +205,11 @@ export default function ExploreScreen() {
             transition={{
               type: 'spring',
               damping: 18,
-              mass: 0.8
+              mass: 0.8,
+              delay: index * 100,
+              stiffness: 100
             }}
+            key={`event-${event.id}`}
           >
             <Stack
               backgroundColor="$background"
@@ -250,7 +256,7 @@ export default function ExploreScreen() {
                     borderRadius="$10"
                     paddingHorizontal="$4"
                     pressStyle={{ scale: 0.97 }}
-                    onPress={() => router.push(`/explore/events/${event.id}`)}
+                    onPress={() => router.push(`/(main)/explore/events/${event.id}`)}
                   >
                     <Text color="white">View Details</Text>
                   </Button>
@@ -264,13 +270,13 @@ export default function ExploreScreen() {
   };
 
 // CategoryCard component with improved contrast
-const CategoryCard = ({ category }: { category: ExploreCategory }) => {
+const CategoryCard = ({ category, index }: { category: ExploreCategory, index: number }) => {
   const theme = useTheme()
+  const router = useRouter()
+  
   const handlePress = () => {
-    // Use our custom navigation utility instead of router.push
-    // This will improve performance by avoiding unnecessary re-renders
-    const screenPath = category.link.replace('/explore/', '');
-    navigateToMainScreen(`explore/${screenPath}`);
+    // Simply navigate to the link path directly
+    router.push(category.link as any);
   }
 
   // Get correct background and border colors based on theme
@@ -312,8 +318,10 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
           type: 'spring',
           damping: 18,
           mass: 0.8,
-          delay: categories.findIndex(c => c.id === category.id) * 100
+          delay: index * 100,
+          stiffness: 100
         }}
+        key={`category-${category.id}`}
       >
         <XStack
           backgroundColor={getBackgroundColor()}
@@ -411,8 +419,8 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
                   <LoadingEventCard />
                 </View>
               ) : (
-                events.map(event => (
-                  <EventCard key={event.id} event={event} />
+                events.map((event, index) => (
+                  <EventCard key={event.id} event={event} index={index} />
                 ))
               )}
             </View>
@@ -422,8 +430,8 @@ const CategoryCard = ({ category }: { category: ExploreCategory }) => {
         <YStack gap="$4" marginTop="$6" marginBottom="$8">
           <Text fontSize={18} fontWeight="bold" color="$color">Services</Text>
           <YStack gap="$3">
-            {categories.map(category => (
-              <CategoryCard key={category.id} category={category} />
+            {categories.map((category, index) => (
+              <CategoryCard key={category.id} category={category} index={index} />
             ))}
           </YStack>
         </YStack>

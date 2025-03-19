@@ -10,7 +10,8 @@ import {
   UserRound, 
   LogIn, 
   Home, 
-  Compass
+  Compass,
+  ChevronLeft
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
@@ -62,7 +63,15 @@ export default function TabLayout() {
     }
   };
 
-  const HeaderComponent = () => (
+  const HeaderComponent = () => {
+    const canGoBack = router.canGoBack();
+
+    const handleBackPress = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      router.back();
+    };
+
+    return (
     <View style={{ 
       width: '100%', 
       overflow: 'hidden',
@@ -102,6 +111,23 @@ export default function TabLayout() {
       >
         <XStack justifyContent="space-between" alignItems="center">
           <XStack flex={1} justifyContent="flex-start">
+            {canGoBack && (
+              <MotiView
+                from={{ opacity: 0, translateX: -20 }}
+                animate={{ opacity: 1, translateX: 0 }}
+                transition={{ type: 'spring', damping: 18 }}
+              >
+                <Button
+                  size="$3"
+                  circular
+                  icon={<ChevronLeft size={20} color={Colors[colorScheme ?? 'light'].text} />}
+                  onPress={handleBackPress}
+                  backgroundColor={Colors[colorScheme ?? 'light'].tint + '15'}
+                  pressStyle={{ scale: 0.9, opacity: 0.8 }}
+                  animation="quick"
+                />
+              </MotiView>
+            )}
           </XStack>
           
           <XStack flex={2} justifyContent="center" alignItems="center">
@@ -117,6 +143,7 @@ export default function TabLayout() {
       </Stack>
     </View>
   );
+};
 
   const getIconForRoute = (routeName: string, color: string) => {
     switch (routeName) {
@@ -128,8 +155,6 @@ export default function TabLayout() {
         return profileIcon(color);
       case 'auth/signIn/index':
         return <LogIn color={color} marginTop="$2" />;
-      case '(main)':
-        return null;
       default:
         return null;
     }

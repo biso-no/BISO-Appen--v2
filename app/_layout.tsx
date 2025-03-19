@@ -21,6 +21,17 @@ import { RootProvider } from '@/components/context/root-provider';
 import { PerformanceProvider } from '@/lib/performance';
 import { AICopilotProvider } from '@/components/ai';
 
+// Silence console warnings about defaultProps
+if (__DEV__) {
+  const originalConsoleError = console.error;
+  console.error = (message, ...args) => {
+    if (typeof message === 'string' && message.includes('defaultProps')) {
+      return;
+    }
+    originalConsoleError.apply(console, [message, ...args]);
+  };
+}
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -31,14 +42,18 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
+// Combine all LogBox ignore patterns into a single call
 LogBox.ignoreLogs([
+  'Support for defaultProps will be removed',
   'Warning: TRenderEngineProvider: Support for defaultProps',
   'Warning: MemoizedTNodeRenderer: Support for defaultProps',
-  'Warning: TNodeChildrenRenderer: Support for defaultProps'
+  'Warning: TNodeChildrenRenderer: Support for defaultProps',
+  'Warning: TNodeChildrenRenderer: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+  'Warning: MemoizedTNodeRenderer: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
 ]);
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   
@@ -85,6 +100,7 @@ function RootLayoutNav() {
                       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                          <Stack.Screen name="(main)" options={{ headerShown: false }} />
                           <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
                           <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
                         </Stack>
