@@ -39,12 +39,10 @@ async function registerForPushNotificationsAsync(userId: string): Promise<string
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
+      console.log('Failed to get push token: permission not granted');
       return null;
     }
-    // Learn more about projectId:
-    // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
-    // EAS projectId is used here.
+    
     try {
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
@@ -57,12 +55,23 @@ async function registerForPushNotificationsAsync(userId: string): Promise<string
       return null;
     }
   } else {
-    alert('Must use physical device for Push Notifications');
+    console.log('Must use physical device for Push Notifications');
     return null;
   }
 
   if (token) {
-    await registerDeviceToken(token);
+    try {
+      await registerDeviceToken(token);
+    } catch (error) {
+      // If error is "target already exists", we can safely ignore and continue
+      if (error instanceof Error && 
+          error.toString().includes('A target with the same ID already exists')) {
+        console.log('Target already exists, continuing');
+      } else {
+        // For other errors, log but don't throw to prevent app crash
+        console.error('Failed to register device token:', error);
+      }
+    }
   }
 
   return token;

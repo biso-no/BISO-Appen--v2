@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   YStack, Card, H2, H4, Text, Input, Separator,
   Label, Button, XStack, useTheme, View, Sheet, ScrollView,
@@ -554,54 +554,134 @@ const ProfileScreen = () => {
     const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
     const { user, actions } = useAuth();
     const [isProcessing, setIsProcessing] = useState<{[key: string]: boolean}>({});
+    const [subscriptions, setSubscriptions] = useState<{[key: string]: boolean}>({});
+    const [isLoading, setIsLoading] = useState(false);
 
+    // Map preference keys to Appwrite topic IDs
+    const topicMap: {[key: string]: string} = {
+      expenses: 'expenses',
+      events: 'events',
+      news: 'posts',
+      products: 'messages'
+    };
+
+    // Initialize local preferences from user data
     useEffect(() => {
       if (user?.prefs) {
         setLocalPrefs(user.prefs);
       }
     }, [user?.prefs]);
 
+    // Fetch subscription status from database
+    const refreshSubscriptions = useCallback(async () => {
+      if (!user?.$id) return;
+      
+      setIsLoading(true);
+      try {
+        const subs: {[key: string]: boolean} = {};
+        
+        // Fetch subscriptions for each topic
+        for (const [prefKey, topicId] of Object.entries(topicMap)) {
+          const documents = await databases.listDocuments('app', 'subs', [
+            Query.equal('user_id', user.$id),
+            Query.equal('topic', topicId)
+          ]);
+          
+          if (documents.total > 0) {
+            subs[prefKey] = documents.documents[0].subscribed;
+          } else {
+            subs[prefKey] = false;
+          }
+        }
+        
+        setSubscriptions(subs);
+      } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, [user?.$id, topicMap]);
+
+    // Load subscriptions when component mounts
+    useEffect(() => {
+      refreshSubscriptions();
+    }, [refreshSubscriptions]);
+
     const updatePreference = async (key: string, checked: boolean) => {
-      if (isProcessing[key]) return;
+      if (isProcessing[key] || !user?.$id) return;
+      
+      // Check if the user has targets set up for notifications
+      if (checked && (!user.targets || user.targets.length === 0)) {
+        Alert.alert(
+          "Notification setup needed", 
+          "You need to enable push notifications on this device to receive updates."
+        );
+        return;
+      }
       
       setIsProcessing(prev => ({ ...prev, [key]: true }));
-      setLocalPrefs(prev => ({ ...prev, [key]: checked }));
       
       try {
-        // Update user preferences in Appwrite
-        await actions.updatePreferences(key, checked, true);
-        
-        // Map preference keys to Appwrite topic IDs
-        const topicMap: {[key: string]: string} = {
-          expenses: 'expenses',
-          events: 'events',
-          news: 'posts',
-          products: 'messages'
-        };
-        
         const topicId = topicMap[key];
         
-        if (topicId && user) {
-          // Update topic subscription
-          await updateSubscription(user.$id, topicId, checked);
-          console.log(`${checked ? 'Subscribed to' : 'Unsubscribed from'} ${topicId} topic`);
+        if (topicId) {
+          // Update subscription in database and handle subscriber creation/deletion
+          const result = await updateSubscription(user.$id, topicId, checked);
+          console.log(`${checked ? 'Subscribed to' : 'Unsubscribed from'} ${topicId} topic:`, result);
+          
+          // Update local state to reflect changes immediately 
+          setSubscriptions(prev => ({ ...prev, [key]: checked }));
+          
+          // Refresh all subscriptions after a short delay to ensure everything is in sync
+          setTimeout(() => {
+            refreshSubscriptions();
+          }, 500);
         }
       } catch (error) {
-        // Revert local state if update fails
-        setLocalPrefs(prev => ({ ...prev, [key]: !checked }));
+        // Log the full error
         console.error(`Failed to update ${key} notification settings:`, error);
-        Alert.alert('Error', 'Failed to update notification settings');
+        
+        // Show more specific error message to the user
+        let errorMessage = 'Failed to update notification settings';
+        if (error instanceof Error) {
+          errorMessage += `: ${error.message}`;
+        }
+        
+        Alert.alert('Error', errorMessage);
+        
+        // Revert local state
+        setSubscriptions(prev => {
+          const currentValue = prev[key];
+          return { ...prev, [key]: !checked };
+        });
       } finally {
         setIsProcessing(prev => ({ ...prev, [key]: false }));
       }
     };
+
+    // Get checked state, prioritizing database subscriptions over preferences
+    const getCheckedState = (key: string) => {
+      if (key in subscriptions) {
+        return subscriptions[key];
+      }
+      return localPrefs?.[key] ?? false;
+    };
+
+    // Show a loading state if we're fetching subscriptions
+    if (isLoading && Object.keys(subscriptions).length === 0) {
+      return (
+        <YStack gap="$3" alignItems="center" justifyContent="center" height={200}>
+          <Text>Loading notification preferences...</Text>
+        </YStack>
+      );
+    }
 
     return (
       <YStack gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
           <Text>Expense Updates</Text>
           <CustomSwitch
-            checked={localPrefs?.expenses ?? false}
+            checked={getCheckedState('expenses')}
             onCheckedChange={(checked: boolean) => {
               if (!isProcessing.expenses) {
                 updatePreference('expenses', checked);
@@ -618,7 +698,7 @@ const ProfileScreen = () => {
         <XStack alignItems="center" justifyContent="space-between">
           <Text>Events</Text>
           <CustomSwitch
-            checked={localPrefs?.events ?? false}
+            checked={getCheckedState('events')}
             onCheckedChange={(checked: boolean) => {
               if (!isProcessing.events) {
                 updatePreference('events', checked);
@@ -635,7 +715,7 @@ const ProfileScreen = () => {
         <XStack alignItems="center" justifyContent="space-between">
           <Text>News</Text>
           <CustomSwitch
-            checked={localPrefs?.news ?? false}
+            checked={getCheckedState('news')}
             onCheckedChange={(checked: boolean) => {
               if (!isProcessing.news) {
                 updatePreference('news', checked);
@@ -652,7 +732,7 @@ const ProfileScreen = () => {
         <XStack alignItems="center" justifyContent="space-between">
           <Text>Products</Text>
           <CustomSwitch
-            checked={localPrefs?.products ?? false}
+            checked={getCheckedState('products')}
             onCheckedChange={(checked: boolean) => {
               if (!isProcessing.products) {
                 updatePreference('products', checked);

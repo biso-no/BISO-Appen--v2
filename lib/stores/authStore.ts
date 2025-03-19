@@ -9,6 +9,7 @@ interface AuthState {
   user: Models.User<Models.Preferences> | null;
   isLoading: boolean;
   error: string | null;
+  pushNotificationsInitialized: boolean;
   
   // Actions
   setUser: (user: Models.User<Models.Preferences> | null) => void;
@@ -26,6 +27,7 @@ const initialState = {
   user: null,
   isLoading: false,
   error: null,
+  pushNotificationsInitialized: false,
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -35,11 +37,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setUser: (user) => {
     set({ user });
     
-    // Register for push notifications when a user logs in
-    if (user && user.$id) {
-      setupPushNotifications(user.$id).catch(error => {
-        console.error('Failed to setup push notifications:', error);
-      });
+    // Register for push notifications when a user logs in, but only once per session
+    const state = get();
+    if (user && user.$id && !state.pushNotificationsInitialized) {
+      setupPushNotifications(user.$id)
+        .then(() => {
+          set({ pushNotificationsInitialized: true });
+        })
+        .catch(error => {
+          console.error('Failed to setup push notifications:', error);
+        });
     }
   },
   setLoading: (isLoading) => set({ isLoading }),
