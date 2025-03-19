@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Models } from 'react-native-appwrite';
 import { updateUserName, updateUserPreferences, getUserPreferences } from '@/lib/appwrite';
 import { queryClient } from '@/lib/react-query';
+import { setupPushNotifications } from '@/lib/notifications';
 
 // Define the auth store state interface
 interface AuthState {
@@ -31,7 +32,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
   
   // State setters
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    set({ user });
+    
+    // Register for push notifications when a user logs in
+    if (user && user.$id) {
+      setupPushNotifications(user.$id).catch(error => {
+        console.error('Failed to setup push notifications:', error);
+      });
+    }
+  },
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
   

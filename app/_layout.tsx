@@ -20,6 +20,8 @@ import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
 import { PerformanceProvider } from '@/lib/performance';
 import { AICopilotProvider } from '@/components/ai';
+import { useNotifications } from '@/lib/notifications';
+import { useRouter } from 'expo-router';
 
 // Silence console warnings about defaultProps
 if (__DEV__) {
@@ -84,7 +86,30 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
+  // Set up notification handlers
+  useNotifications(
+    (notification) => {
+      // Handle foreground notification
+      console.log('Notification received:', notification);
+    },
+    (response) => {
+      // Handle notification response (user interaction)
+      console.log('User interacted with notification:', response);
+      
+      // Navigate based on notification data if needed
+      const data = response.notification.request.content.data;
+      if (data && typeof data === 'object' && 'route' in data) {
+        const route = data.route as string;
+        if (route.startsWith('/')) {
+          router.push(route as any);
+        } else {
+          router.navigate(route as any);
+        }
+      }
+    }
+  );
 
   return (
     <QueryClientProvider client={queryClient}>

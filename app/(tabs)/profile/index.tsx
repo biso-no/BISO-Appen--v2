@@ -11,7 +11,7 @@ import {
 import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/core/auth-provider';
 import { useRouter } from 'expo-router';
-import { signOut, databases, triggerFunction } from '@/lib/appwrite';
+import { signOut, databases, triggerFunction, updateSubscription } from '@/lib/appwrite';
 import { ExpenseList } from '@/components/tools/expenses/expense-list';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { Models, Query } from 'react-native-appwrite';
@@ -553,6 +553,7 @@ const ProfileScreen = () => {
   const NotificationSection = React.memo(() => {
     const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
     const { user, actions } = useAuth();
+    const [isProcessing, setIsProcessing] = useState<{[key: string]: boolean}>({});
 
     useEffect(() => {
       if (user?.prefs) {
@@ -561,14 +562,37 @@ const ProfileScreen = () => {
     }, [user?.prefs]);
 
     const updatePreference = async (key: string, checked: boolean) => {
+      if (isProcessing[key]) return;
+      
+      setIsProcessing(prev => ({ ...prev, [key]: true }));
       setLocalPrefs(prev => ({ ...prev, [key]: checked }));
+      
       try {
+        // Update user preferences in Appwrite
         await actions.updatePreferences(key, checked, true);
+        
+        // Map preference keys to Appwrite topic IDs
+        const topicMap: {[key: string]: string} = {
+          expenses: 'expenses',
+          events: 'events',
+          news: 'posts',
+          products: 'messages'
+        };
+        
+        const topicId = topicMap[key];
+        
+        if (topicId && user) {
+          // Update topic subscription
+          await updateSubscription(user.$id, topicId, checked);
+          console.log(`${checked ? 'Subscribed to' : 'Unsubscribed from'} ${topicId} topic`);
+        }
       } catch (error) {
         // Revert local state if update fails
         setLocalPrefs(prev => ({ ...prev, [key]: !checked }));
         console.error(`Failed to update ${key} notification settings:`, error);
         Alert.alert('Error', 'Failed to update notification settings');
+      } finally {
+        setIsProcessing(prev => ({ ...prev, [key]: false }));
       }
     };
 
@@ -579,7 +603,9 @@ const ProfileScreen = () => {
           <CustomSwitch
             checked={localPrefs?.expenses ?? false}
             onCheckedChange={(checked: boolean) => {
-              updatePreference('expenses', checked);
+              if (!isProcessing.expenses) {
+                updatePreference('expenses', checked);
+              }
             }}
           />
         </XStack>
@@ -594,7 +620,9 @@ const ProfileScreen = () => {
           <CustomSwitch
             checked={localPrefs?.events ?? false}
             onCheckedChange={(checked: boolean) => {
-              updatePreference('events', checked);
+              if (!isProcessing.events) {
+                updatePreference('events', checked);
+              }
             }}
           />
         </XStack>
@@ -609,7 +637,9 @@ const ProfileScreen = () => {
           <CustomSwitch
             checked={localPrefs?.news ?? false}
             onCheckedChange={(checked: boolean) => {
-              updatePreference('news', checked);
+              if (!isProcessing.news) {
+                updatePreference('news', checked);
+              }
             }}
           />
         </XStack>
@@ -624,7 +654,9 @@ const ProfileScreen = () => {
           <CustomSwitch
             checked={localPrefs?.products ?? false}
             onCheckedChange={(checked: boolean) => {
-              updatePreference('products', checked);
+              if (!isProcessing.products) {
+                updatePreference('products', checked);
+              }
             }}
           />
         </XStack>
