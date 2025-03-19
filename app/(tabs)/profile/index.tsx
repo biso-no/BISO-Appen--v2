@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   YStack, Card, H2, H4, Text, Input, Separator,
   Label, Button, XStack, useTheme, View, Sheet, ScrollView,
@@ -247,7 +247,7 @@ const ProfileScreen = () => {
         });
       }, 100);
     }
-  }, [isEditing, profile]);
+  }, [isEditing, profile, resetProfileForm]);
 
   useEffect(() => {
     if (isEditingPayment) {
@@ -557,13 +557,13 @@ const ProfileScreen = () => {
     const [subscriptions, setSubscriptions] = useState<{[key: string]: boolean}>({});
     const [isLoading, setIsLoading] = useState(false);
 
-    // Map preference keys to Appwrite topic IDs
-    const topicMap: {[key: string]: string} = {
+    // Map preference keys to Appwrite topic IDs - moved to useMemo
+    const topicMap = useMemo<{[key: string]: string}>(() => ({
       expenses: 'expenses',
       events: 'events',
-      news: 'posts',
-      products: 'messages'
-    };
+      jobs: 'jobs',
+      products: 'products'
+    }), []);
 
     // Initialize local preferences from user data
     useEffect(() => {
@@ -713,18 +713,18 @@ const ProfileScreen = () => {
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>News</Text>
+          <Text>Volunteer Opportunities</Text>
           <CustomSwitch
-            checked={getCheckedState('news')}
+            checked={getCheckedState('jobs')}
             onCheckedChange={(checked: boolean) => {
-              if (!isProcessing.news) {
-                updatePreference('news', checked);
+              if (!isProcessing.jobs) {
+                updatePreference('jobs', checked);
               }
             }}
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about organization news and announcements
+          Receive notifications about volunteer opportunities and events
         </Text>
 
         <Separator marginVertical="$2" />
@@ -1107,7 +1107,7 @@ const ProfileScreen = () => {
       case 'menu': return 'Profile Options';
       case 'personal': return 'Personal Details';
       case 'payment': return 'Payment Details';
-      case 'notifications': return 'Notification Preferences';
+      case 'notifications': return 'Notifications';
       case 'preferences': return 'Clubs & Departments';
       case 'expenses': return 'Recent Expenses';
       default: return 'Profile';
