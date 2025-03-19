@@ -191,7 +191,25 @@ export async function updateDocument(collectionId: string, documentId: string, d
 
 export async function registerDeviceToken(token: string) {
     try {
-        await account.createPushTarget(ID.unique(), token);
+        // Get the current user account to check existing targets
+        const user = await account.get();
+        
+        // Check if the user already has this token registered as a target
+        if (user.targets && user.targets.length > 0) {
+            // Look for an existing push target with the same token identifier
+            const existingTarget = user.targets.find(
+                target => target.providerType === 'push' && target.identifier === token
+            );
+            
+            // If a target with this token already exists, don't create a new one
+            if (existingTarget) {
+                console.log("Push notification target already exists, skipping registration");
+                return existingTarget;
+            }
+        }
+        
+        // Create a new push target only if one doesn't exist already
+        return await account.createPushTarget(ID.unique(), token);
     } catch (error) {
         console.error("Error registering device token:", error);
         throw error; // Re-throw the error to be handled by the caller
@@ -248,13 +266,18 @@ export function signInWithBI() {
 
 
 export async function createSubscriber(topic: string, user: Models.User<Models.Preferences>) {
+    // Make sure the user has at least one target
+    if (!user.targets || user.targets.length === 0) {
+        throw new Error("User has no notification targets set up");
+    }
 
     const targetId = user.targets[0].$id;
+    const subscriberId = ID.unique();
 
     try {
         const response = await messaging.createSubscriber(
             topic,
-            ID.unique(),
+            subscriberId,
             targetId
         );
 
@@ -277,29 +300,135 @@ export async function deleteSubscriber(topic: string, subscriberId: string) {
 }
 
 export const updateSubscription = async (userId: string, topic: string, subscribed: boolean) => {
-    try {
-      const documents = await databases.listDocuments('app', 'subs', [
-        Query.equal('topic', topic),
-      ]);
-  
-      if (documents.total > 0) {
-        const response = await databases.updateDocument('app', 'subs', documents.documents[0].$id, {
-          subscribed,
-        });
+  try {
+    console.log(`Updating subscription for user ${userId}, topic ${topic} to ${subscribed ? 'subscribed' : 'unsubscribed'}`);
+    
+    // Get current user to use for subscriber management
+    const userData = await account.get();
+    
+    // First check if there's an existing subscription record
+    const existingSubscriptions = await databases.listDocuments('app', 'subs', [
+      Query.equal('user_id', userId),
+      Query.equal('topic', topic)
+    ]);
+    
+    let subscriberId = '';
+    
+    // Handle existing subscription
+    if (existingSubscriptions.total > 0) {
+      const existingSubscription = existingSubscriptions.documents[0];
+      console.log(`Found existing subscription: ${JSON.stringify(existingSubscription)}`);
+      
+      // If subscription status is changing
+      if (existingSubscription.subscribed !== subscribed) {
+        // If subscribing now
+        if (subscribed) {
+          if (userData.targets && userData.targets.length > 0) {
+            try {
+              const subscriber = await createSubscriber(topic, userData);
+              subscriberId = subscriber.$id;
+              console.log(`Successfully created subscriber for ${topic}: ${subscriberId}`);
+            } catch (error) {
+              console.error(`Error creating subscriber for ${topic}:`, error);
+              // Continue with setting the subscription even if subscriber creation fails
+            }
+          } else {
+            console.warn(`User ${userId} has no notification targets for topic ${topic}`);
+          }
+        } 
+        // If unsubscribing now and there's a subscriber_id
+        else if (existingSubscription.subscriber_id) {
+          try {
+            console.log(`Deleting subscriber ${existingSubscription.subscriber_id} for topic ${topic}`);
+            await deleteSubscriber(topic, existingSubscription.subscriber_id);
+            console.log(`Successfully deleted subscriber for ${topic}: ${existingSubscription.subscriber_id}`);
+          } catch (error) {
+            console.error(`Error deleting subscriber for ${topic}:`, error);
+            // Continue with updating subscription even if deletion fails
+          }
+        }
+        
+        try {
+          // Update the subscription record with the new status and subscriber_id
+          const updateData = {
+            subscribed: subscribed,
+            subscriber_id: subscribed ? subscriberId : ''
+          };
+          
+          console.log(`Updating subscription document with data: ${JSON.stringify(updateData)}`);
+          
+          const updateResult = await databases.updateDocument(
+            'app', 
+            'subs', 
+            existingSubscription.$id, 
+            updateData
+          );
+          
+          console.log(`Updated subscription record for ${topic} to ${subscribed}`, updateResult);
+        } catch (updateError) {
+          console.error(`Error updating subscription document for ${topic}:`, updateError);
+          throw updateError; // Re-throw to be handled by caller
+        }
       } else {
-        const response = await databases.createDocument('app', 'subs', ID.unique(), {
-          user_id: userId,
-          topic,
-          subscribed,
-        });
+        console.log(`Subscription for ${topic} already set to ${subscribed}, no changes needed`);
       }
-    } catch (error) {
-      console.error("Error updating subscription:", error);
-      throw error; // Re-throw the error to be handled by the caller
+    } 
+    // Create new subscription
+    else {
+      console.log(`No existing subscription found for user ${userId} and topic ${topic}, creating new one`);
+      
+      // If subscribing, create a subscriber in Appwrite messaging
+      if (subscribed && userData.targets && userData.targets.length > 0) {
+        try {
+          const subscriber = await createSubscriber(topic, userData);
+          subscriberId = subscriber.$id;
+          console.log(`Successfully created subscriber for ${topic}: ${subscriberId}`);
+        } catch (error) {
+          console.error(`Error creating subscriber for ${topic}:`, error);
+          // Continue with creating subscription even if creating subscriber fails
+        }
+      }
+      
+      try {
+        // Create new subscription record
+        const createData = {
+          user_id: userId,
+          topic: topic,
+          subscribed: subscribed,
+          subscriber_id: subscriberId || ''
+        };
+        
+        console.log(`Creating subscription document with data: ${JSON.stringify(createData)}`);
+        
+        const createResult = await databases.createDocument('app', 'subs', ID.unique(), createData);
+        
+        console.log(`Created new subscription record for ${topic}:`, createResult);
+      } catch (createError) {
+        console.error(`Error creating subscription document for ${topic}:`, createError);
+        throw createError; // Re-throw to be handled by caller
+      }
     }
-  };
+    
+    // Also update user preferences for backward compatibility
+    try {
+      const currentPrefs = userData.prefs || {};
+      const prefKey = topic;
+      const updatedPrefs = { ...currentPrefs, [prefKey]: subscribed };
+      await account.updatePrefs(updatedPrefs);
+      console.log(`Updated user preferences for topic ${topic} to ${subscribed}`);
+    } catch (prefsError) {
+      console.error(`Error updating user preferences for topic ${topic}:`, prefsError);
+      // Continue even if preferences update fails
+    }
+    
+    return { success: true, topic, subscribed };
+  } catch (error) {
+    console.error(`Error updating subscription for topic ${topic}:`, error);
+    throw error;
+  }
+};
   
-  export const fetchSubscription = async (data: Models.User<Models.Preferences>, props: { topic: string }) => {
+export const fetchSubscription = async (data: Models.User<Models.Preferences>, props: { topic: string }) => {
     if (data) {
       try {
         const documents = await databases.listDocuments('app', 'subs', [

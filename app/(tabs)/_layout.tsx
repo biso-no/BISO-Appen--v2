@@ -340,13 +340,6 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="(main)"
-          options={{
-            title: '',
-            href: null,
-          }}
-        />
-        <Tabs.Screen
           name="profile/index"
           options={{
             title: '',

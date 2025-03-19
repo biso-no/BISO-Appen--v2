@@ -216,7 +216,7 @@ export default function HomeScreen() {
       if (!campus?.name) return [];
       
       const response = await axios.get(
-        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=3&campus=${campus.name}`
+        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=false&per_page=5&campus=${campus.name}`
       );
       return response.data;
     } catch (error) {

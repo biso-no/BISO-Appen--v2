@@ -67,7 +67,7 @@ interface FetchJobsParams {
 
 // Function to fetch jobs from the API
 async function fetchJobs({ campus, pageParam = 1 }: FetchJobsParams) {
-  const apiUrl = `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=true&per_page=${ITEMS_PER_PAGE}&page=${pageParam}&campus=${campus || ''}`;
+  const apiUrl = `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=false&per_page=${ITEMS_PER_PAGE}&page=${pageParam}&campus=${campus || ''}`;
   
   const response = await axios.get(apiUrl);
   

@@ -51,8 +51,10 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
   };
   
   const jobColor = colors[getColorIndex()];
-
-  const textColor = theme?.color?.val;
+  
+  // Get consistent text color for titles and tags
+  const titleTextColor = colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`;
+  const contentTextColor = colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme[`${jobColor}11`]?.val;
   
   const getCardBorderColor = () => {
     return colorScheme === 'dark' 
@@ -70,21 +72,24 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
     body: { 
       fontSize: 26, 
       lineHeight: 34,  // Increased line height
-      color: textColor,
+      color: theme[titleTextColor]?.val,
       paddingTop: 4,
       paddingBottom: 4
     },
     h1: {
       marginBottom: 8,
-      marginTop: 8
+      marginTop: 8,
+      color: theme[titleTextColor]?.val
     },
     h2: {
       marginBottom: 8,
-      marginTop: 8
+      marginTop: 8,
+      color: theme[titleTextColor]?.val
     },
     p: {
       marginBottom: 0,
-      marginTop: 0
+      marginTop: 0,
+      color: theme[titleTextColor]?.val
     }
 };
 
@@ -121,7 +126,7 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
                         source={{ html: job.title }} 
                         contentWidth={width - 40}
                         tagsStyles={titleStyles}
-                        baseStyle={{ margin: 0, padding: 0 }}
+                        baseStyle={{ margin: 0, padding: 0, color: theme[titleTextColor]?.val }}
                     />
                 
                 {/* Campus tags */}
@@ -177,7 +182,7 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
                   source={{ html: job.content.split('</p>')[0].replace(/<\/?[^>]+(>|$)/g, '') }}
                   contentWidth={width - 64}
                   baseStyle={{
-                    color: colorScheme === 'dark' ? theme[`${jobColor}11`]?.val : theme.color?.val,
+                    color: contentTextColor,
                     fontSize: 14,
                     lineHeight: 20,
                   }}

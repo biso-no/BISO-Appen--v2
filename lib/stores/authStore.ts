@@ -2,12 +2,14 @@ import { create } from 'zustand';
 import { Models } from 'react-native-appwrite';
 import { updateUserName, updateUserPreferences, getUserPreferences } from '@/lib/appwrite';
 import { queryClient } from '@/lib/react-query';
+import { setupPushNotifications } from '@/lib/notifications';
 
 // Define the auth store state interface
 interface AuthState {
   user: Models.User<Models.Preferences> | null;
   isLoading: boolean;
   error: string | null;
+  pushNotificationsInitialized: boolean;
   
   // Actions
   setUser: (user: Models.User<Models.Preferences> | null) => void;
@@ -25,13 +27,28 @@ const initialState = {
   user: null,
   isLoading: false,
   error: null,
+  pushNotificationsInitialized: false,
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
   
   // State setters
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    set({ user });
+    
+    // Register for push notifications when a user logs in, but only once per session
+    const state = get();
+    if (user && user.$id && !state.pushNotificationsInitialized) {
+      setupPushNotifications(user.$id)
+        .then(() => {
+          set({ pushNotificationsInitialized: true });
+        })
+        .catch(error => {
+          console.error('Failed to setup push notifications:', error);
+        });
+    }
+  },
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
   
