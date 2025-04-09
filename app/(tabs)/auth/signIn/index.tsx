@@ -234,23 +234,6 @@ export default function LoginScreen() {
                     <XStack gap="$2" width="100%">
                       <Button
                         flex={1}
-                        backgroundColor={COLORS.accentBlue}
-                        color="white"
-                        size="$4"
-                        fontWeight="600"
-                        onPress={() => Linking.openURL('mailto:')}
-                        pressStyle={{ 
-                          backgroundColor: COLORS.defaultBlue,
-                          scale: 0.98,
-                        }}
-                      >
-                        <ExternalLink size={16} color="white" />
-                        <Text color="white" fontSize={14} fontWeight="600" marginLeft="$1">
-                          Open Email App
-                        </Text>
-                      </Button>
-                      <Button
-                        flex={1}
                         backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
                         color="white"
                         size="$4"

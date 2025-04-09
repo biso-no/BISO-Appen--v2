@@ -80,8 +80,8 @@ const categories: ExploreCategory[] = [
     description: 'Submit and track expenses',
     icon: Receipt,
     color: 'green',
-    link: '/explore/expenses',
-    requiresAuth: true
+    link: '/explore/expenses/create1',
+    requiresAuth: false
   },
   {
     id: 'jobs',
