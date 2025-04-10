@@ -76,6 +76,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
+    'expo-web-browser',
     'react-native-email-link',
     ["expo-splash-screen", {
       backgroundColor: "#232323",
