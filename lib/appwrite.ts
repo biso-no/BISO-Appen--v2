@@ -8,6 +8,7 @@ client
     .setEndpoint('https://appwrite.biso.no/v1')
     .setProject('biso')
     .setEndpointRealtime('wss://appwrite.biso.no/v1/realtime')
+    .setPlatform('com.biso.no')
 
 
 const account = new Account(client);

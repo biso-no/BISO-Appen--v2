@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'BISO',
   owner: 'bi_student_organisation',
   newArchEnabled: true,
-  version: "1.0.0",
+  version: "1.0.2",
   orientation: 'portrait',
   icon: "./assets/ios_icon.png",
   scheme: 'biso',
@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
+      ITSAppUsesNonExemptEncryption: false
     },
     entitlements: {
       'aps-environment': 'production',
