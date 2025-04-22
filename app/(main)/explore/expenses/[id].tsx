@@ -186,7 +186,14 @@ export default function ExpenseScreen() {
                             <XStack alignItems="center" gap="$2">
                                 <MapPin size={16} color={theme?.gray11?.val || "$gray11"} />
                                 <Paragraph color="$gray11">
-                                    {capitalizeFirstLetter(expense?.campus?.name || expense?.campus || 'Unknown campus')}
+                                    {capitalizeFirstLetter(expense?.departmentRel?.campus.name || expense?.campus || 'Unknown campus')}
+                                </Paragraph>
+                            </XStack>
+                            
+                            <XStack alignItems="center" gap="$2">
+                                <Tag size={16} color={theme?.gray11?.val || "$gray11"} />
+                                <Paragraph color="$gray11">
+                                    {expense?.departmentRel?.Name}
                                 </Paragraph>
                             </XStack>
                             
