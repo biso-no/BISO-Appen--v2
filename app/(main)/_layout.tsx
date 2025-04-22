@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { useTheme } from 'tamagui';
 import React from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
@@ -24,6 +24,10 @@ export default function MainLayout() {
   const { profile } = useProfile();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Check if the current path is an expenses screen
+  const isExpensesScreen = pathname?.includes('/expenses');
   
   const HeaderComponent = () => {
     const canGoBack = router.canGoBack();
@@ -109,15 +113,15 @@ export default function MainLayout() {
   
   return (
     <>
-      <HeaderComponent />
+      {!isExpensesScreen && <HeaderComponent />}
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { 
             backgroundColor: theme.background?.val || '#FFFFFF',
             paddingTop: Platform.select({
-              ios: 0,
-              android: 0,
+              ios: isExpensesScreen ? insets.top : 0,
+              android: isExpensesScreen ? insets.top : 0,
             }),
           },
           // Improve performance by reducing animation duration

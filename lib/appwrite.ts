@@ -42,6 +42,11 @@ export async function getUserPreferences() {
     return response;
 }
 
+export async function createOtp(email: string) {
+    const response = await account.createEmailToken(ID.unique(), email);
+    return response;
+}
+
 export async function verifyOtp(userId: string, otp: string) {
     
     if (!userId || !otp) {

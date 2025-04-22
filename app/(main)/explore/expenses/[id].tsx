@@ -138,6 +138,7 @@ export default function ExpenseScreen() {
                 <XStack 
                     alignItems="center" 
                     paddingHorizontal="$4" 
+                    paddingTop="$4"
                     paddingBottom="$4"
                 >
                     <Button

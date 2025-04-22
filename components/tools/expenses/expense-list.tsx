@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/select";
 import { useEffect, useState, useMemo, useCallback, memo, useRef } from "react";
 import { getDocuments, getExpensesDepartments } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
-import { ArrowUpDown, Clock, Filter, Plus, RefreshCw, Wallet } from "@tamagui/lucide-icons";
+import { ArrowUpDown, Clock, Filter, Plus, RefreshCw, Wallet, ChevronLeft } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
 import { Animated, FlatList, RefreshControl, useColorScheme } from "react-native";
 import { Image } from 'expo-image';
@@ -160,14 +160,14 @@ ExpenseCardSkeleton.displayName = 'ExpenseCardSkeleton';
 
 // Enhanced expense card with animations
 const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Document, onPress: () => void, index?: number }) => {
-  const { description, total, $createdAt: created_at, status, department } = expense;
+  const { description, total, $createdAt: created_at, status, department, departmentRel } = expense;
   const formattedDate = useMemo(() => 
     created_at ? getFormattedDateFromString(created_at) : 'Invalid date',
     [created_at]
   );
   
   // For debugging
-  console.log('Expense data:', { description, total, created_at, status, department });
+  console.log('Expense data:', { description, total, created_at, status, department, departmentRel });
   
   const theme = useTheme();
   const colorScheme = useColorScheme();
@@ -194,7 +194,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
     >
       <Card 
         width="100%"
-        elevate
+        elevate={colorScheme === 'dark'}
         size="$5"
         scale={0.98}
         hoverStyle={{ scale: 1 }}
@@ -204,6 +204,15 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
         borderRadius="$6"
         onPress={onPress}
         marginBottom="$3"
+        borderWidth={colorScheme === 'dark' ? 0 : 1}
+        borderColor={colorScheme === 'dark' ? 'transparent' : '$gray5'}
+        shadowColor={colorScheme === 'dark' ? "#000" : "rgba(0,0,0,0.1)"}
+        shadowRadius={colorScheme === 'dark' ? 8 : 4}
+        shadowOpacity={colorScheme === 'dark' ? 0.25 : 0.1}
+        shadowOffset={colorScheme === 'dark' 
+          ? { width: 0, height: 4 } 
+          : { width: 0, height: 2 }
+        }
       >
         <Card.Header padding="$4" paddingBottom="$2">
           <YStack width="100%">
@@ -231,7 +240,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
                 opacity={0.7}
                 marginTop="$1"
               >
-                {department}
+                {departmentRel?.Name}
               </Text>
             )}
           </YStack>
@@ -342,12 +351,16 @@ const ExpenseListHeader = memo(({
   onCreatePress, 
   onFilterToggle, 
   isFilterVisible,
-  expensesCount
+  expensesCount,
+  onBackPress,
+  showBackButton = true
 }: { 
   onCreatePress: () => void, 
   onFilterToggle: () => void,
   isFilterVisible: boolean,
-  expensesCount: number
+  expensesCount: number,
+  onBackPress?: () => void,
+  showBackButton?: boolean
 }) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
@@ -364,34 +377,54 @@ const ExpenseListHeader = memo(({
         padding="$4"
         paddingBottom="$3"
       >
-        <YStack>
-          <MotiText
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 100 }}
-            style={{ 
-              fontSize: 28, 
-              fontWeight: "700"
-            }}
-          >
-            Expenses
-          </MotiText>
+        <XStack alignItems="center" gap="$3">
+          {showBackButton && onBackPress && (
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', damping: 18 }}
+            >
+              <Button
+                size="$3.5"
+                circular
+                icon={<ChevronLeft size={20} color={theme.color?.val || colorScheme === 'dark' ? '#fff' : '#000'} />}
+                onPress={onBackPress}
+                backgroundColor={colorScheme === 'dark' ? '$gray3' : '$gray2'}
+                opacity={0.8}
+                pressStyle={{ scale: 0.92, opacity: 0.7 }}
+              />
+            </MotiView>
+          )}
           
-          {expensesCount > 0 && (
+          <YStack>
             <MotiText
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 200 }}
+              transition={{ delay: 100 }}
               style={{ 
-                fontSize: 15, 
-                opacity: 0.6,
-                marginTop: 4
+                fontSize: 28, 
+                fontWeight: "700"
               }}
             >
-              {expensesCount} {expensesCount === 1 ? 'expense' : 'expenses'} found
+              Expenses
             </MotiText>
-          )}
-        </YStack>
+            
+            {expensesCount > 0 && (
+              <MotiText
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 200 }}
+                style={{ 
+                  fontSize: 15, 
+                  opacity: 0.6,
+                  marginTop: 4
+                }}
+              >
+                {expensesCount} {expensesCount === 1 ? 'expense' : 'expenses'} found
+              </MotiText>
+            )}
+          </YStack>
+        </XStack>
         
         <XStack gap="$2">
           <Button
@@ -649,6 +682,11 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     router.push("/explore/expenses/create");
   }, [router]);
   
+  // Handle back navigation
+  const handleBackPress = useCallback(() => {
+    router.back();
+  }, [router]);
+  
   // Create filter configs
   const filterConfigs = useMemo(() => [
     {
@@ -732,6 +770,8 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
           onFilterToggle={toggleFilter}
           isFilterVisible={isFilterVisible}
           expensesCount={expenses?.documents?.length || 0}
+          onBackPress={handleBackPress}
+          showBackButton={router.canGoBack()}
         />
       )}
       

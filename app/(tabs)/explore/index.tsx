@@ -81,7 +81,7 @@ const categories: ExploreCategory[] = [
     icon: Receipt,
     color: 'green',
     link: '/explore/expenses',
-    requiresAuth: true
+    requiresAuth: false
   },
   {
     id: 'jobs',
