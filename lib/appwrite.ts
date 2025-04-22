@@ -479,9 +479,7 @@ export async function getDepartments(campusId?: string, page: number = 1, search
 }
 
 export async function getExpensesDepartments() {
-    const expensesDepartments = await databases.listDocuments('app', 'expense', [
-        Query.select(['department'])
-    ])
+    const expensesDepartments = await databases.listDocuments('app', 'expense')
     
     return expensesDepartments
 }

@@ -649,7 +649,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     const loadDepartments = async () => {
       try {
         const data = await getExpensesDepartments();
-        const departments = data.documents.map(doc => doc.department);
+        const departments = data.documents.map(doc => doc.departmentRel.Name);
         setDepartmentFilters(departments);
       } catch (error) {
         console.error("Error loading departments:", error);
