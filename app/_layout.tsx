@@ -5,8 +5,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
@@ -22,6 +23,7 @@ import { PerformanceProvider } from '@/lib/performance';
 import { AICopilotProvider } from '@/components/ai';
 import { useNotifications } from '@/lib/notifications';
 import { useRouter } from 'expo-router';
+import NoticeContainer from '@/components/ui/notice-container';
 
 // Silence console warnings about defaultProps
 if (__DEV__) {
@@ -87,6 +89,26 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const { i18n } = useTranslation();
+
+  // Force rerender when language changes
+  const [, setForceUpdate] = useState(0);
+
+  // Add language change listener
+  useEffect(() => {
+    const handleLanguageChanged = () => {
+      // Force rerender of the entire app
+      setForceUpdate(prev => prev + 1);
+    };
+
+    // Add the listener
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    // Clean up
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, [i18n]);
 
   // Set up notification handlers
   useNotifications(
@@ -123,6 +145,7 @@ function RootLayoutNav() {
                   <MembershipModalProvider>
                     <PerformanceProvider>
                       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                        <NoticeContainer />
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                           <Stack.Screen name="(main)" options={{ headerShown: false }} />

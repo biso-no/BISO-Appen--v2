@@ -15,6 +15,8 @@ import {
   Search,
   RefreshCw
 } from "@tamagui/lucide-icons";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface EmptyStateProps {
   message?: string;
@@ -24,14 +26,14 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ 
-  message = "No departments found", 
+  message = i18next.t('no-departments-found'), 
   onRetry,
   isFiltering,
   onClearFilters
 }: EmptyStateProps) {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-
+  const { t } = useTranslation();
   return (
     <MotiView
       from={{ opacity: 0, scale: 0.95 }}
@@ -62,8 +64,8 @@ export function EmptyState({
           </Text>
           <Paragraph textAlign="center" color="$gray11">
             {isFiltering 
-              ? "Try adjusting your search or filters to find more departments" 
-              : "There are no departments available at this time"
+              ? t('try-adjusting-your-search-or-filters-to-find-more-departments') 
+              : t('there-are-no-departments-available-at-this-time')
             }
           </Paragraph>
         </YStack>
@@ -75,7 +77,7 @@ export function EmptyState({
             size="$4"
             borderRadius="$6"
           >
-            Clear Filters
+            {t('clear-filters')}
           </Button>
         )}
         
@@ -88,7 +90,7 @@ export function EmptyState({
             size="$3"
             borderRadius="$6"
           >
-            Refresh
+            {t('refresh')}
           </Button>
         )}
       </Card>

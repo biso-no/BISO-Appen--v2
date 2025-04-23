@@ -7,10 +7,12 @@ import { usePathname } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from './context/core/auth-provider';
 import { useMembershipContext } from './context/core/membership-provider';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 const paymentMethods = [
-  { label: 'Credit Card', value: 'CARD', size: '$5' },
-  { label: 'Vipps MobilePay', value: 'WALLET', size: '$5' },
+  { label: i18next.t('credit-card'), value: 'CARD', size: '$5' },
+  { label: i18next.t('vipps-mobilepay'), value: 'WALLET', size: '$5' },
 ];
 
 interface ApiResponse {
@@ -34,6 +36,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
   const [membershipOptions, setMembershipOptions] = useState<Models.DocumentList<Models.Document>>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const pathName = usePathname();
   const { user } = useAuth();
@@ -56,7 +59,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         setMembershipOptions(response);
       } catch (error) {
         console.error("Error fetching memberships:", error);
-        setError("Failed to load membership options. Please try again later.");
+        setError(t('failed-to-load-membership-options-please-try-again-later'));
       }
     };
     fetchMemberships();
@@ -66,12 +69,12 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
 
   const initiatePurchase = async () => {
     if (!selectedMembership) {
-      setError("Please select a membership.");
+      setError(t('please-select-a-membership'));
       return;
     }
 
     if (!selectedPaymentMethod) {
-      setError("Please select a payment method.");
+      setError(t('please-select-a-payment-method'));
       return;
     }
 
@@ -104,12 +107,12 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         if (result.type === 'success') {
           setOpen(false);
         } else {
-          setError("Purchase was not completed. Please try again.");
+          setError(t('purchase-was-not-completed-please-try-again'));
         }
       }
     } catch (error) {
       console.error("Error during purchase initiation", error);
-      setError("An error occurred while processing your purchase. Please try again.");
+      setError(t('an-error-occurred-while-processing-your-purchase-please-try-again'));
     } finally {
       setIsLoading(false);
     }
@@ -133,9 +136,9 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
       <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
       <Sheet.Handle />
       <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
-        <H2>Select Membership</H2>
+        <H2>{t('select-membership')}</H2>
         <RadioGroup
-          aria-labelledby="Select a membership"
+          aria-labelledby={t('select-a-membership')}
           name="membership"
           onValueChange={(value) => {
             const membership = membershipOptions?.documents?.find((option) => option.membership_id === value);
@@ -144,7 +147,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
         >
           <YStack width={300} alignItems="center" gap="$2">
             {membershipOptions?.documents?.map((option) => {
-              const label = `${option.name} - ${option.price} kr`;
+              const label = `${t('option-name-option-price-kr', { name: option.name, price: option.price })}`;
               return (
                 <RadioGroupItemWithLabel key={option.$id} size="$5" value={option.membership_id} label={label} />
               );
@@ -152,9 +155,9 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
           </YStack>
         </RadioGroup>
 
-        <H2>Select Payment Method</H2>
+        <H2>{t('select-payment-method')}</H2>
         <RadioGroup
-          aria-labelledby="Select a payment method"
+          aria-labelledby={t('select-a-payment-method')}
           name="paymentMethod"
           onValueChange={setSelectedPaymentMethod}
         >
@@ -171,7 +174,7 @@ export const MembershipModal = ({ open, setOpen }: MembershipModalProps) => {
           onPress={initiatePurchase} 
           disabled={isLoading || !selectedMembership || !selectedPaymentMethod}
         >
-          {isLoading ? 'Processing...' : 'Buy BISO membership'}
+          {isLoading ? 'Processing...' : t('buy-biso-membership')}
         </Button>
       </Sheet.Frame>
     </Sheet>

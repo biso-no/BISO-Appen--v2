@@ -3,7 +3,8 @@ import { Button, useTheme } from 'tamagui';
 import { Bot, Sparkles } from '@tamagui/lucide-icons';
 import { useCopilotStore } from '@/lib/stores/copilotStore';
 import { useColorScheme } from 'react-native';
-
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 interface CopilotButtonProps {}
 
 export function CopilotButton({}: CopilotButtonProps) {
@@ -11,7 +12,7 @@ export function CopilotButton({}: CopilotButtonProps) {
   const isDark = colorScheme === 'dark';
   const theme = useTheme();
   const [isPulsing, setIsPulsing] = useState(false);
-  
+  const { t } = useTranslation();
   const { 
     isExpanded,
     expandCopilot,

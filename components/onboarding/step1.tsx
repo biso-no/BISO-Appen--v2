@@ -5,6 +5,8 @@ import { MotiView } from 'moti';
 import { StyleSheet, Dimensions } from 'react-native';
 import { User, Sparkles } from '@tamagui/lucide-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Step1Props {
   name: string;
@@ -17,7 +19,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
   const { width } = Dimensions.get('window');
-  
+  const { t } = useTranslation();
   // Start animation when component mounts
   React.useEffect(() => {
     rotation.value = withRepeat(
@@ -108,7 +110,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
         <YStack gap="$1" marginTop="$3" width="100%" alignItems="center">
           <H3 textAlign="center" fontWeight="bold">Welcome!</H3>
           <Paragraph textAlign="center" opacity={0.8} paddingHorizontal="$4">
-            Let's get to know you better. What should we call you?
+            {t('lets-get-to-know-you-better-what-should-we-call-you')}
           </Paragraph>
         </YStack>
         
@@ -120,7 +122,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
         >
           <Input
             id="name"
-            placeholder="Enter your name"
+            placeholder={t('enter-your-name')}
             value={name}
             onChangeText={handleNameChange}
             size="$4"
@@ -146,7 +148,7 @@ export function Step1({ name, setName, onNext }: Step1Props) {
             style={styles.greetingContainer}
           >
             <Text color="$primary" fontWeight="bold" fontSize="$4">
-              Nice to meet you, {name}!
+              {t('nice-to-meet-you')} {name}{t('key-2')}
             </Text>
           </MotiView>
         )}
@@ -177,7 +179,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(130, 130, 255, 0.1)',
+    borderColor: 'rgba-130-130-255-0-1',
     borderRadius: width * 0.75,
   },
   avatarContainer: {

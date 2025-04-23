@@ -3,6 +3,7 @@ import { StyleSheet, ToastAndroid, Platform, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useCopilotStore } from '../../lib/stores/copilotStore';
 import { AICopilotPanel } from './AICopilotPanel';
+import { useTranslation } from 'react-i18next';
 
 interface AICopilotProviderProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function AICopilotProvider({
 }: AICopilotProviderProps) {
   const { setAnimation } = useCopilotStore();
   const [apiInitialized, setApiInitialized] = useState(false);
+  const { t } = useTranslation();
   
   // Initialize on mount
   useEffect(() => {
@@ -38,9 +40,9 @@ export function AICopilotProvider({
         
         // Show a user-friendly message
         if (Platform.OS === 'android') {
-          ToastAndroid.show('AI assistant service unavailable', ToastAndroid.SHORT);
+          ToastAndroid.show(t('ai-assistant-service-unavailable'), ToastAndroid.SHORT);
         } else if (Platform.OS === 'ios') {
-          Alert.alert('Notice', 'AI assistant service unavailable');
+          Alert.alert(t('notice'), t('ai-assistant-service-unavailable-0'));
         }
       }
     };

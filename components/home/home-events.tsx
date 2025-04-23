@@ -21,6 +21,7 @@ import { Calendar, Clock, MapPin, Star, ArrowRight, Heart } from "@tamagui/lucid
 import { format, parseISO } from "date-fns";
 import { LinearGradient } from "tamagui/linear-gradient";
 import { MotiView, AnimatePresence } from "moti";
+import { useTranslation } from "react-i18next";
 
 // Updated Event interface based on the provided JSON structure
 interface Thumbnail {
@@ -148,6 +149,7 @@ const CategoryBadge = styled(Text, {
 export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps) => {
   const { width } = useWindowDimensions();
   const cardWidth = width - 32;
+  const { t } = useTranslation();
   
   // Extract dates and group by month for better visualization
   const eventsByDate = useMemo(() => {
@@ -185,7 +187,7 @@ export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps)
         backgroundColor="$gray100"
         borderRadius="$4"
       >
-        <Text color="$gray700">No upcoming events</Text>
+        <Text color="$gray700">{t('no-upcoming-events')}</Text>
       </YStack>
     );
   }

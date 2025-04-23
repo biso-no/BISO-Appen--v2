@@ -20,6 +20,8 @@ import {
   useTheme,
   withStaticProperties,
 } from 'tamagui'
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 const defaultContextValues = {
   size: '$true',

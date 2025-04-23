@@ -33,6 +33,8 @@ import { useVolunteerStore } from "@/lib/stores/volunteerStore";
 import { JobCard } from "@/components/volunteer/JobCard";
 import { CategoryFilter } from "@/components/volunteer/CategoryFilter";
 import { FilterSheet } from "@/components/volunteer/FilterSheet";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Maximum visible items for categories and interests
 const MAX_VISIBLE_CATEGORIES = 5;
@@ -64,7 +66,7 @@ export default function VolunteerScreen() {
     toggleFilterSheet,
     getFilteredJobs
   } = useVolunteerStore();
-  
+  const { t } = useTranslation();
   // Destructure filters
   const { searchQuery, selectedCategory, selectedInterests } = filters;
   
@@ -128,7 +130,7 @@ export default function VolunteerScreen() {
           </Circle>
         </Theme>
       </MotiView>
-      <Text color="$blue10" fontWeight="600">Loading opportunities...</Text>
+      <Text color="$blue10" fontWeight="600">{t('loading-opportunities')}</Text>
     </YStack>
   );
 
@@ -157,10 +159,10 @@ export default function VolunteerScreen() {
         
         <YStack alignItems="center" gap="$2">
           <Text fontSize="$5" fontWeight="700" textAlign="center">
-            No positions found
+            {t('no-positions-found')}
           </Text>
           <Paragraph textAlign="center" color="$gray11" maxWidth={width * 0.7}>
-            Try adjusting your search or filters to find more opportunities
+            {t('try-adjusting-your-search-or-filters-to-find-more-opportunities')}
           </Paragraph>
         </YStack>
         
@@ -170,7 +172,7 @@ export default function VolunteerScreen() {
           size="$4"
           borderRadius="$6"
         >
-          Clear Filters
+          {t('clear-filters')}
         </Button>
       </Card>
     </MotiView>
@@ -193,7 +195,7 @@ export default function VolunteerScreen() {
         borderColor="$red5"
       >
         <Text color="$red10" fontSize={16} textAlign="center" fontWeight="600">
-          {error || "An error occurred while loading opportunities"}
+          {error || t('an-error-occurred-while-loading-opportunities')}
         </Text>
         <Button 
           onPress={() => refetch()} 
@@ -201,7 +203,7 @@ export default function VolunteerScreen() {
           size="$4"
           borderRadius="$6"
         >
-          Retry
+          {t('common.retry')}
         </Button>
       </Card>
     </MotiView>
@@ -293,7 +295,7 @@ export default function VolunteerScreen() {
                   fontWeight="600"
                   letterSpacing={1}
                 >
-                  VOLUNTEER OPPORTUNITIES
+                  {t('volunteer-opportunities-0')}
                 </Text>
                 <H1 
                   color="white" 
@@ -302,7 +304,7 @@ export default function VolunteerScreen() {
                   letterSpacing={-1}
                   lineHeight="$10"
                 >
-                  Make an Impact
+                  {t('make-an-impact')}
                 </H1>
               </YStack>
             </MotiView>
@@ -318,7 +320,7 @@ export default function VolunteerScreen() {
                 maxWidth={width * 0.85}
                 lineHeight="$6"
               >
-                Join BISO and create positive change on campus through meaningful opportunities
+                {t('join-biso-and-create-positive-change-on-campus-through-meaningful-opportunities')}
               </Paragraph>
             </MotiView>
           </YStack>
@@ -358,7 +360,7 @@ export default function VolunteerScreen() {
               <Search size={20} color={theme.color?.val} opacity={0.7} />
               <Input
                 flex={1}
-                placeholder="Search positions..."
+                placeholder={t('search-positions')}
                 borderWidth={0}
                 backgroundColor="transparent"
                 value={searchQuery}
@@ -385,7 +387,7 @@ export default function VolunteerScreen() {
               transition={{ type: 'timing', duration: 500 }}
             >
             <Text fontSize="$5" fontWeight="700" color="$color">
-                {selectedCategory === 'all' ? 'All Opportunities' : `${categories.find(c => c.id === selectedCategory)?.name} Positions`}
+                {selectedCategory === 'all' ? t('all-opportunities') : t('categories-find-c-greater-than-c-id-selectedcategory-name-positions')}
               </Text>
             </MotiView>
               </YStack>

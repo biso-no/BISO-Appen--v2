@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useWindowDimensions, Platform, RefreshControl, Pressable, AppState } from 'react-native';
+import { useWindowDimensions, RefreshControl, Pressable, AppState } from 'react-native';
 import { 
-  H1, H2, H3, H4, Paragraph, YStack, XStack, Button, Text, 
+  H1, H2, H3, Paragraph, YStack, XStack, Button, Text, 
  useTheme, Sheet, Separator,
   View
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MotiView, MotiScrollView, AnimatePresence, motify } from 'moti';
+import { MotiView, MotiScrollView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   useAnimatedStyle,
@@ -28,15 +28,17 @@ import {
   ShoppingBag
 } from '@tamagui/lucide-icons';
 import { useColorScheme } from 'react-native';
-import { useEffect, useState, useMemo, useCallback, memo, Suspense, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { DepartmentMembersShowcase } from '@/components/board-showcase';
 import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 import { mapCampusNameToId } from '@/lib/utils/map-campus';
-import { useQuery, useQueryClient, QueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image as ExpoImage } from 'expo-image';
 import { Asset } from 'expo-asset';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Define query keys for React Query
 const QUERY_KEYS = {
@@ -66,7 +68,8 @@ const CAMPUS_IMAGES: Record<string, any> = {
 
 // Fetch campus data function for React Query
 const fetchCampusData = async (slug: string): Promise<Models.Document> => {
-  if (!slug) throw new Error('No campus slug provided');
+
+  if (!slug) throw new Error(i18next.t('no-campus-slug-provided'));
   
   const campusId = mapCampusNameToId(slug);
   
@@ -77,7 +80,7 @@ const fetchCampusData = async (slug: string): Promise<Models.Document> => {
 
 // Memoize ParallaxHeader for performance
 const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document; slug: string }) => {
-  const { height: windowHeight, width } = useWindowDimensions();
+  const { height: windowHeight } = useWindowDimensions();
   const scrollY = useSharedValue(0);
   const HEADER_HEIGHT = windowHeight * 0.45;
   const imageScale = useSharedValue(1);
@@ -170,6 +173,7 @@ const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document
     </Animated.View>
   );
 });
+ParallaxHeader.displayName = 'ParallaxHeader';
 
 // Memoize QuickActionButton
 const QuickActionButton = memo(({ icon: Icon, title, color, onPress }: { 
@@ -242,7 +246,7 @@ const BenefitsModal = memo(({
   color: string;
 }) => {
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   // Memoize color calculations
   const iconColor = useMemo(() => 
     colorScheme === 'dark' ? `$${color}11` : `$${color}9`,
@@ -294,7 +298,7 @@ const BenefitsModal = memo(({
                 transition={{ delay: index * 50, type: 'spring', damping: 15 }}
               >
                 <XStack gap="$3" alignItems="center">
-                  <Text color={iconColor} fontSize={20}>•</Text>
+                  <Text color={iconColor} fontSize={20}>{t('key')}</Text>
                   <Text color="$color" fontSize={16}>{item}</Text>
                 </XStack>
                 {index < items.length - 1 && (
@@ -319,7 +323,7 @@ const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
 }) => {
   const [showModal, setShowModal] = useState(false);
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   // Memoize color calculations
   const backgroundColor = useMemo(() => 
     colorScheme === 'dark' ? `$${color}7` : `$${color}1`,
@@ -372,7 +376,7 @@ const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
                 transition={{ delay: delay + (index * 100), type: 'spring', damping: 15 }}
               >
                 <XStack gap="$2" alignItems="center">
-                  <Text color={iconColor}>•</Text>
+                  <Text color={iconColor}>{t('key-0')}</Text>
                   <Text color="$color" opacity={0.9}>{item}</Text>
                 </XStack>
               </MotiView>
@@ -388,7 +392,7 @@ const BenefitCard = memo(({ title, items, icon: Icon, color, delay = 0 }: {
                 icon={ExternalLink}
                 iconAfter={ExternalLink}
               >
-                <Text color={iconColor}>View all {items.length} benefits</Text>
+                <Text color={iconColor}>{t('view-all')} {items.length} {t('benefits')}</Text>
               </Button>
             )}
           </YStack>
@@ -636,7 +640,7 @@ export default function CampusPage() {
   const queryClient = useQueryClient();
   const appState = useRef(AppState.currentState);
   const isInitialMount = useRef(true);
-  
+  const { t } = useTranslation();
   // Set up router paths as memoized object to prevent re-creation
   const routerPaths = useMemo(() => ({
     events: '/explore/events',
@@ -733,15 +737,15 @@ export default function CampusPage() {
           >
             <YStack alignItems="center" gap="$4">
               <Building size={64} color="$gray9" />
-              <H1>Campus not found</H1>
+              <H1>{t('campus-not-found')}</H1>
               <Paragraph textAlign="center">
-                {isError ? `Error: ${error?.toString()}` : "We couldn't find information for this campus."}
+                {isError ? `Error: ${error?.toString()}` : t('we-couldnt-find-information-for-this-campus')}
               </Paragraph>
               <Button
                 onPress={() => router.back()}
                 marginTop="$4"
               >
-                Go Back
+                {t('go-back')}
               </Button>
             </YStack>
           </MotiView>
@@ -755,10 +759,10 @@ export default function CampusPage() {
     try {
       return typeof campusData?.location === 'string' 
         ? JSON.parse(campusData.location) 
-        : { address: 'Address not available', email: 'Email not available' };
+        : { address: t('address-not-available'), email: t('email-not-available') };
     } catch (e) {
       console.error('Error parsing location:', e);
-      return { address: 'Address not available', email: 'Email not available' };
+      return { address: t('address-not-available-0'), email: t('email-not-available-0') };
     }
   })();
 
@@ -795,25 +799,25 @@ export default function CampusPage() {
           >
             <QuickActionButton 
               icon={Calendar} 
-              title="Events" 
+              title={t('explore.categories.events.title')} 
               color="purple"
               onPress={() => handleQuickAction('events')}
             />
             <QuickActionButton 
               icon={Users} 
-              title="Join Club" 
+              title={t('join-club')} 
               color="blue"
               onPress={() => handleQuickAction('join')}
             />
             <QuickActionButton 
               icon={Briefcase} 
-              title="Positions" 
+              title={t('positions')} 
               color="pink"
               onPress={() => handleQuickAction('jobs')}
             />
             <QuickActionButton 
               icon={ShoppingBag} 
-              title="Products" 
+              title={t('products')} 
               color="orange"
               onPress={() => handleQuickAction('products')}
             />
@@ -825,7 +829,7 @@ export default function CampusPage() {
             flex={1}
           >
             <BenefitCard
-              title="For Students"
+              title={t('for-students')}
               items={campusData?.studentBenefits || []}
               icon={GraduationCap}
               color="blue"
@@ -833,7 +837,7 @@ export default function CampusPage() {
             />
 
             <BenefitCard
-              title="For Business"
+              title={t('for-business')}
               items={campusData?.businessBenefits || []}
               icon={Briefcase}
               color="purple"
@@ -841,7 +845,7 @@ export default function CampusPage() {
             />
 
             <BenefitCard
-              title="Career Benefits"
+              title={t('career-benefits')}
               items={campusData?.careerAdvantages || []}
               icon={ChevronRight}
               color="pink"
@@ -849,7 +853,7 @@ export default function CampusPage() {
             />
 
             {/* Lazy load department members for better initial load time */}
-            <LazyDepartmentMembersShowcase campusId={slug as string} title='Management' />
+            <LazyDepartmentMembersShowcase campusId={slug as string} title={t('management')} />
             
             {/* Contact Card */}
             <MotiView

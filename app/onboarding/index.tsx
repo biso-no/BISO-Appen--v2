@@ -17,6 +17,8 @@ import { User, Building2, MapPin } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 import { useProfile } from '@/components/context/core/profile-provider';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 enum Campus {
   Bergen = "bergen",
@@ -56,7 +58,7 @@ export default function Onboarding() {
   const [selectedCampus, setSelectedCampus] = useState<Models.Document | null>(null);
   const [selectedDepartments, setSelectedDepartments] = useState<Models.Document[]>([]);
   const router = useRouter();
-
+  const { t } = useTranslation();
 
   const handleUpdateName = async (name: string) => {
     setName(name);
@@ -89,7 +91,7 @@ export default function Onboarding() {
 
   const steps = [
     {
-      label: 'What is your name?',
+      label: t('what-is-your-name'),
       content: (
         <Step1 name={name} setName={setName} />
       ),
@@ -99,7 +101,7 @@ export default function Onboarding() {
       icon: <User size={24} color="$primary" />
     },
     {
-      label: 'Select one or more departments to follow (Optional)',
+      label: t('select-one-or-more-departments-to-follow-optional'),
       content: (
         <Step2 
           selectedCampus={selectedCampus}
@@ -111,7 +113,7 @@ export default function Onboarding() {
       icon: <Building2 size={24} color="$primary" />
     },
     {
-      label: 'Address Details',
+      label: t('address-details'),
       content: (
         <Step4 
           address={address} 
@@ -205,7 +207,7 @@ export default function Onboarding() {
                       marginBottom="$2"
                       marginTop="$2"
                     >
-                      Welcome Onboard
+                      {t('welcome-onboard')}
                     </H1>
                     
                     <YStack flex={1} width="100%" maxWidth={600}>

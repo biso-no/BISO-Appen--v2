@@ -29,6 +29,7 @@ import { HomeJobs } from '@/components/home/home-jobs';
 import type { Job } from '@/types/jobs';
 import { useScreenPerformance } from '@/lib/performance';
 import { BISCOLogo } from '@/components/BISCOLogo';
+import { useTranslation } from 'react-i18next';
 
 // Updated Event interface based on the provided JSON structure
 interface Thumbnail {
@@ -89,12 +90,12 @@ interface Product {
 // Replace CategorySelector component with a new implementation
 const CategorySelector = memo(
   ({ categories, activeCategory, onSelectCategory }: {
-    categories: Array<{
+    categories: {
       id: string;
       label: string;
       icon: React.ComponentType<any>;
       description: string;
-    }>;
+    }[];
     activeCategory: string;
     onSelectCategory: (category: string) => void;
   }) => {
@@ -155,7 +156,7 @@ export default function HomeScreen() {
   const { campus } = useCampus();
   const colorScheme = useColorScheme();
   const theme = useTheme();
-
+  const { t } = useTranslation();
   // Track performance 
   useScreenPerformance('HomeScreen');
 
@@ -163,29 +164,29 @@ export default function HomeScreen() {
   const categories = useMemo(() => [
     {
       id: 'all',
-      label: 'All',
+      label: t('all-0'),
       icon: Sparkles,
-      description: 'Browse everything happening at your campus',
+      description: t('browse-everything-happening-at-your-campus'),
     },
     {
       id: 'events',
-      label: 'Events',
+      label: t('explore.categories.events.title'),
       icon: Calendar,
-      description: 'Find events happening at your campus',
+      description: t('find-events-happening-at-your-campus'),
     },
     {
       id: 'marketplace',
-      label: 'Shop',
+      label: t('shop'),
       icon: ShoppingBag,
-      description: 'Buy and sell items within your campus community',
+      description: t('buy-and-sell-items-within-your-campus-community'),
     },
     {
       id: 'jobs',
-      label: 'Jobs',
+      label: t('jobs'),
       icon: Users,
-      description: 'Find job opportunities with campus partners',
+      description: t('find-job-opportunities-with-campus-partners'),
     },
-  ], []);
+  ], [t]);
 
   // Handle category selection
   const handleCategorySelect = useCallback((category: string) => {
@@ -324,9 +325,9 @@ export default function HomeScreen() {
       >
         <BISCOLogo />
       </MotiView>
-      <Text color="$blue10" marginTop={20}>Loading content...</Text>
+      <Text color="$blue10" marginTop={20}>{t('loading-content')}</Text>
     </YStack>
-  ), []);
+  ), [t]);
 
   return (
     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme?.background?.val || '#ffffff' }}>

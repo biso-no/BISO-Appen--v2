@@ -15,7 +15,7 @@ import {
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -44,7 +44,7 @@ export default function TabLayout() {
   const { user, isLoading } = useAuth();
   const { profile } = useProfile();
   const avatarId = profile?.avatar;
-  const [image, setImage] = useState(profile?.avatar || '');
+  const [image] = useState(profile?.avatar || '');
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -54,7 +54,6 @@ export default function TabLayout() {
     } else if (!avatarId) {
       return <UserRound size={25} color={color} marginTop="$2" />;
     } else {
-      const avatarUrl = `https://appwrite.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
         <Avatar circular size={30} bordered marginTop="$2">
           <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
@@ -65,6 +64,10 @@ export default function TabLayout() {
 
   const HeaderComponent = () => {
     const canGoBack = router.canGoBack();
+    const pathname = usePathname();
+    const isHomeScreen = pathname === '/' || pathname === '/index' || pathname === '/(tabs)' || pathname === '/(tabs)/index';
+    
+    const shouldShowBackButton = canGoBack && !isHomeScreen;
 
     const handleBackPress = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -111,7 +114,7 @@ export default function TabLayout() {
       >
         <XStack justifyContent="space-between" alignItems="center">
           <XStack flex={1} justifyContent="flex-start">
-            {canGoBack && (
+            {shouldShowBackButton && (
               <MotiView
                 from={{ opacity: 0, translateX: -20 }}
                 animate={{ opacity: 1, translateX: 0 }}

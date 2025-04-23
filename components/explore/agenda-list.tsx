@@ -23,6 +23,8 @@ import axios from 'axios';
 import { useCampus } from '@/lib/hooks/useCampus';
 import RenderHTML from 'react-native-render-html';
 import { LinearGradient } from '@tamagui/linear-gradient';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Event {
   id: number;
@@ -69,7 +71,7 @@ const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const date = parseISO(event.start_date);
-
+  const { t } = useTranslation();
   const { height: windowHeight, width } = useWindowDimensions();
 
   const textColor = theme?.color?.val;
@@ -128,7 +130,7 @@ const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
               <XStack gap="$2" alignItems="center">
                 <Clock size={14} color={theme.color?.val} />
                 <Text fontSize={12} opacity={0.7}>
-                  {format(date, 'EEE, MMM d • HH:mm')}
+                  {format(date, t('eee-mmm-d-hh-mm'))}
                 </Text>
               </XStack>
               
@@ -186,7 +188,7 @@ export function EventsList() {
   const [isLoading, setIsLoading] = useState(true);
   const { campus } = useCampus();
   const theme = useTheme();
-
+  const { t } = useTranslation();
   const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -293,24 +295,24 @@ export function EventsList() {
             paddingTop="$8"
           >
             <Calendar size={48} color={theme.color?.val} />
-            <H4>No upcoming events</H4>
+            <H4>{t('no-upcoming-events')}</H4>
             <Paragraph color="$gray11" textAlign="center">
-              Check back later for new events
+              {t('check-back-later-for-new-events')}
             </Paragraph>
           </YStack>
         ) : (
           <>
             {today.length > 0 && (
-              <EventsSection title="Today" events={today} />
+              <EventsSection title={t('today')} events={today} />
             )}
             {tomorrow.length > 0 && (
-              <EventsSection title="Tomorrow" events={tomorrow} />
+              <EventsSection title={t('tomorrow')} events={tomorrow} />
             )}
             {thisWeek.length > 0 && (
-              <EventsSection title="This Week" events={thisWeek} />
+              <EventsSection title={t('this-week')} events={thisWeek} />
             )}
             {upcoming.length > 0 && (
-              <EventsSection title="Upcoming" events={upcoming} />
+              <EventsSection title={t('upcoming')} events={upcoming} />
             )}
           </>
         )}

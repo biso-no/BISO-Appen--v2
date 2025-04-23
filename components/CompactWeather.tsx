@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { XStack, Text, Spinner, Image } from 'tamagui';
 import { getCampusWeather, Campus } from '../lib/get-weather';
 import { storage } from '../lib/appwrite';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // The user agent string for API requests
 const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
@@ -72,7 +74,7 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [iconUrl, setIconUrl] = useState<string | null>(null);
-
+  const { t } = useTranslation();
   // Fetch weather data for the specified campus
   const fetchWeather = async (campusName: Campus) => {
     setLoading(true);
@@ -99,7 +101,7 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
         setWeatherData(data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      setError(err instanceof Error ? err.message : t('failed-to-fetch-weather-data'));
       console.error('Error fetching weather:', err);
     } finally {
       setLoading(false);

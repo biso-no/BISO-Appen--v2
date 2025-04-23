@@ -33,30 +33,33 @@ import { useProfileStore } from '@/lib/stores/profileStore';
 import { useMembershipStore } from '@/lib/stores/membershipStore';
 import { queryClient } from '@/lib/react-query';
 import { CustomSwitch } from '@/components/custom-switch';
+import i18next from '@/i18n';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 // Type definitions
 type ProfileSectionProps = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
 
 const paymentMethods = [
-  { label: 'Credit Card', value: 'CARD', size: '$5' },
-  { label: 'Vipps MobilePay', value: 'WALLET', size: '$5' },
+  { label: i18next.t('credit-card'), value: 'CARD', size: '$5' },
+  { label: i18next.t('vipps-mobilepay'), value: 'WALLET', size: '$5' },
 ];
 
 // Form Schemas
 const profileFormSchema = z.object({
-  phone: z.string().min(8, 'Phone number must be at least 8 characters'),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
-  zip: z.string().min(4, 'ZIP code must be at least 4 characters'),
+  phone: z.string().min(8, i18next.t('phone-number-must-be-at-least-8-characters')),
+  address: z.string().min(1, i18next.t('address-is-required')),
+  city: z.string().min(1, i18next.t('city-is-required')),
+  zip: z.string().min(4, i18next.t('zip-code-must-be-at-least-4-characters')),
 });
 
 const norwegianPaymentFormSchema = z.object({
-  bank_account: z.string().length(11, 'Norwegian bank account must be 11 digits'),
+  bank_account: z.string().length(11, i18next.t('norwegian-bank-account-must-be-11-digits')),
 });
 
 const internationalPaymentFormSchema = z.object({
-  bank_account: z.string().min(15, 'IBAN must be at least 15 characters'),
-  swift: z.string().min(8, 'SWIFT/BIC must be at least 8 characters'),
+  bank_account: z.string().min(15, i18next.t('iban-must-be-at-least-15-characters')),
+  swift: z.string().min(8, i18next.t('swift-bic-must-be-at-least-8-characters')),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -160,6 +163,8 @@ const ProfileScreen = () => {
   
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  
+  const { t } = useTranslation();
 
   // Local prefs
   const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
@@ -211,7 +216,7 @@ const ProfileScreen = () => {
           setMembershipOptions(response);
         } catch (error) {
           console.error("Error fetching memberships:", error);
-          setMembershipError("Failed to load membership options. Please try again later.");
+          setMembershipError(t('failed-to-load-membership-options-please-try-again-later'));
         }
       };
       fetchMemberships();
@@ -286,7 +291,7 @@ const ProfileScreen = () => {
       setIsEditingPayment(false);
     } catch (error) {
       console.error('Error updating payment details:', error);
-      Alert.alert('Error', 'Failed to update payment details');
+      Alert.alert(t('error'), t('failed-to-update-payment-details'));
     }
   };
 
@@ -298,7 +303,7 @@ const ProfileScreen = () => {
       setIsEditingPayment(false);
     } catch (error) {
       console.error('Error updating payment details:', error);
-      Alert.alert('Error', 'Failed to update payment details');
+      Alert.alert(t('error'), t('failed-to-update-payment-details'));
     }
   };
 
@@ -340,12 +345,12 @@ const ProfileScreen = () => {
 
   const initiatePurchase = async () => {
     if (!selectedMembership) {
-      setMembershipError("Please select a membership.");
+      setMembershipError(t('please-select-a-membership'));
       return;
     }
 
     if (!selectedPaymentMethod) {
-      setMembershipError("Please select a payment method.");
+      setMembershipError(t('please-select-a-payment-method'));
       return;
     }
 
@@ -385,12 +390,12 @@ const ProfileScreen = () => {
         if (result.type === 'success') {
           setIsMembershipOpen(false);
         } else {
-          setMembershipError("Purchase was not completed. Please try again.");
+          setMembershipError(t('purchase-was-not-completed-please-try-again'));
         }
       }
     } catch (error) {
       console.error("Error during purchase initiation:", error);
-      setMembershipError("An error occurred while processing your purchase. Please try again.");
+      setMembershipError(t('an-error-occurred-while-processing-your-purchase-please-try-again'));
     } finally {
       setMembershipLoading(false);
     }
@@ -496,7 +501,7 @@ const ProfileScreen = () => {
     const [showFull, setShowFull] = useState(false);
     
     const getSecureDisplay = (value: string) => {
-      if (!value) return 'Not set';
+      if (!value) return t('not-set');
       if (!secure) return value;
       if (showFull) return value;
       
@@ -515,7 +520,7 @@ const ProfileScreen = () => {
             theme="gray"
             onPress={() => setShowFull(!showFull)}
           >
-            {showFull ? 'Hide' : 'Show All'}
+            {showFull ? t('hide') : t('show-all')}
           </Button>
         )}
       </XStack>
@@ -613,8 +618,8 @@ const ProfileScreen = () => {
       // Check if the user has targets set up for notifications
       if (checked && (!user.targets || user.targets.length === 0)) {
         Alert.alert(
-          "Notification setup needed", 
-          "You need to enable push notifications on this device to receive updates."
+          t('notification-setup-needed'), 
+          t('you-need-to-enable-push-notifications-on-this-device-to-receive-updates')
         );
         return;
       }
@@ -642,12 +647,12 @@ const ProfileScreen = () => {
         console.error(`Failed to update ${key} notification settings:`, error);
         
         // Show more specific error message to the user
-        let errorMessage = 'Failed to update notification settings';
+        let errorMessage = t('failed-to-update-notification-settings');
         if (error instanceof Error) {
           errorMessage += `: ${error.message}`;
         }
         
-        Alert.alert('Error', errorMessage);
+        Alert.alert(t('error'), errorMessage);
         
         // Revert local state
         setSubscriptions(prev => {
@@ -671,7 +676,7 @@ const ProfileScreen = () => {
     if (isLoading && Object.keys(subscriptions).length === 0) {
       return (
         <YStack gap="$3" alignItems="center" justifyContent="center" height={200}>
-          <Text>Loading notification preferences...</Text>
+          <Text>{t('loading-notification-preferences')}</Text>
         </YStack>
       );
     }
@@ -679,7 +684,7 @@ const ProfileScreen = () => {
     return (
       <YStack gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Expense Updates</Text>
+          <Text>{t('expense-updates')}</Text>
           <CustomSwitch
             checked={getCheckedState('expenses')}
             onCheckedChange={(checked: boolean) => {
@@ -690,13 +695,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications when expenses are approved, rejected or need attention
+          {t('receive-notifications-when-expenses-are-approved-rejected-or-need-attention')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Events</Text>
+          <Text>{t('explore.categories.events.title')}</Text>
           <CustomSwitch
             checked={getCheckedState('events')}
             onCheckedChange={(checked: boolean) => {
@@ -707,13 +712,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about upcoming events and activities
+          {t('receive-notifications-about-upcoming-events-and-activities')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Volunteer Opportunities</Text>
+          <Text>{t('volunteer-opportunities')}</Text>
           <CustomSwitch
             checked={getCheckedState('jobs')}
             onCheckedChange={(checked: boolean) => {
@@ -724,13 +729,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about volunteer opportunities and events
+          {t('receive-notifications-about-volunteer-opportunities-and-events')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Products</Text>
+          <Text>{t('products')}</Text>
           <CustomSwitch
             checked={getCheckedState('products')}
             onCheckedChange={(checked: boolean) => {
@@ -741,12 +746,78 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about new products, offers and promotions
+          {t('receive-notifications-about-new-products-offers-and-promotions')}
         </Text>
       </YStack>
     );
   });
   NotificationSection.displayName = 'NotificationSection';
+
+  const renderPreferencesSection = () => (
+    <AnimatedContent>
+      <YStack space="$6" padding="$4">
+        <YStack space="$4">
+          <H4>{t('app-settings')}</H4>
+          <Separator />
+          
+          <LanguageSwitcher />
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-notifications')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_notifications ?? true}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_notifications: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-analytics')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_analytics ?? true}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_analytics: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-dark-mode')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_dark_mode ?? isDarkMode}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_dark_mode: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+        </YStack>
+        
+        <YStack space="$4">
+          <H4>{t('departments')}</H4>
+          <Separator />
+          <DepartmentSelector
+            campus={profile?.campus_id}
+            onSelect={handleDepartmentSelect}
+            selectedDepartments={followedDepartments}
+            multiSelect
+          />
+        </YStack>
+      </YStack>
+    </AnimatedContent>
+  );
 
   // Content Renderer
   const renderContent = () => {
@@ -759,28 +830,28 @@ const ProfileScreen = () => {
               theme="blue"
               icon={User}
             >
-              Personal Details
+              {t('personal-details')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('payment')}
               theme="purple"
               icon={CreditCard}
             >
-              Payment Details
+              {t('payment-details')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('notifications')}
               theme="orange"
               icon={Bell}
             >
-              Notification Preferences
+              {t('notification-preferences')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('preferences')}
               theme="green"
               icon={Settings}
             >
-              Clubs & Departments
+              {t('app-settings')}
             </Button>
             {isBisoMember && (
               <Button 
@@ -788,7 +859,7 @@ const ProfileScreen = () => {
                 theme="yellow"
                 icon={CreditCard}
               >
-                Expenses
+                {t('expenses')}
               </Button>
             )}
             <Button 
@@ -797,7 +868,7 @@ const ProfileScreen = () => {
               theme="red"
               onPress={handleLogout}
             >
-              Sign Out
+              {t('sign-out')}
             </Button>
           </YStack>
         );
@@ -807,7 +878,7 @@ const ProfileScreen = () => {
           <Form onSubmit={handleProfileSubmit(onProfileSubmit)}>
             <YStack gap="$4">
               <EditableProfileField 
-                label="Name" 
+                label={t('name')} 
                 value={profile?.name || ""} 
               />
               <Controller
@@ -815,13 +886,13 @@ const ProfileScreen = () => {
                 name="phone"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="Phone"
+                    label={t('phone')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
                     keyboardType="phone-pad"
-                    placeholder="Phone"
+                    placeholder={t('phone')}
                     inputRef={addressInputRef}
                     onSubmitEditing={() => addressInputRef.current?.focus()}
                   />
@@ -832,12 +903,12 @@ const ProfileScreen = () => {
                 name="address"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="Address"
+                    label={t('address')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="Address"
+                    placeholder={t('address')}
                     inputRef={addressInputRef}
                     onSubmitEditing={() => cityInputRef.current?.focus()}
                   />
@@ -848,12 +919,12 @@ const ProfileScreen = () => {
                 name="city"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="City"
+                    label={t('city')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="City"
+                    placeholder={t('city')}
                     inputRef={cityInputRef}
                     onSubmitEditing={() => zipInputRef.current?.focus()}
                   />
@@ -869,7 +940,7 @@ const ProfileScreen = () => {
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="ZIP Code"
+                    placeholder={t('zip-code')}
                     keyboardType="number-pad"
                     inputRef={zipInputRef}
                     returnKeyType="done"
@@ -886,7 +957,7 @@ const ProfileScreen = () => {
                       theme="active"
                       disabled={!profileIsValid || profileIsSubmitting}
                     >
-                      {profileIsSubmitting ? 'Saving...' : 'Save'}
+                      {profileIsSubmitting ? t('saving') + '...' : t('save')}
                     </Button>
                     <Button 
                       flex={1}
@@ -896,7 +967,7 @@ const ProfileScreen = () => {
                       }}
                       theme="red"
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </>
                 ) : (
@@ -904,7 +975,7 @@ const ProfileScreen = () => {
                     onPress={() => setIsEditing(true)}
                     theme="blue"
                   >
-                    Edit Details
+                    {t('edit-details')}
                   </Button>
                 )}
               </XStack>
@@ -916,21 +987,21 @@ const ProfileScreen = () => {
         return (
           <YStack gap="$4">
             <YStack gap="$2">
-              <Label>Account Type</Label>
+              <Label>{t('account-type')}</Label>
               <XStack gap="$2">
                 <Button
                   flex={1}
                   theme={bankType === 'norwegian' ? 'active' : 'neutral'}
                   onPress={() => setBankType('norwegian')}
                 >
-                  Norwegian Account
+                  {t('norwegian-account')}
                 </Button>
                 <Button
                   flex={1}
                   theme={bankType === 'international' ? 'active' : 'neutral'}
                   onPress={() => setBankType('international')}
                 >
-                  International Account
+                  {t('international-account')}
                 </Button>
               </XStack>
             </YStack>
@@ -943,7 +1014,7 @@ const ProfileScreen = () => {
                     name="bank_account"
                     render={({ field: { onChange, value }, fieldState: { error } }) => (
                       <EditableProfileField 
-                        label="Bank Account"
+                        label={t('bank-account')}
                         value={value}
                         isEditing={isEditingPayment}
                         onChangeText={onChange}
@@ -965,7 +1036,7 @@ const ProfileScreen = () => {
                           theme="active"
                           disabled={!norwegianIsValid || norwegianIsSubmitting}
                         >
-                          {norwegianIsSubmitting ? 'Saving...' : 'Save'}
+                          {norwegianIsSubmitting ? t('saving') + '...' : t('save')}
                         </Button>
                         <Button 
                           flex={1}
@@ -975,7 +1046,7 @@ const ProfileScreen = () => {
                           }}
                           theme="red"
                         >
-                          Cancel
+                          {t('cancel')}
                         </Button>
                       </>
                     ) : (
@@ -983,7 +1054,7 @@ const ProfileScreen = () => {
                         onPress={() => setIsEditingPayment(true)}
                         theme="blue"
                       >
-                        Edit Bank Details
+                        {t('edit-bank-details')}
                       </Button>
                     )}
                   </XStack>
@@ -1037,7 +1108,7 @@ const ProfileScreen = () => {
                           theme="active"
                           disabled={!internationalIsValid || internationalIsSubmitting}
                         >
-                          {internationalIsSubmitting ? 'Saving...' : 'Save'}
+                          {internationalIsSubmitting ? t('saving') + '...' : t('save')}
                         </Button>
                         <Button 
                           flex={1}
@@ -1047,7 +1118,7 @@ const ProfileScreen = () => {
                           }}
                           theme="red"
                         >
-                          Cancel
+                          {t('cancel')}
                         </Button>
                       </>
                     ) : (
@@ -1055,7 +1126,7 @@ const ProfileScreen = () => {
                         onPress={() => setIsEditingPayment(true)}
                         theme="blue"
                       >
-                        Edit Bank Details
+                        {t('edit-bank-details')}
                       </Button>
                     )}
                   </XStack>
@@ -1068,23 +1139,13 @@ const ProfileScreen = () => {
       case 'notifications':
         return (
           <YStack gap="$4">
-            <H4>Notification Settings</H4>
+            <H4>{t('notification-settings')}</H4>
             <NotificationSection />
           </YStack>
         );
 
       case 'preferences':
-        return (
-          <YStack gap="$4">
-            <H4>Department Settings</H4>
-            <DepartmentSelector
-              campus={profile?.campus_id}
-              onSelect={handleDepartmentSelect}
-              selectedDepartments={followedDepartments}
-              multiSelect
-            />
-          </YStack>
-        );
+        return renderPreferencesSection();
 
       case 'expenses':
         return (
@@ -1094,7 +1155,7 @@ const ProfileScreen = () => {
               onPress={() => router.push("/explore/expenses")}
               variant="outlined"
             >
-              View All Expenses
+              {t('view-all-expenses')}
             </Button>
           </YStack>
         );
@@ -1104,13 +1165,13 @@ const ProfileScreen = () => {
   // Get section title
   const getSectionTitle = () => {
     switch (currentSection) {
-      case 'menu': return 'Profile Options';
-      case 'personal': return 'Personal Details';
-      case 'payment': return 'Payment Details';
-      case 'notifications': return 'Notifications';
-      case 'preferences': return 'Clubs & Departments';
-      case 'expenses': return 'Recent Expenses';
-      default: return 'Profile';
+      case 'menu': return t('profile-options');
+      case 'personal': return t('personal-details');
+      case 'payment': return t('payment-details');
+      case 'notifications': return t('notifications');
+      case 'preferences': return t('clubs-and-departments');
+      case 'expenses': return t('recent-expenses');
+      default: return t('profile');
     }
   };
 
@@ -1121,13 +1182,13 @@ const ProfileScreen = () => {
     return (
       <YStack gap="$4" padding="$6" alignItems="center" justifyContent="center">
         <H2>Welcome!</H2>
-        <Text textAlign="center">Complete your profile to get started</Text>
+        <Text textAlign="center">{t('complete-your-profile-to-get-started')}</Text>
         <Button 
           size="$4" 
           theme="active"
           onPress={() => router.navigate('/onboarding')}
         >
-          Complete Profile
+          {t('complete-profile')}
         </Button>
       </YStack>
     );
@@ -1183,7 +1244,7 @@ const ProfileScreen = () => {
                       fontWeight="bold"
                       fontSize="$5"
                     >
-                      Member - {membership.name}
+                      {t('member')} - {membership.name}
                     </SizableText>
                     <XStack gap="$1" alignItems="center">
                       <MaterialCommunityIcons 
@@ -1226,7 +1287,7 @@ const ProfileScreen = () => {
             backgroundColor={isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)'}
             borderColor="$blue8"
           >
-            Get BISO Membership
+            {t('get-biso-membership')}
           </Button>
         )}
       </Card>
@@ -1262,9 +1323,9 @@ const ProfileScreen = () => {
   />
   <Sheet.Handle />
   <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
-    <H2>Select Membership</H2>
+    <H2>{t('select-membership')}</H2>
     <RadioGroup
-      aria-labelledby="Select a membership"
+      aria-labelledby={t('select-a-membership')}
       name="membership"
       onValueChange={(value) => {
         const membership = membershipOptions?.documents?.find(
@@ -1288,9 +1349,9 @@ const ProfileScreen = () => {
       </YStack>
     </RadioGroup>
 
-    <H2>Select Payment Method</H2>
+    <H2>{t('select-payment-method')}</H2>
     <RadioGroup
-      aria-labelledby="Select a payment method"
+      aria-labelledby={t('please-select-a-payment-method')}
       name="paymentMethod"
       onValueChange={setSelectedPaymentMethod}
     >
@@ -1312,7 +1373,7 @@ const ProfileScreen = () => {
       onPress={initiatePurchase} 
       disabled={membershipLoading || !selectedMembership || !selectedPaymentMethod}
     >
-      {membershipLoading ? 'Processing...' : 'Buy BISO membership'}
+      {membershipLoading ? t('processing') + '...' : t('buy-biso-membership')}
     </Button>
   </Sheet.Frame>
 </Sheet>

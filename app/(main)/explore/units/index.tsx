@@ -23,6 +23,8 @@ import { MotiView } from 'moti';
 import { useWindowDimensions, ActivityIndicator, useColorScheme } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { debounce } from 'tamagui';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Import our new components
 import { DepartmentCard } from "@/components/departments/DepartmentCard";
@@ -45,6 +47,7 @@ export default function DepartmentsScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
 
   // Extract faculties from departments data
   const extractFaculties = useCallback((depts: Models.Document[]) => {
@@ -60,7 +63,7 @@ export default function DepartmentsScreen() {
     
     const result = Object.entries(facultyCounts).map(([name, count]) => ({
       id: name.toLowerCase(),
-      name: name === 'all' ? 'All' : name,
+      name: name === 'all' ? t('all') : name,
       count
     }));
     
@@ -125,7 +128,7 @@ export default function DepartmentsScreen() {
       // Make sure we have departments to display even after an error
       if (reset && departments.length === 0) {
         setDepartments([]);
-        setFaculties([{id: 'all', name: 'All', count: 0}]);
+        setFaculties([{id: 'all', name: t('all-0'), count: 0}]);
       }
     } finally {
       setLoading(false);
@@ -157,7 +160,7 @@ export default function DepartmentsScreen() {
     setLoading(true);
     try {
       const deps = await databases.listDocuments('app', 'departments', [
-        Query.search('Name', search),
+        Query.search(t('name'), search),
         Query.limit(20),
       ]);
       
@@ -319,7 +322,7 @@ export default function DepartmentsScreen() {
                   letterSpacing={-1}
                   lineHeight="$10"
                 >
-                  Explore Units
+                  {t('explore-units')}
                 </H1>
               </YStack>
             </MotiView>
@@ -335,7 +338,7 @@ export default function DepartmentsScreen() {
                 maxWidth={width * 0.85}
                 lineHeight="$6"
               >
-                Discover the various academic departments at {campus?.name || 'BISO'} 
+                {t('discover-the-various-academic-departments-at')} {campus?.name || 'BISO'} 
               </Paragraph>
             </MotiView>
           </YStack>
@@ -372,7 +375,7 @@ export default function DepartmentsScreen() {
               <Search size={20} color={theme.color?.val} opacity={0.7} />
               <Input
                 flex={1}
-                placeholder="Search departments..."
+                placeholder={t('search-departments')}
                 borderWidth={0}
                 backgroundColor="transparent"
                 value={search}
@@ -387,7 +390,7 @@ export default function DepartmentsScreen() {
                   backgroundColor="$backgroundHover"
                   onPress={() => setSearch('')}
                 >
-                  ✕
+                  {t('key-1')}
                 </Button>
               )}
             </XStack>
@@ -405,27 +408,14 @@ export default function DepartmentsScreen() {
           >
             <Text fontSize="$5" fontWeight="700" color="$color">
               {selectedFaculty === 'all' 
-                ? 'All Departments' 
-                : `${faculties.find(f => f.id === selectedFaculty)?.name || ''} Departments`}
+                ? t('all-departments') 
+                : t('faculties-find-f-greater-than-f-id-selectedfaculty-name-or-or-departments')}
             </Text>
           </MotiView>
         </YStack>
       )}
     </YStack>
-  ), [
-    colorScheme, 
-    width, 
-    campus?.name, 
-    faculties, 
-    selectedFaculty, 
-    handleFacultySelect, 
-    theme.color?.val, 
-    search, 
-    handleSearchChange, 
-    handleSearchSubmit, 
-    loading, 
-    filteredDepartments.length
-  ]);
+  ), [colorScheme, t, width, campus?.name, faculties, selectedFaculty, handleFacultySelect, theme.color?.val, search, handleSearchChange, handleSearchSubmit, loading, filteredDepartments.length]);
 
   return (
     <MyStack flex={1} backgroundColor={theme.background?.val}>
@@ -444,7 +434,7 @@ export default function DepartmentsScreen() {
               <Building size={32} color={theme.blue10?.val} />
             </Circle>
           </MotiView>
-          <Text color="$blue10" fontWeight="600">Loading departments...</Text>
+          <Text color="$blue10" fontWeight="600">{t('loading-departments')}</Text>
           
           {/* Add reset button for stuck states */}
           <Button 
@@ -463,7 +453,7 @@ export default function DepartmentsScreen() {
               }
             }}
           >
-            Reset
+            {t('reset')}
           </Button>
         </YStack>
       ) : (

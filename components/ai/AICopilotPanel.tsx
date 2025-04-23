@@ -43,6 +43,8 @@ import { useColorScheme } from 'react-native';
 import { MotiView, MotiText, AnimatePresence as MotiAnimatePresence } from 'moti';
 import { Easing } from 'react-native-reanimated';
 import Markdown from 'react-native-markdown-display';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface AICopilotPanelProps {}
 
@@ -54,7 +56,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   const inputRef = useRef<RNTextInput>(null);
   const flatListRef = useRef<FlatList>(null);
   const windowDimensions = Dimensions.get('window');
-
+  const { t } = useTranslation();
   
   
   const {
@@ -351,7 +353,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
               </Paragraph>
             )
           ) : (
-            <Text color="$red9">No content available</Text>
+            <Text color="$red9">{t('no-content-available')}</Text>
           )}
         </YStack>
         
@@ -389,8 +391,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
         <View style={[StyleSheet.absoluteFill, { borderRadius: 16, overflow: 'hidden' }]}>
           <LinearGradient
             colors={isDark 
-              ? ['rgba(50, 52, 75, 0.9)', 'rgba(60, 63, 90, 0.9)'] as [string, string]
-              : ['rgba(232, 237, 255, 0.9)', 'rgba(209, 224, 255, 0.9)'] as [string, string]}
+              ? [t('rgba-50-52-75-0-9'), t('rgba-60-63-90-0-9')] as [string, string]
+              : [t('rgba-232-237-255-0-9'), t('rgba-209-224-255-0-9')] as [string, string]}
             style={StyleSheet.absoluteFill}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -563,8 +565,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   </Avatar>
                 </MotiView>
                 <YStack>
-                  <Text fontWeight="700" fontSize="$4" color={textColor}>BISO Copilot</Text>
-                  <Text fontSize="$2" color={textMutedColor}>Ready to assist</Text>
+                  <Text fontWeight="700" fontSize="$4" color={textColor}>{t('biso-copilot')}</Text>
+                  <Text fontSize="$2" color={textMutedColor}>{t('ready-to-assist')}</Text>
                 </YStack>
               </XStack>
               
@@ -618,7 +620,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                     </Avatar>
                   </MotiView>
                   <YStack>
-                    <Text fontWeight="700" fontSize="$5" color={textColor}>BISO Copilot</Text>
+                    <Text fontWeight="700" fontSize="$5" color={textColor}>{t('biso-copilot-0')}</Text>
                     <XStack alignItems="center" gap="$1">
                       <MotiView
                         from={{ opacity: 0.5, scale: 1 }}
@@ -639,7 +641,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                         />
                       </MotiView>
                       <Text fontSize="$2" color={textMutedColor} fontWeight="500">
-                        {isLoading ? 'Thinking...' : isListening ? 'Listening...' : 'Ready to help'}
+                        {isLoading ? 'Thinking...' : isListening ? 'Listening...' : t('ready-to-help')}
                       </Text>
                     </XStack>
                   </YStack>
@@ -649,7 +651,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   <Button
                     size="$3"
                     circular
-                    backgroundColor={isDark ? 'rgba(60, 63, 90, 0.8)' : 'rgba(232, 237, 255, 0.9)'}
+                    backgroundColor={isDark ? t('rgba-60-63-90-0-8') : t('rgba-232-237-255-0-9-0')}
                     hoverStyle={{ opacity: 0.9 }}
                     pressStyle={{ scale: 0.95 }}
                     onPress={toggleMinimized}
@@ -662,7 +664,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   <Button
                     size="$3"
                     circular
-                    backgroundColor={isDark ? 'rgba(60, 63, 90, 0.8)' : 'rgba(232, 237, 255, 0.9)'}
+                    backgroundColor={isDark ? t('rgba-60-63-90-0-8-0') : t('rgba-232-237-255-0-9-1')}
                     hoverStyle={{ opacity: 0.9 }}
                     pressStyle={{ scale: 0.95 }}
                     onPress={minimizeCopilot}
@@ -727,7 +729,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                         color: textColor,
                       }}
                     >
-                      How can I help you today?
+                      {t('how-can-i-help-you-today')}
                     </MotiText>
                     <MotiView
                       from={{ opacity: 0, translateY: 20 }}
@@ -743,7 +745,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                         fontSize="$2" // Reduced from $3
                         lineHeight={18} // Reduced from 22
                       >
-                        Ask me anything about departments, events, or how to navigate BISO.
+                        {t('ask-me-anything-about-departments-events-or-how-to-navigate-biso')}
                       </Paragraph>
                     </MotiView>
                   </YStack>
@@ -825,13 +827,13 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                   gap="$3"
                   borderTopWidth={1}
                   borderTopColor={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
-                  backgroundColor={isDark ? 'rgba(36, 37, 53, 0.95)' : 'rgba(245, 247, 255, 0.95)'}
+                  backgroundColor={isDark ? t('rgba-36-37-53-0-95') : t('rgba-245-247-255-0-95')}
                 >
                   {messages.length > 0 && (
                     <Button
                       size="$3"
                       circular
-                      backgroundColor={isDark ? 'rgba(60, 63, 90, 0.8)' : 'rgba(232, 237, 255, 0.9)'}
+                      backgroundColor={isDark ? t('rgba-60-63-90-0-8-1') : t('rgba-232-237-255-0-9-2')}
                       hoverStyle={{ opacity: 0.9 }}
                       pressStyle={{ scale: 0.95 }}
                       onPress={clearMessages}
@@ -855,7 +857,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                       ]}
                       value={currentInput}
                       onChangeText={setCurrentInput}
-                      placeholder="Ask me anything..."
+                      placeholder={t('ask-me-anything')}
                       placeholderTextColor={isDark ? '#8B8FA3' : '#9DA3C5'}
                       autoCapitalize="none"
                       onSubmitEditing={handleSendMessage}
@@ -864,8 +866,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                     <View style={[StyleSheet.absoluteFill, { borderRadius: 16, overflow: 'hidden' }]}>
                       <LinearGradient
                         colors={isDark 
-                          ? ['rgba(50, 52, 75, 0.9)', 'rgba(60, 63, 90, 0.9)'] as [string, string]
-                          : ['rgba(255, 255, 255, 0.95)', 'rgba(240, 242, 255, 0.95)'] as [string, string]}
+                          ? [t('rgba-50-52-75-0-9-0'), t('rgba-60-63-90-0-9-0')] as [string, string]
+                          : [t('rgba-255-255-255-0-95'), t('rgba-240-242-255-0-95')] as [string, string]}
                         style={StyleSheet.absoluteFill}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}

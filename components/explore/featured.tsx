@@ -6,6 +6,8 @@ import { Models, Query } from 'react-native-appwrite';
 import { databases } from '@/lib/appwrite';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 const GalleryItem = styled(YStack, {
   zIndex: 1,

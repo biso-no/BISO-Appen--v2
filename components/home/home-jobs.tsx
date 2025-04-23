@@ -9,6 +9,8 @@ import { Job } from "@/types/jobs";
 import { useTheme } from "tamagui";
 import { useColorScheme } from "react-native";
 import { useCampus } from "@/lib/hooks/useCampus";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface HomeJobsProps {
     jobs: Job[];
@@ -22,6 +24,7 @@ const JobCard = memo(({ job, width, theme, colorScheme, campusName }: {
     colorScheme: ColorSchemeName;
     campusName: string | null;
 }) => {
+    const { t } = useTranslation();
     return (
         <Card
             pressStyle={{ scale: 0.98 }}
@@ -63,7 +66,7 @@ const JobCard = memo(({ job, width, theme, colorScheme, campusName }: {
                                 />
                             </Text>
                             <Text fontSize={14} color="$gray11">
-                                {campusName || 'All Campuses'}
+                                {campusName || t('all-campuses')}
                             </Text>
                         </YStack>
                     </XStack>
@@ -85,7 +88,7 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     const colorScheme = useColorScheme();
     const { width } = useWindowDimensions();
     const { campus } = useCampus();
-    
+    const { t } = useTranslation();
     // Memoize the job cards to prevent re-rendering when switching categories
     const jobCards = useMemo(() => {
         if (!jobs || jobs.length === 0) return null;
@@ -107,16 +110,16 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
         return (
             <YStack gap="$4" paddingHorizontal="$4">
                 <XStack justifyContent="space-between" alignItems="center">
-                    <H3>Volunteer Positions</H3>
+                    <H3>{t('volunteer-positions')}</H3>
                     <Button
                         chromeless
                         onPress={() => router.push('/explore/volunteer')}
                     >
-                        <Text fontSize={14} color="$blue9">See all</Text>
+                        <Text fontSize={14} color="$blue9">{t('see-all')}</Text>
                     </Button>
                 </XStack>
                 <Text color="$gray11" textAlign="center" padding="$4">
-                    No volunteer positions available at the moment
+                    {t('no-volunteer-positions-available-at-the-moment')}
                 </Text>
             </YStack>
         );
@@ -125,12 +128,12 @@ export const HomeJobs = memo(({ jobs }: HomeJobsProps) => {
     return (
         <YStack gap="$4" padding="$4">
             <XStack justifyContent="space-between" alignItems="center">
-                <H3>Volunteer Positions</H3>
+                <H3>{t('volunteer-positions-0')}</H3>
                 <Button
                     chromeless
                     onPress={() => router.push('/explore/volunteer')}
                 >
-                    <Text fontSize={14} color="$blue9">See all</Text>
+                    <Text fontSize={14} color="$blue9">{t('see-all-0')}</Text>
                 </Button>
             </XStack>
 

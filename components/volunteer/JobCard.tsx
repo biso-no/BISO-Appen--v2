@@ -21,6 +21,8 @@ import {
   Clock,
   Zap,
 } from "@tamagui/lucide-icons";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface JobCardProps {
   job: Models.Document;
@@ -32,6 +34,7 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
   
   // Generate a random color from a predefined set for each job
   const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow'];
@@ -217,7 +220,7 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
                     color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}11`} 
                     fontWeight="500"
                   >
-                    Open position
+                    {t('open-position')}
                   </SizableText>
                 </XStack>
               )}
@@ -237,7 +240,7 @@ export function JobCard({ job, onPress, index }: JobCardProps) {
                     color={colorScheme === 'dark' ? `$${jobColor}11` : `$${jobColor}12`} 
                     fontWeight="600"
                   >
-                    View
+                    {t('view')}
                   </Text>
                 </Button>
               </Theme>

@@ -15,6 +15,8 @@ import { BlurView } from 'expo-blur';
 import { useWindowDimensions } from 'react-native';
 import { create } from 'zustand';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Define expense status colors and icons
 interface StatusStyle {
@@ -71,7 +73,7 @@ const useExpenseListStore = create<ExpenseListStore>((set) => ({
   setSelectedStatus: (status: string) => set({ selectedStatus: status }),
   selectedDepartment: "all",
   setSelectedDepartment: (department: string) => set({ selectedDepartment: department }),
-  sortingOption: "Date Descending",
+  sortingOption: i18next.t('date-descending'),
   setSortingOption: (option: string) => set({ sortingOption: option }),
 }));
 
@@ -161,8 +163,9 @@ ExpenseCardSkeleton.displayName = 'ExpenseCardSkeleton';
 // Enhanced expense card with animations
 const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Document, onPress: () => void, index?: number }) => {
   const { description, total, $createdAt: created_at, status, department } = expense;
+  const { t } = useTranslation();
   const formattedDate = useMemo(() => 
-    created_at ? getFormattedDateFromString(created_at) : 'Invalid date',
+    created_at ? getFormattedDateFromString(created_at) : t('invalid-date'),
     [created_at]
   );
   
@@ -214,7 +217,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
                 flex={1}
                 numberOfLines={1}
               >
-                {description || "Unnamed expense"}
+                {description || t('unnamed-expense')}
               </Text>
               <Text
                 fontSize={22}
@@ -245,7 +248,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
             >
               {formattedDate}
             </Text>
-            <StatusBadge status={status || "Unknown"} />
+            <StatusBadge status={status || t('unknown')} />
           </XStack>
         </Card.Footer>
       </Card>
@@ -258,6 +261,7 @@ ExpenseCard.displayName = 'ExpenseCard';
 const NoExpensesPlaceholder = memo(() => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
 
   const router = useRouter();
   
@@ -278,7 +282,7 @@ const NoExpensesPlaceholder = memo(() => {
           transition={{ type: 'timing', duration: 500 }}
         >
           <YStack
-            backgroundColor="rgba(59, 130, 246, 0.1)"
+            backgroundColor='rgba-59-130-246-0-1'
             padding="$5"
             borderRadius="$circle"
             alignItems="center"
@@ -299,7 +303,7 @@ const NoExpensesPlaceholder = memo(() => {
             textAlign: "center"
           }}
         >
-          No Expenses Found
+          {t('no-expenses-found')}
         </MotiText>
         
         <MotiView
@@ -308,7 +312,7 @@ const NoExpensesPlaceholder = memo(() => {
           transition={{ delay: 300 }}
         >
           <Paragraph fontSize={16} color="$color11" textAlign="center" marginTop="$3" maxWidth={300}>
-            You haven't submitted any expenses yet. Start by adding your first expense.
+            {t('you-havent-submitted-any-expenses-yet-start-by-adding-your-first-expense')}
           </Paragraph>
         </MotiView>
         
@@ -328,7 +332,7 @@ const NoExpensesPlaceholder = memo(() => {
             paddingHorizontal="$6"
             onPress={() =>router.push("/explore/expenses/create")}
           >
-            Create New Expense
+            {t('create-new-expense')}
           </Button>
         </MotiView>
       </YStack>
@@ -351,7 +355,7 @@ const ExpenseListHeader = memo(({
 }) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   return (
     <MotiView
       from={{ opacity: 0, translateY: -10 }}
@@ -374,7 +378,7 @@ const ExpenseListHeader = memo(({
               fontWeight: "700"
             }}
           >
-            Expenses
+            {t('expenses')}
           </MotiText>
           
           {expensesCount > 0 && (
@@ -446,7 +450,7 @@ const FilterPanel = memo(({
 }) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {isVisible && (
@@ -469,7 +473,7 @@ const FilterPanel = memo(({
             <YStack gap="$4">
               <XStack alignItems="center" gap="$2">
                 <Filter size={18} />
-                <Text fontSize={18} fontWeight="600">Filters & Sorting</Text>
+                <Text fontSize={18} fontWeight="600">{t('filters-and-sorting')}</Text>
               </XStack>
               
               <YStack gap="$4">
@@ -517,13 +521,13 @@ const FilterPanel = memo(({
                 ))}
                 
                 <YStack gap="$2">
-                  <Text fontSize={14} fontWeight="500">Sort by</Text>
+                  <Text fontSize={14} fontWeight="500">{t('sort-by')}</Text>
                   <XStack flexWrap="wrap" gap="$2">
                     {[
-                      "Date Descending",
-                      "Date Ascending",
-                      "Amount Descending",
-                      "Amount Ascending",
+                      t('date-descending-0'),
+                      t('date-ascending'),
+                      t('amount-descending'),
+                      t('amount-ascending'),
                     ].map((option: string) => (
                       <Button
                         key={option}
@@ -536,7 +540,7 @@ const FilterPanel = memo(({
                         borderColor="$borderColor"
                         borderWidth={1}
                         onPress={() => onSortChange(option)}
-                        iconAfter={option.includes('Descending') ? ArrowUpDown : undefined}
+                        iconAfter={option.includes(t('descending')) ? ArrowUpDown : undefined}
                       >
                         {option}
                       </Button>
@@ -574,7 +578,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
-  
+  const { t } = useTranslation();
   // Create filters object for query
   const filters = useMemo(() => {
     const filtersObj: Record<string, string> = {};
@@ -654,24 +658,24 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     {
       filterType: 'status',
       options: [
-        { name: "All", value: "all" },
-        { name: "Pending", value: "pending" },
-        { name: "Success", value: "success" },
-        { name: "Submitted", value: "submitted" },
+        { name: t('all-0'), value: "all" },
+        { name: t('pending'), value: "pending" },
+        { name: t('success'), value: "success" },
+        { name: t('submitted'), value: "submitted" },
       ],
-      label: 'Status',
+      label: t('status'),
       initialSelected: selectedStatus,
     },
     {
       filterType: 'department',
       options: [
-        { name: "All", value: "all" },
+        { name: t('all-0'), value: "all" },
         ...departmentFilters.map(department => ({
           name: department,
           value: department
         }))
       ],
-      label: 'Department',
+      label: t('department'),
       initialSelected: selectedDepartment,
     },
   ], [departmentFilters, selectedStatus, selectedDepartment]);
@@ -682,13 +686,13 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     
     const docs = [...expenses.documents];
     switch (sortingOption) {
-      case "Date Ascending":
+      case t('date-ascending-0'):
         return docs.sort((a, b) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
-      case "Date Descending":
+      case t('date-descending-1'):
         return docs.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime());
-      case "Amount Ascending":
+      case t('amount-ascending-0'):
         return docs.sort((a, b) => a.total - b.total);
-      case "Amount Descending":
+      case t('amount-descending-0'):
         return docs.sort((a, b) => b.total - a.total);
       default:
         return docs;
