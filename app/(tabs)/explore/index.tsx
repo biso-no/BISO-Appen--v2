@@ -109,7 +109,7 @@ export default function ExploreScreen() {
       setIsLoading(true);
       setError(null);
   
-      let url = 'https://biso.no/wp-json/biso/v1/events?featured=true';
+      let url = 'https://biso.no/wp-json/biso/v1/events';
       
       const params: Record<string, string | number> = {
         per_page: 25
