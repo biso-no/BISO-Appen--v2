@@ -24,6 +24,7 @@ import { AICopilotProvider } from '@/components/ai';
 import { useNotifications } from '@/lib/notifications';
 import { useRouter } from 'expo-router';
 import NoticeContainer from '@/components/ui/notice-container';
+import AppUpdater from '@/components/app-updater';
 
 // Silence console warnings about defaultProps
 if (__DEV__) {
@@ -146,6 +147,7 @@ function RootLayoutNav() {
                     <PerformanceProvider>
                       <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
                         <NoticeContainer />
+                        <AppUpdater />
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                           <Stack.Screen name="(main)" options={{ headerShown: false }} />

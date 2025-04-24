@@ -88,6 +88,7 @@
     "react-native-url-polyfill": "2.0.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
+    "sp-react-native-in-app-updates": "^1.4.1",
     "tamagui": "^1.121.7",
     "use-debounce": "^10.0.4",
     "zod": "^3.24.2",

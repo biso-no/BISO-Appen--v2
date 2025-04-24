@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
+      LSApplicationQueriesSchemes: ['itms-apps'],
     },
     entitlements: {
       'aps-environment': 'production',
