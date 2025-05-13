@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopilotStore } from '../../lib/stores/copilotStore';
+import { Message } from '../../lib/mastra-api';
 import { BlurView } from 'expo-blur';
 import {
   XStack,
@@ -39,55 +40,11 @@ import {
 } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'react-native';
-import { MotiView, MotiText } from 'moti';
+import { MotiView, MotiText, AnimatePresence as MotiAnimatePresence } from 'moti';
 import { Easing } from 'react-native-reanimated';
 import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
-import { useChat, Message as UIMessage } from '@ai-sdk/react';
-import { aiApi } from '../../lib/ai-client';
-import { Message } from '../../lib/message-types';
-
-// Create a fetch function for useChat that uses our custom API
-const fetchFn = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  // Extract messages and other options from the request body
-  if (!init?.body) {
-    console.error('No request body provided to fetchFn');
-    return Promise.reject(new Error('No request body provided'));
-  }
-  
-  try {
-    const body = JSON.parse(init.body.toString());
-    
-    // Ensure messages is an array
-    if (!Array.isArray(body.messages)) {
-      console.error('Invalid messages format in fetchFn', body.messages);
-      return Promise.reject(new Error('Invalid messages format'));
-    }
-    
-    // Create a unique threadId if not provided
-    const threadId = body.threadId || `chat-${Date.now()}`;
-    
-    console.log(`AI fetchFn sending ${body.messages.length} messages with threadId: ${threadId}`);
-    
-    // Call our AI API directly
-    return aiApi.chatCompletions.create({
-      messages: body.messages,
-      stream: body.stream ?? true,
-      threadId: threadId,
-    }) as Promise<Response>;
-  } catch (error) {
-    console.error('Error in fetchFn:', error);
-    return Promise.reject(error);
-  }
-};
-
-// Convert UI messages to our Message format for rendering
-const convertUIMessageToMessage = (uiMessage: UIMessage): Message => {
-  return {
-    role: uiMessage.role === 'data' ? 'system' : uiMessage.role as 'user' | 'assistant' | 'system',
-    content: typeof uiMessage.content === 'string' ? uiMessage.content : JSON.stringify(uiMessage.content),
-  };
-};
+import i18next from '@/i18n';
 
 interface AICopilotPanelProps {}
 
@@ -101,52 +58,21 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   const windowDimensions = Dimensions.get('window');
   const { t } = useTranslation();
   
+  
   const {
     isExpanded,
     isMinimized,
-    toggleMinimized,
+    currentInput,
+    setCurrentInput,
+    sendMessage,
+    messages,
+    clearMessages,
+    isLoading,
+    isListening,
     minimizeCopilot,
-    setAnimation,
+    toggleMinimized,
     suggestions,
   } = useCopilotStore();
-  
-  // Vercel AI SDK chat hook
-  const {
-    messages: uiMessages,
-    input,
-    setInput,
-    handleSubmit: onSubmit,
-    isLoading,
-    error,
-    append,
-    reload,
-    stop,
-    setMessages: setUIMessages,
-  } = useChat({
-    api: '/api/chat', // This is ignored when using a custom fetch
-    fetch: fetchFn,
-    initialMessages: [
-      { 
-        id: '1',
-        role: 'system',
-        content: "You are a helpful AI assistant for BISO. You can search website content, find documents, match jobs, and provide department information. You'll understand the user's intent and provide relevant information."
-      }
-    ],
-    onResponse: () => {
-      // When a response starts, set the animation to 'thinking'
-      setAnimation('thinking');
-    },
-    onFinish: () => {
-      // When a response finishes, set the animation back to 'idle'
-      setAnimation('idle');
-    },
-    id: 'biso-chat', // Add a unique ID for this chat
-  });
-  
-  // Convert UI messages to our Message format for rendering
-  const messages = uiMessages
-    .filter(msg => msg.role !== 'system') // Filter out system messages from display
-    .map(convertUIMessageToMessage);
   
   // State for showing/hiding suggestions and pulse animation
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -159,12 +85,12 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   
   // Start send button pulsing animation when input is not empty
   useEffect(() => {
-    if (input.trim() !== '') {
+    if (currentInput.trim() !== '') {
       setIsSendButtonPulsing(true);
     } else {
       setIsSendButtonPulsing(false);
     }
-  }, [input]);
+  }, [currentInput]);
   
   // Scroll to bottom of messages when new message is added
   useEffect(() => {
@@ -492,27 +418,17 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
   
   // Handle sending message
   const handleSendMessage = () => {
-    if (input.trim()) {
-      // Custom way to submit without form event
-      append({
-        role: 'user',
-        content: input,
-      });
-      setInput('');
+    if (currentInput.trim()) {
+      sendMessage(currentInput);
       inputRef.current?.blur();
     }
   };
   
   // Handle suggestion click
   const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
+    setCurrentInput(suggestion);
     setTimeout(() => {
-      // Custom way to submit without form event
-      append({
-        role: 'user',
-        content: suggestion,
-      });
-      setInput('');
+      sendMessage(suggestion);
     }, 300);
   };
   
@@ -720,12 +636,12 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                             width: 8,
                             height: 8,
                             borderRadius: 4,
-                            backgroundColor: isLoading ? '#FF9D00' : '#34C759',
+                            backgroundColor: isLoading ? '#FF9D00' : isListening ? '#FF3B30' : '#34C759',
                           }}
                         />
                       </MotiView>
                       <Text fontSize="$2" color={textMutedColor} fontWeight="500">
-                        {isLoading ? 'Thinking...' : t('ready-to-help')}
+                        {isLoading ? 'Thinking...' : isListening ? 'Listening...' : t('ready-to-help')}
                       </Text>
                     </XStack>
                   </YStack>
@@ -920,10 +836,7 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                       backgroundColor={isDark ? t('rgba-60-63-90-0-8-1') : t('rgba-232-237-255-0-9-2')}
                       hoverStyle={{ opacity: 0.9 }}
                       pressStyle={{ scale: 0.95 }}
-                      onPress={() => {
-                        setUIMessages([]);
-                        reload();
-                      }}
+                      onPress={clearMessages}
                       icon={<RefreshCcw size={18} color={textColor} />}
                       borderColor={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
                       borderWidth={1}
@@ -942,8 +855,8 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                           backgroundColor: 'transparent',
                         }
                       ]}
-                      value={input}
-                      onChangeText={setInput}
+                      value={currentInput}
+                      onChangeText={setCurrentInput}
                       placeholder={t('ask-me-anything')}
                       placeholderTextColor={isDark ? '#8B8FA3' : '#9DA3C5'}
                       autoCapitalize="none"
@@ -967,9 +880,9 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                     size="$3"
                     circular
                     pressStyle={{ scale: 0.92 }}
-                    onPress={handleSendMessage}
-                    disabled={input.trim() === ''}
-                    opacity={input.trim() === '' ? 0.6 : 1}
+                    onPress={isListening ? handleSendMessage : handleSendMessage}
+                    disabled={currentInput.trim() === ''}
+                    opacity={currentInput.trim() === '' ? 0.6 : 1}
                     elevation={5}
                     style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
                   >
@@ -998,7 +911,11 @@ export function AICopilotPanel({}: AICopilotPanelProps) {
                     </MotiView>
                     
                     <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
-                      <Send size={18} color="white" />
+                      {isListening ? (
+                        <X size={18} color="white" />
+                      ) : (
+                        <Send size={18} color="white" />
+                      )}
                     </View>
                   </Button>
                 </XStack>

@@ -22,7 +22,7 @@ export function AICopilotProvider({
   useEffect(() => {
     const initializeApi = async () => {
       try {
-        // Set as initialized immediately
+        // Set as initialized immediately since we no longer need to load speakers
         setApiInitialized(true);
         
         // Greet the user with a welcome animation
