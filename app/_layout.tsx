@@ -20,11 +20,15 @@ import { LogBox } from 'react-native';
 import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
 import { PerformanceProvider } from '@/lib/performance';
-import { AICopilotProvider } from '@/components/ai';
 import { useNotifications } from '@/lib/notifications';
 import { useRouter } from 'expo-router';
 import NoticeContainer from '@/components/ui/notice-container';
 import AppUpdater from '@/components/app-updater';
+import { AICopilotProvider } from '@/components/context/core/ai-copilot-provider';
+import { AICopilotContainer } from '@/components/ai-copilot-container';
+import { Sheet } from '@tamagui/sheet';
+import { AICopilot } from '@/components/ai-copilot';
+import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
 
 // Silence console warnings about defaultProps
 if (__DEV__) {
@@ -87,6 +91,33 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+function AICopilotSheetModal() {
+  const { isOpen, setIsOpen } = useAICopilot();
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+  };
+  
+  return (
+    <Sheet
+      forceRemoveScrollEnabled={isOpen}
+      modal={true}
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      snapPoints={[90]}
+      dismissOnSnapToBottom
+      zIndex={100_000}
+      animation="medium"
+    >
+      <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+      <Sheet.Handle />
+      <Sheet.Frame padding="$2" flex={1}>
+        <AICopilot isModal />
+      </Sheet.Frame>
+    </Sheet>
+  );
+}
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -140,14 +171,15 @@ function RootLayoutNav() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootProvider>
             <CampusProvider>
-            <AICopilotProvider>
               <PortalProvider shouldAddRootHost>
                 <ModalProvider>
-                  <MembershipModalProvider>
-                    <PerformanceProvider>
-                      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                  <AICopilotProvider>
+                    <MembershipModalProvider>
+                      <PerformanceProvider>
+                        <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
                         <NoticeContainer />
                         <AppUpdater />
+                        <AICopilotSheetModal />
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                           <Stack.Screen name="(main)" options={{ headerShown: false }} />
@@ -155,11 +187,11 @@ function RootLayoutNav() {
                           <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
                         </Stack>
                       </Theme>
-                    </PerformanceProvider>
-                  </MembershipModalProvider>
+                      </PerformanceProvider>
+                    </MembershipModalProvider>
+                  </AICopilotProvider>
                 </ModalProvider>
               </PortalProvider>
-              </AICopilotProvider>
             </CampusProvider>
           </RootProvider>
         </ThemeProvider>

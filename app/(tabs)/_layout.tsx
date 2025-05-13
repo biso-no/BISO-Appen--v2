@@ -11,7 +11,8 @@ import {
   LogIn, 
   Home, 
   Compass,
-  ChevronLeft
+  ChevronLeft,
+  Bot
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
@@ -22,8 +23,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '@/components/context/core/profile-provider';
 // Add moti imports
 import { MotiView } from 'moti';
-import { CopilotButton } from '@/components/ai';
 import CampusPopover from '@/components/CampusPopover';
+import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
+import { AICopilot } from '@/components/ai-copilot';
+import { AICopilotButton } from '@/components/ai-copilot-container';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -66,12 +69,18 @@ export default function TabLayout() {
     const canGoBack = router.canGoBack();
     const pathname = usePathname();
     const isHomeScreen = pathname === '/' || pathname === '/index' || pathname === '/(tabs)' || pathname === '/(tabs)/index';
+    const { openAICopilot } = useAICopilot();
     
     const shouldShowBackButton = canGoBack && !isHomeScreen;
 
     const handleBackPress = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.back();
+    };
+
+    const handleOpenAICopilot = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      openAICopilot();
     };
 
     return (
@@ -140,7 +149,15 @@ export default function TabLayout() {
           </XStack>
           
           <XStack flex={1} justifyContent="flex-end">
-            <CopilotButton />
+            <Button
+              size="$3"
+              circular
+              icon={<Bot size={20} color={Colors[colorScheme ?? 'light'].text} />}
+              onPress={handleOpenAICopilot}
+              backgroundColor={Colors[colorScheme ?? 'light'].tint + '15'}
+              pressStyle={{ scale: 0.9, opacity: 0.8 }}
+              animation="quick"
+            />
           </XStack>
         </XStack>
       </Stack>

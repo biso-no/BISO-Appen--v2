@@ -12,8 +12,8 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView } from 'moti';
-import { CopilotButton } from '@/components/ai';
 import CampusPopover from '@/components/CampusPopover';
+import { AICopilot } from '@/components/ai-copilot';
 
 export default function MainLayout() {
   const theme = useTheme();
@@ -96,7 +96,7 @@ export default function MainLayout() {
           </XStack>
           
           <XStack flex={1} justifyContent="flex-end">
-            <CopilotButton />
+            <AICopilot />
           </XStack>
         </XStack>
       </TStack>
