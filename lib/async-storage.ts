@@ -16,3 +16,28 @@ export async function storeObjectData(key: string, value: any) {
         console.log(e)
     }
 }
+
+export async function getData(key: string) {
+    try {
+        const value = await AsyncStorage.getItem(key)
+        return value
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+export async function removeData(key: string) {
+    try {
+        await AsyncStorage.removeItem(key)
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+export async function clearData() {
+    try {
+        await AsyncStorage.clear()
+    } catch (e) {
+        console.log(e)
+    }
+}

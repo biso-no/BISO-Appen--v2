@@ -15,6 +15,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@ai-sdk/react": "^1.2.12",
     "@bottom-tabs/react-navigation": "^0.8.9",
     "@expo/vector-icons": "^14.0.4",
     "@hookform/resolvers": "^4.1.2",
@@ -31,6 +32,7 @@
     "@tamagui/themes": "^1.121.7",
     "@tamagui/web": "^1.121.7",
     "@tanstack/react-query": "^5.66.11",
+    "ai": "^4.3.15",
     "axios": "^1.7.9",
     "babel-plugin-module-resolver": "^5.0.2",
     "date-fns": "^4.1.0",
