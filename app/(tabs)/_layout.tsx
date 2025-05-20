@@ -25,8 +25,6 @@ import { useProfile } from '@/components/context/core/profile-provider';
 import { MotiView } from 'moti';
 import CampusPopover from '@/components/CampusPopover';
 import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
-import { AICopilot } from '@/components/ai-copilot';
-import { AICopilotButton } from '@/components/ai-copilot-container';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -69,7 +67,7 @@ export default function TabLayout() {
     const canGoBack = router.canGoBack();
     const pathname = usePathname();
     const isHomeScreen = pathname === '/' || pathname === '/index' || pathname === '/(tabs)' || pathname === '/(tabs)/index';
-    const { openAICopilot } = useAICopilot();
+    const { openAICopilot, isEnabled } = useAICopilot();
     
     const shouldShowBackButton = canGoBack && !isHomeScreen;
 
@@ -149,15 +147,17 @@ export default function TabLayout() {
           </XStack>
           
           <XStack flex={1} justifyContent="flex-end">
-            <Button
-              size="$3"
-              circular
-              icon={<Bot size={20} color={Colors[colorScheme ?? 'light'].text} />}
-              onPress={handleOpenAICopilot}
-              backgroundColor={Colors[colorScheme ?? 'light'].tint + '15'}
-              pressStyle={{ scale: 0.9, opacity: 0.8 }}
-              animation="quick"
-            />
+            {isEnabled && (
+              <Button
+                size="$3"
+                circular
+                icon={<Bot size={20} color={Colors[colorScheme ?? 'light'].text} />}
+                onPress={handleOpenAICopilot}
+                backgroundColor={Colors[colorScheme ?? 'light'].tint + '15'}
+                pressStyle={{ scale: 0.9, opacity: 0.8 }}
+                animation="quick"
+              />
+            )}
           </XStack>
         </XStack>
       </Stack>

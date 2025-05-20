@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { RefreshControl } from 'react-native'
 import { 
   YStack, 
@@ -61,6 +61,7 @@ export default function ExploreScreen() {
   const [error, setError] = useState<string | null>(null)
   const [hasLoaded, setHasLoaded] = useState(false)
   const { t, i18n } = useTranslation()
+  const animationCompletedRef = useRef(false)
 
   const colorScheme = useColorScheme();
 
@@ -148,13 +149,15 @@ export default function ExploreScreen() {
 
   useEffect(() => {
     if (!hasLoaded) {
-      loadEvents()
+      loadEvents();
+      animationCompletedRef.current = true;
     }
-  }, [hasLoaded, loadEvents])
+  }, [hasLoaded, loadEvents]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     setHasLoaded(false)
+    animationCompletedRef.current = false;
     await loadEvents()
     setRefreshing(false)
   }, [loadEvents])
@@ -196,6 +199,7 @@ export default function ExploreScreen() {
           pressStyle={{ scale: 0.98 }}
         >
           <MotiView
+            key={`event-${event.id}-animated`}
             from={{ 
               opacity: 0,
               scale: 0.9,
@@ -213,7 +217,6 @@ export default function ExploreScreen() {
               delay: index * 100,
               stiffness: 100
             }}
-            key={`event-${event.id}`}
           >
             <Stack
               backgroundColor="$background"
@@ -316,6 +319,7 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
       onPress={handlePress}
     >
       <MotiView
+        key={`category-${category.id}-animated`}
         from={{ opacity: 0, translateX: -20 }}
         animate={{ opacity: 1, translateX: 0 }}
         transition={{
@@ -325,7 +329,6 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
           delay: index * 100,
           stiffness: 100
         }}
-        key={`category-${category.id}`}
       >
         <XStack
           backgroundColor={getBackgroundColor()}

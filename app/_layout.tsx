@@ -25,7 +25,6 @@ import { useRouter } from 'expo-router';
 import NoticeContainer from '@/components/ui/notice-container';
 import AppUpdater from '@/components/app-updater';
 import { AICopilotProvider } from '@/components/context/core/ai-copilot-provider';
-import { AICopilotContainer } from '@/components/ai-copilot-container';
 import { Sheet } from '@tamagui/sheet';
 import { AICopilot } from '@/components/ai-copilot';
 import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
@@ -92,7 +91,10 @@ export default function RootLayout() {
 }
 
 function AICopilotSheetModal() {
-  const { isOpen, setIsOpen } = useAICopilot();
+  const { isOpen, setIsOpen, isEnabled } = useAICopilot();
+  
+  // Don't render the sheet if the feature is disabled
+  if (!isEnabled) return null;
   
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);

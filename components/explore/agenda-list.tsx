@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, useColorScheme } from 'react-native';
+import { RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { 
   YStack, 
@@ -7,7 +7,6 @@ import {
   ScrollView, 
   Text,
   Card,
-  H3,
   H4,
   Image,
   Paragraph,
@@ -24,7 +23,6 @@ import { useCampus } from '@/lib/hooks/useCampus';
 import RenderHTML from 'react-native-render-html';
 import { LinearGradient } from '@tamagui/linear-gradient';
 import { useTranslation } from 'react-i18next';
-import i18next from '@/i18n';
 
 interface Event {
   id: number;
@@ -69,10 +67,9 @@ const LoadingCard = () => (
 
 const AnimatedCard = ({ event, index }: { event: Event; index: number }) => {
   const theme = useTheme();
-  const colorScheme = useColorScheme();
   const date = parseISO(event.start_date);
   const { t } = useTranslation();
-  const { height: windowHeight, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   const textColor = theme?.color?.val;
     const style = { 

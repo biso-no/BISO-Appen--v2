@@ -9,7 +9,10 @@ interface AICopilotButtonProps {
 }
 
 export function AICopilotButton({ size = 24 }: AICopilotButtonProps) {
-  const { openAICopilot } = useAICopilot();
+  const { openAICopilot, isEnabled } = useAICopilot();
+
+  // Don't render the button if the feature is disabled
+  if (!isEnabled) return null;
 
   return (
     <Button
@@ -25,7 +28,10 @@ export function AICopilotButton({ size = 24 }: AICopilotButtonProps) {
 }
 
 export function AICopilotContainer() {
-  const { isOpen, setIsOpen } = useAICopilot();
+  const { isOpen, setIsOpen, isEnabled } = useAICopilot();
+
+  // Don't render the container if the feature is disabled
+  if (!isEnabled) return null;
 
   const handleSetOpen = (open: boolean) => {
     if (open === false) {

@@ -1,28 +1,21 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
+import { API_ENDPOINTS } from '@/constants/ApiEndpoints';
 import {
   XStack,
   YStack,
   Text,
   Button,
   Avatar,
-  Spinner,
   Paragraph,
   useTheme,
-  AnimatePresence,
-  Input,
   ScrollView,
   styled,
-  Theme,
   TextArea,
   Circle,
-  Image,
   H4,
-  useMedia,
   Sheet,
-  Separator,
-  Handle,
 } from 'tamagui';
 import {
   X,
@@ -33,17 +26,13 @@ import {
   RefreshCcw,
   Sparkles,
   ChevronRight,
-  Zap,
   Lightbulb,
   MessageCircle,
-  Wand2,
-  Brain,
   Search,
   Star,
   HelpCircle,
   AlertTriangle,
   Trash2,
-  MoreHorizontal,
 } from '@tamagui/lucide-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -52,19 +41,12 @@ import {
   TouchableWithoutFeedback, 
   KeyboardAvoidingView, 
   Platform, 
-  GestureResponderEvent,
-  NativeSyntheticEvent,
-  TextInputSubmitEditingEventData,
   Alert,
   KeyboardEvent,
-  LayoutChangeEvent,
-  ScrollViewProps,
-  Animated,
   Dimensions,
   Vibration,
 } from 'react-native';
-import { MotiView, MotiText, AnimatePresence as MotiAnimatePresence, useAnimationState } from 'moti';
-import { Easing } from 'react-native-reanimated';
+import { MotiView, MotiText } from 'moti';
 import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
 import { useChat, Message as AIMessage } from '@ai-sdk/react';
@@ -153,18 +135,14 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
-  const media = useMedia();
   
   // Animation states for visual effects
   const [expanded, setExpanded] = useState(true);
-  const [showWelcomeAnim, setShowWelcomeAnim] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [contentHeight, setContentHeight] = useState(0);
   
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRef = useRef<typeof TextArea>(null);
-  const opacityAnimRef = useRef(new Animated.Value(0)).current;
   
   // Get the background, text, and accent colors based on theme
   const getThemeColors = () => {
@@ -207,6 +185,8 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
   const themeColors = getThemeColors();
   const suggestions = ENHANCED_SUGGESTIONS;
 
+  
+
   // Use the Vercel AI SDK's useChat hook
   const {
     messages,
@@ -216,10 +196,9 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
     isLoading,
     error,
     reload,
-    stop,
     setMessages: setAIMessages,
   } = useChat({
-    api: 'https://68233095312e736521e7.appwrite.biso.no/',
+    api: API_ENDPOINTS.AI_COPILOT,
     initialMessages: [
       {
         id: 'welcome-msg',
@@ -228,7 +207,7 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
       }
     ],
     onError: (error) => {
-      console.error('Chat error:', error);
+      console.error('Chat error:', JSON.stringify(error));
       // Error feedback with native Alert
       Alert.alert(
         t('Message Failed'),
@@ -253,18 +232,26 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
     }
   });
 
+    // Improved scroll to bottom function with enhanced animation
+    const scrollToBottom = useCallback((animated = true) => {
+      if (scrollViewRef.current && messages.length > 0) {
+        scrollViewRef.current.scrollToEnd({ 
+          animated,
+        });
+      }
+    }, [messages.length]);
+
   // Adapter functions for React Native
-  const handleInputChange = (text: string) => {
+  const handleInputChange = useCallback((text: string) => {
     aiHandleInputChange({ target: { value: text } } as any);
-  };
+  }, [aiHandleInputChange]);
 
   const handleSendMessage = useCallback(() => {
     if (input.trim()) {
-      setShowWelcomeAnim(false);
       aiHandleSubmit(null as any);
       scrollToBottom(true);
     }
-  }, [input, aiHandleSubmit]);
+  }, [input, aiHandleSubmit, scrollToBottom]);
 
   const handleSuggestionPress = useCallback((text: string) => {
     handleInputChange(text);
@@ -272,7 +259,7 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
     setTimeout(() => {
       aiHandleSubmit(null as any);
     }, 100);
-  }, [aiHandleSubmit]);
+  }, [aiHandleSubmit, handleInputChange]);
 
   const setMessages = (msgs: ExtendedMessage[]) => {
     setAIMessages(msgs);
@@ -299,20 +286,12 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-  }, []);
+  }, [scrollToBottom]);
 
-  // Improved scroll to bottom function with enhanced animation
-  const scrollToBottom = useCallback((animated = true) => {
-    if (scrollViewRef.current && messages.length > 0) {
-      scrollViewRef.current.scrollToEnd({ 
-        animated,
-      });
-    }
-  }, [messages.length]);
+
 
   // Handle content size change on ScrollView with smooth animations
   const handleContentSizeChange = useCallback((width: number, height: number) => {
-    setContentHeight(height);
     scrollToBottom();
   }, [scrollToBottom]);
 
@@ -713,7 +692,7 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
               flex={1}
             >
               <Text color={isDark ? 'white' : '$gray12'}>
-                {t('Cancel')}
+                {t('cancel')}
               </Text>
             </Button>
             
@@ -727,7 +706,7 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
               flex={1}
             >
               <Text color="white">
-                {t('Reset')}
+                {t('reset')}
               </Text>
             </Button>
           </XStack>
@@ -739,7 +718,6 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
   // Enhanced message bubble with animations and markdown support
   const renderMessage = (message: ExtendedMessage, index: number) => {
     const isUser = message.role === 'user';
-    const isLastMessage = index === messages.length - 1;
     
     return (
       <MotiView
@@ -953,7 +931,7 @@ export function AICopilot({ isModal = false, theme = 'default', accentColor, onC
             onPress={() => reload()}
             pressStyle={{ scale: 0.98 }}
           >
-            {t('Retry')}
+            {t('common.retry')}
           </Button>
         </YStack>
       </MotiView>

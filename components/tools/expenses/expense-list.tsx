@@ -1,20 +1,14 @@
-import { Card, Paragraph, Text, View, XStack, YStack, Button, Separator, useTheme } from "tamagui";
+import { Card, Paragraph, Text, View, XStack, YStack, Button, useTheme } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
-import { ExpenseFilter } from "./filter";
-import { CustomSelect } from "@/components/ui/select";
-import { useEffect, useState, useMemo, useCallback, memo, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { getDocuments, getExpensesDepartments } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
-import { ArrowUpDown, Clock, Filter, Plus, RefreshCw, Wallet } from "@tamagui/lucide-icons";
+import { ArrowUpDown, Clock, Filter, Plus, Wallet } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
-import { Animated, FlatList, RefreshControl, useColorScheme } from "react-native";
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FlatList, RefreshControl, useColorScheme } from "react-native";
 import { MotiView, MotiText, AnimatePresence } from 'moti';
-import { BlurView } from 'expo-blur';
-import { useWindowDimensions } from 'react-native';
 import { create } from 'zustand';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import i18next from '@/i18n';
 
@@ -119,7 +113,6 @@ StatusBadge.displayName = 'StatusBadge';
 const ExpenseCardSkeleton = memo(({ delay = 0 }: { delay?: number }) => {
   const colorScheme = useColorScheme();
   const baseColor = colorScheme === 'dark' ? '#333' : '#f0f0f0';
-  const theme = useTheme();
   
   return (
     <MotiView
@@ -166,7 +159,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
   const { t } = useTranslation();
   const formattedDate = useMemo(() => 
     created_at ? getFormattedDateFromString(created_at) : t('invalid-date'),
-    [created_at]
+    [created_at, t]
   );
   
   // For debugging
@@ -259,8 +252,6 @@ ExpenseCard.displayName = 'ExpenseCard';
 
 // Enhanced placeholder for empty expenses
 const NoExpensesPlaceholder = memo(() => {
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
 
   const router = useRouter();
@@ -353,8 +344,6 @@ const ExpenseListHeader = memo(({
   isFilterVisible: boolean,
   expensesCount: number
 }) => {
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
   return (
     <MotiView
@@ -448,7 +437,6 @@ const FilterPanel = memo(({
   onSortChange: (option: string) => void,
   isVisible: boolean
 }) => {
-  const theme = useTheme();
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
   return (
@@ -573,11 +561,8 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
   
   const [refreshing, setRefreshing] = useState(false);
   const [departmentFilters, setDepartmentFilters] = useState<string[]>([]);
-  const { width } = useWindowDimensions();
-  const colorScheme = useColorScheme();
   const theme = useTheme();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
   // Create filters object for query
   const filters = useMemo(() => {
@@ -598,10 +583,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
   const { 
     data: expenses,
     isLoading,
-    isError,
-    error,
     refetch,
-    isFetching
   } = useQuery({
     queryKey: ['expenses', filters],
     queryFn: async () => {
@@ -678,11 +660,12 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
       label: t('department'),
       initialSelected: selectedDepartment,
     },
-  ], [departmentFilters, selectedStatus, selectedDepartment]);
+  ], [t, selectedStatus, departmentFilters, selectedDepartment]);
   
   // Sort expenses
   const sortedExpenses = useMemo(() => {
-    if (!expenses?.documents) return [];
+    if (!expenses) return [];
+
     
     const docs = [...expenses.documents];
     switch (sortingOption) {
@@ -697,7 +680,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
       default:
         return docs;
     }
-  }, [expenses?.documents, sortingOption]);
+  }, [expenses, sortingOption, t]);
   
   // Render item function for FlatList
   const renderItem = useCallback(({ item: expense, index }: { item: Models.Document, index: number }) => {

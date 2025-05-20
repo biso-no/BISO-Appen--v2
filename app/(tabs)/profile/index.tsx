@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   YStack, Card, H2, H4, Text, Input, Separator,
   Label, Button, XStack, useTheme, View, Sheet, ScrollView,
-  SizableText, RadioGroup, Stack, Form
+  SizableText, RadioGroup, Stack, Form, Paragraph
 } from 'tamagui';
 import { 
   LogOut, ArrowLeft, User, Settings, 
-  CreditCard, Bell 
+  CreditCard, Bell, Check
 } from '@tamagui/lucide-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/core/auth-provider';
@@ -36,6 +36,9 @@ import { CustomSwitch } from '@/components/custom-switch';
 import i18next from '@/i18n';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { LinearGradient } from 'tamagui/linear-gradient';
+import { Theme } from '@tamagui/core';
+import { ActivityIndicator } from 'react-native';
 
 // Type definitions
 type ProfileSectionProps = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
@@ -71,6 +74,7 @@ const ProfileScreen = () => {
   const { profile, actions: profileActions } = useProfile();
   const { membership, isBisoMember } = useMembershipContext();
   const router = useRouter();
+  const theme = useTheme();
 
   const pathName = usePathname();
   
@@ -1311,7 +1315,7 @@ const ProfileScreen = () => {
   modal
   open={isMembershipOpen}
   onOpenChange={setIsMembershipOpen}
-  snapPoints={[85]}
+  snapPoints={[90]}
   dismissOnSnapToBottom
   zIndex={100_000}
   animation="medium"
@@ -1319,62 +1323,274 @@ const ProfileScreen = () => {
   <Sheet.Overlay 
     animation="lazy" 
     enterStyle={{ opacity: 0 }} 
-    exitStyle={{ opacity: 0 }} 
+    exitStyle={{ opacity: 0 }}
+    backgroundColor={isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)'} 
   />
   <Sheet.Handle />
-  <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
-    <H2>{t('select-membership')}</H2>
-    <RadioGroup
-      aria-labelledby={t('select-a-membership')}
-      name="membership"
-      onValueChange={(value) => {
-        const membership = membershipOptions?.documents?.find(
-          (option) => option.membership_id === value
-        );
-        setSelectedMembership(membership);
-      }}
-    >
-      <YStack width={300} alignItems="center" gap="$2">
-        {membershipOptions?.documents?.map((option) => {
-          const label = `${option.name} - ${option.price} kr`;
-          return (
-            <RadioGroupItemWithLabel 
-              key={option.$id} 
-              size="$5" 
-              value={option.membership_id} 
-              label={label} 
-            />
-          );
-        })}
-      </YStack>
-    </RadioGroup>
-
-    <H2>{t('select-payment-method')}</H2>
-    <RadioGroup
-      aria-labelledby={t('please-select-a-payment-method')}
-      name="paymentMethod"
-      onValueChange={setSelectedPaymentMethod}
-    >
-      <YStack width={300} alignItems="center" gap="$2">
-        {paymentMethods.map((method) => (
-          <RadioGroupItemWithLabel 
-            key={method.value} 
-            size={method.size} 
-            value={method.value} 
-            label={method.label} 
+  <Sheet.Frame padding="$0" justifyContent="flex-start" alignItems="center">
+    {/* Header with gradient */}
+    <YStack width="100%" alignItems="center" overflow="hidden">
+      <MotiView
+        from={{ translateY: -50, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        transition={{ type: 'spring', damping: 15 }}
+        style={{ width: '100%' }}
+      >
+        <YStack
+          height={90}
+          width="100%"
+          justifyContent="center"
+          alignItems="center"
+          overflow="hidden"
+        >
+          <LinearGradient
+            colors={isDarkMode 
+              ? [(theme.blue9?.val || '#0091ff'), (theme.purple9?.val || '#8c00ff')]
+              : [(theme.blue8?.val || '#0080ff'), (theme.purple8?.val || '#7f00ff')]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            }}
           />
-        ))}
-      </YStack>
-    </RadioGroup>
-    
-    {membershipError && <Text color="$red10">{membershipError}</Text>}
-    
-    <Button 
-      onPress={initiatePurchase} 
-      disabled={membershipLoading || !selectedMembership || !selectedPaymentMethod}
-    >
-      {membershipLoading ? t('processing') + '...' : t('buy-biso-membership')}
-    </Button>
+          <H2 color="white">{t('become-a-member')}</H2>
+        </YStack>
+      </MotiView>
+    </YStack>
+
+    <YStack padding="$5" gap="$5" width="100%" flex={1}>
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', damping: 15, delay: 100 }}
+      >
+        <YStack>
+          <Text fontSize="$6" fontWeight="bold" marginBottom="$2">{t('select-membership')}</Text>
+          <Text fontSize="$3" color={isDarkMode ? '$gray11' : '$gray10'} marginBottom="$4">
+            {t('choose-the-membership-that-fits-your-needs')}
+          </Text>
+          <YStack gap="$3">
+            {membershipOptions?.documents?.map((option, index) => (
+              <MotiView
+                key={option.$id}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', damping: 15, delay: 150 + index * 100 }}
+              >
+                <Button
+                  unstyled
+                  onPress={() => setSelectedMembership(option)}
+                  pressStyle={{ scale: 0.98 }}
+                >
+                  <Card
+                    bordered
+                    borderColor={selectedMembership?.$id === option.$id ? '$blue8' : isDarkMode ? '$gray7' : '$gray4'}
+                    animation="bouncy"
+                    backgroundColor={selectedMembership?.$id === option.$id ? isDarkMode ? '$blue5' : '$blue2' : undefined}
+                    borderRadius="$6"
+                    overflow="hidden"
+                    borderWidth={selectedMembership?.$id === option.$id ? 2 : 1}
+                    padding="$4"
+                  >
+                    <XStack alignItems="center" justifyContent="space-between">
+                      <YStack>
+                        <Text fontSize="$5" fontWeight="600">{option.name}</Text>
+                        <Paragraph size="$3" theme={selectedMembership?.$id === option.$id ? 'accent' : undefined}>
+                          {option.price} kr
+                        </Paragraph>
+                      </YStack>
+                      {selectedMembership?.$id === option.$id && (
+                        <MotiView
+                          from={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ type: 'spring', damping: 10 }}
+                        >
+                          <Theme name="accent">
+                            <Button
+                              size="$3"
+                              circular
+                              icon={<Check size={18} />}
+                            />
+                          </Theme>
+                        </MotiView>
+                      )}
+                    </XStack>
+                  </Card>
+                </Button>
+              </MotiView>
+            ))}
+          </YStack>
+        </YStack>
+      </MotiView>
+
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', damping: 15, delay: 300 }}
+      >
+        <YStack marginTop="$2">
+          <Text fontSize="$6" fontWeight="bold" marginBottom="$2">{t('select-payment-method')}</Text>
+          <Text fontSize="$3" color={isDarkMode ? '$gray11' : '$gray10'} marginBottom="$4">
+            {t('choose-how-you-want-to-pay')}
+          </Text>
+          <YStack gap="$3">
+            {/* Credit Card Payment Option */}
+            <MotiView
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', damping: 15, delay: 350 }}
+            >
+              <Button
+                unstyled
+                onPress={() => setSelectedPaymentMethod('CARD')}
+                pressStyle={{ scale: 0.98 }}
+              >
+                <Card
+                  bordered
+                  borderColor={selectedPaymentMethod === 'CARD' ? '$blue8' : isDarkMode ? '$gray7' : '$gray4'}
+                  animation="bouncy"
+                  backgroundColor={selectedPaymentMethod === 'CARD' ? isDarkMode ? '$blue5' : '$blue2' : undefined}
+                  borderRadius="$6"
+                  overflow="hidden"
+                  borderWidth={selectedPaymentMethod === 'CARD' ? 2 : 1}
+                  padding="$4"
+                >
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap="$3">
+                      <Theme name="accent">
+                        <CreditCard size={24} />
+                      </Theme>
+                      <Text fontSize="$4" fontWeight="500">{t('credit-card')}</Text>
+                    </XStack>
+                    {selectedPaymentMethod === 'CARD' && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                      >
+                        <Theme name="accent">
+                          <Button
+                            size="$2"
+                            circular
+                            icon={<Check size={16} />}
+                          />
+                        </Theme>
+                      </MotiView>
+                    )}
+                  </XStack>
+                </Card>
+              </Button>
+            </MotiView>
+
+            {/* Vipps Payment Option */}
+            <MotiView
+              from={{ opacity: 0, translateX: 20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', damping: 15, delay: 400 }}
+            >
+              <Button
+                unstyled
+                onPress={() => setSelectedPaymentMethod('WALLET')}
+                pressStyle={{ scale: 0.98 }}
+              >
+                <Card
+                  bordered
+                  borderColor={selectedPaymentMethod === 'WALLET' ? '$orange8' : isDarkMode ? '$gray7' : '$gray4'}
+                  animation="bouncy"
+                  backgroundColor={selectedPaymentMethod === 'WALLET' ? isDarkMode ? 'rgba(255, 100, 0, 0.15)' : 'rgba(255, 100, 0, 0.1)' : undefined}
+                  borderRadius="$6"
+                  overflow="hidden"
+                  borderWidth={selectedPaymentMethod === 'WALLET' ? 2 : 1}
+                  padding="$4"
+                >
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap="$3">
+                      <Image 
+                        source={require('@/assets/images/vipps.png')} 
+                        width={80} 
+                        height={24} 
+                        objectFit="contain"
+                        alt="Vipps"
+                      />
+                    </XStack>
+                    {selectedPaymentMethod === 'WALLET' && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                      >
+                        <Theme name="accent">
+                          <Button
+                            size="$2"
+                            circular
+                            icon={<Check size={16} />}
+                          />
+                        </Theme>
+                      </MotiView>
+                    )}
+                  </XStack>
+                </Card>
+              </Button>
+            </MotiView>
+          </YStack>
+        </YStack>
+      </MotiView>
+
+      {/* Error message */}
+      {membershipError && (
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', damping: 15 }}
+        >
+          <YStack
+            backgroundColor={isDarkMode ? '$red5' : '$red2'}
+            borderRadius="$4"
+            padding="$3"
+            borderColor={isDarkMode ? '$red7' : '$red5'}
+            borderWidth={1}
+          >
+            <Text color={isDarkMode ? '$red11' : '$red10'}>{membershipError}</Text>
+          </YStack>
+        </MotiView>
+      )}
+
+      {/* Purchase Button */}
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'spring', damping: 15, delay: 450 }}
+        style={{ alignItems: 'center', marginTop: 'auto' }}
+      >
+        <Button
+          onPress={initiatePurchase}
+          disabled={membershipLoading || !selectedMembership || !selectedPaymentMethod}
+          width={200}
+          height={50}
+          backgroundColor="#ff5b24"
+          borderRadius="$6"
+          paddingHorizontal="$5"
+          pressStyle={{ opacity: 0.9, scale: 0.98 }}
+        >
+          <XStack alignItems="center" justifyContent="center">
+            {membershipLoading ? <ActivityIndicator color="white" /> : (
+              <Image 
+                source={require('@/assets/images/vipps.png')} 
+                width={100} 
+                height={30} 
+                objectFit='contain'
+                alt="Vipps"
+              />
+            )}
+          </XStack>
+        </Button>
+      </MotiView>
+    </YStack>
   </Sheet.Frame>
 </Sheet>
     </ScrollView>

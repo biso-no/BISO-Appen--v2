@@ -30,6 +30,7 @@ import type { Job } from '@/types/jobs';
 import { useScreenPerformance } from '@/lib/performance';
 import { BISCOLogo } from '@/components/BISCOLogo';
 import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Updated Event interface based on the provided JSON structure
 interface Thumbnail {
@@ -214,51 +215,48 @@ export default function HomeScreen() {
 
   const fetchJobs = useCallback(async () => {
     try {
-      if (!campus?.name) return [];
+      if (!campus) return [];
       
-      const response = await axios.get(
-        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=false&per_page=5&campus=${campus.name}`
+      const body = { campusId: campus.$id, locale: i18next.language };
+
+      const response = await functions.createExecution(
+        'fetch_jobs',
+        JSON.stringify(body),
+        false
       );
-      return response.data;
+      console.log("New jobs:", response.responseBody);
+      const jobBody = JSON.parse(response.responseBody);
+      return jobBody?.jobs?.slice(0, 3) || [];
     } catch (error) {
       console.error("Error fetching jobs:", error);
       return [];
     }
-  }, [campus?.name]);
+  }, [campus]);
 
   // Updated fetchEvents function to use the new Event interface
   const fetchEvents = useCallback(async () => {
     try {
-      if (!campus?.name) return [];
+      console.log("Fetching events for campus:", campus?.$id);
+      if (!campus) return [];
+      console.log("Campus ID:", campus?.$id);
+      // Call your Appwrite function
+      const response = await functions.createExecution(
+        'fetch_events', 
+        JSON.stringify({ campusId: campus?.$id, locale: i18next.language }),
+        false, // async execution
+      );
+      console.log("Response:", response); 
+      if (response.responseBody) {
+        console.log(`Fetched ${response.responseBody.length} events for campus ${campus.name}`);
+        return JSON.parse(response.responseBody);
+      }
       
-      let url = 'https://biso.no/wp-json/biso/v1/events';
-      
-      const params: Record<string, string | number> = {
-        per_page: 25
-      };
-  
-      // Append the organizer parameter with campus name
-      params.organizer = "biso-" + campus.name.toLowerCase();
-      
-      console.log("Fetching events with params:", params);
-      const response = await axios.get(url, { params });
-      console.log(`Fetched ${response.data.length} events for campus ${campus.name}`);
-      
-      // Filter out past events
-      const today = new Date();
-      const filteredEvents = response.data.filter((event: Event) => {
-        const eventDate = parseISO(event.start_date);
-        return isAfter(eventDate, today);
-      });
-      
-      console.log(`${filteredEvents.length} upcoming events after filtering`);
-      return filteredEvents;
-      
+      return [];
     } catch (err) {
       console.error('Error loading events:', err);
       return [];
     }
-  }, [campus?.name]);
+  }, [campus]);
 
   // Optimized data loading with parallel requests
   const loadAllData = useCallback(async () => {
