@@ -11,8 +11,16 @@ const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
 // Cache duration in milliseconds (15 minutes)
 const CACHE_DURATION = 15 * 60 * 1000;
 
+// Extended campus type to include 'National'
+type ExtendedCampus = Campus | 'National';
+
+// Type guard to check if a campus is National
+const isNationalCampus = (campus: ExtendedCampus): campus is 'National' => {
+  return campus === 'National';
+};
+
 interface CampusWeatherProps {
-  defaultCampus?: Campus;
+  defaultCampus?: ExtendedCampus;
   showSelector?: boolean;
 }
 
@@ -25,7 +33,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   defaultCampus = Campus.OSLO,
   showSelector = true 
 }) => {
-  const [selectedCampus, setSelectedCampus] = useState<Campus>(defaultCampus);
+  const [selectedCampus, setSelectedCampus] = useState<ExtendedCampus>(defaultCampus);
   const [weatherData, setWeatherData] = useState<Awaited<ReturnType<typeof getCampusWeather>> | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +47,14 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   });
 
   // Fetch weather data for the selected campus
-  const fetchWeather = useCallback(async (campus: Campus) => {
+  const fetchWeather = useCallback(async (campus: ExtendedCampus) => {
+    // Skip fetching for National campus
+    if (isNationalCampus(campus)) {
+      setLoading(false);
+      setWeatherData(null);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -81,7 +96,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
 
   // Handle campus selection change
   const handleCampusChange = (value: string) => {
-    setSelectedCampus(value as Campus);
+    setSelectedCampus(value as ExtendedCampus);
   };
 
   // Format temperature with one decimal place
@@ -90,11 +105,46 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   };
 
   // Create campus options for the select dropdown
-  const campusOptions = Object.values(Campus).map((campus, index) => (
-    <Select.Item key={campus} index={index} value={campus}>
-      <Select.ItemText>{campus}</Select.ItemText>
+  const campusOptions = [
+    ...Object.values(Campus).map((campus, index) => (
+      <Select.Item key={campus} index={index} value={campus}>
+        <Select.ItemText>{campus}</Select.ItemText>
+      </Select.Item>
+    )),
+    <Select.Item key="National" index={Object.values(Campus).length} value="National">
+      <Select.ItemText>National</Select.ItemText>
     </Select.Item>
-  ));
+  ];
+
+  // If National campus is selected, don't render weather data
+  if (isNationalCampus(selectedCampus)) {
+    return showSelector ? (
+      <Card elevate size="$4" bordered padding="$4">
+        <YStack gap="$3">
+          <XStack justifyContent="space-between" alignItems="center">
+            <H4>{t('weather')}</H4>
+            
+            <Select value={selectedCampus} onValueChange={handleCampusChange}>
+              <Select.Trigger width={150} iconAfter={ChevronDown}>
+                <Select.Value placeholder={t('select-campus-0')} />
+              </Select.Trigger>
+              
+              <Select.Content>
+                <Select.ScrollUpButton />
+                <Select.Viewport>
+                  <Select.Group>
+                    <Select.Label>{t('campuses')}</Select.Label>
+                    {campusOptions}
+                  </Select.Group>
+                </Select.Viewport>
+                <Select.ScrollDownButton />
+              </Select.Content>
+            </Select>
+          </XStack>
+        </YStack>
+      </Card>
+    ) : null;
+  }
 
   return (
     <Card elevate size="$4" bordered padding="$4">
@@ -176,7 +226,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
           </YStack>
         ) : null}
         
-        {!loading && (
+        {!loading && !isNationalCampus(selectedCampus) && (
           <Button 
             size="$3" 
             theme="blue" 

@@ -68,23 +68,37 @@ const CAMPUS_IMAGES: Record<string, any> = {
 
 // Fetch campus data function for React Query
 const fetchCampusData = async (slug: string): Promise<Models.Document> => {
-
   if (!slug) throw new Error(i18next.t('no-campus-slug-provided'));
   
-  const campusId = mapCampusNameToId(slug);
-  
-  const campusData = await databases.getDocument('app', 'campus_data', campusId);
-  console.log("Campus Data: ", campusData);
-  return campusData;
+  try {
+    const campusId = mapCampusNameToId(slug);
+    const campusData = await databases.getDocument('app', 'campus_data', campusId);
+    console.log("Campus Data: ", campusData);
+    return campusData;
+  } catch (error: any) {
+    // Handle Appwrite specific errors more gracefully
+    if (error.code === 404) {
+      throw new Error(i18next.t('campus-not-available'));
+    }
+    // Handle other errors
+    throw new Error(i18next.t('campus-data-error'));
+  }
 };
 
 // Memoize ParallaxHeader for performance
-const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document; slug: string }) => {
+const ParallaxHeader = memo(({ campusData, slug, routerPaths }: { 
+  campusData: Models.Document; 
+  slug: string;
+  routerPaths: Record<string, string>;
+}) => {
   const { height: windowHeight } = useWindowDimensions();
+  const { t } = useTranslation();
   const scrollY = useSharedValue(0);
   const HEADER_HEIGHT = windowHeight * 0.45;
   const imageScale = useSharedValue(1);
   const imageTranslateY = useSharedValue(0);
+  const router = useRouter();
+  const fallbackImage = require("@/assets/logo-light.png");
 
   const headerStyle = useAnimatedStyle(() => {
     return {
@@ -114,17 +128,26 @@ const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document
     };
   });
 
+  // Get source image with fallback for campuses without a custom image
+  const getImageSource = () => {
+    if (CAMPUS_IMAGES[slug]) {
+      return CAMPUS_IMAGES[slug].uri;
+    }
+    // Use a default image if no specific image is available
+    return fallbackImage;
+  };
+
   // Use ExpoImage for better performance with caching
   return (
     <Animated.View style={[{ height: HEADER_HEIGHT, overflow: 'hidden' }, headerStyle]}>
       <Animated.View style={[{ height: HEADER_HEIGHT + 50 }, imageStyle]}>
         <ExpoImage
-          source={CAMPUS_IMAGES[slug].uri}
+          source={getImageSource()}
           style={{ width: '100%', height: '100%' }}
           contentFit="cover"
           transition={300}
           placeholderContentFit="cover"
-          placeholder={CAMPUS_IMAGES[slug].blurhash ? { blurhash: CAMPUS_IMAGES[slug].blurhash } : undefined}
+          placeholder={CAMPUS_IMAGES[slug]?.blurhash ? { blurhash: CAMPUS_IMAGES[slug].blurhash } : undefined}
           priority="high"
         />
       </Animated.View>
@@ -146,16 +169,23 @@ const ParallaxHeader = memo(({ campusData, slug }: { campusData: Models.Document
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'spring', damping: 15 }}
         >
-          <H1 
-            color="white" 
-            size="$10"
-            shadowColor="black"
-            shadowOffset={{ width: 0, height: 1 }}
-            shadowOpacity={0.3}
-            shadowRadius={2}
-          >
-            {campusData.name}
-          </H1>
+          <Pressable onPress={() => router.push(routerPaths.campus as any)}>
+            <XStack alignItems="center" gap="$2">
+              <H1 
+                color="white" 
+                size="$10"
+                shadowColor="black"
+                shadowOffset={{ width: 0, height: 1 }}
+                shadowOpacity={0.3}
+                shadowRadius={2}
+              >
+                {campusData.name}
+              </H1>
+              <Text color="white" opacity={0.7} fontSize={16}>
+                {t('view-all')}
+              </Text>
+            </XStack>
+          </Pressable>
           <Paragraph 
             color="white" 
             size="$6" 
@@ -621,6 +651,10 @@ const preloadCampusImages = async () => {
     // Extract all image URIs from the campus images object
     const imageUris = Object.values(CAMPUS_IMAGES).map(img => img.uri);
     
+    // Also preload default image
+    const defaultImage = require("@/assets/logo-light.png");
+    imageUris.push(defaultImage);
+    
     // Preload all images in parallel
     await Promise.all(imageUris.map(uri => Asset.fromModule(uri).downloadAsync()));
   } catch (error) {
@@ -727,6 +761,48 @@ export default function CampusPage() {
 
   // Show error state if campus data not found
   if (isError || !campusData) {
+    // Determine friendly message based on error and action messages
+    const errorInfo = (() => {
+      if (!error) {
+        return {
+          title: t('campus-not-found'),
+          message: t('we-couldnt-find-information-for-this-campus'),
+          icon: Building,
+          color: 'gray'
+        };
+      }
+      
+      // Check for specific error messages we've defined
+      const errorString = error.toString();
+      if (errorString.includes('campus-not-available')) {
+        return {
+          title: t('coming-soon'),
+          message: t('this-campus-is-not-available-yet'),
+          icon: Calendar,
+          color: 'blue',
+          hint: t('check-back-later-or-explore-other-campuses')
+        };
+      }
+      if (errorString.includes('campus-data-error')) {
+        return {
+          title: t('oops'),
+          message: t('we-encountered-an-issue-loading-this-campus'),
+          icon: Building,
+          color: 'orange'
+        };
+      }
+      
+      // Fallback message for any other errors
+      return {
+        title: t('campus-not-found'),
+        message: t('campus-data-unavailable'),
+        icon: Building,
+        color: 'gray'
+      };
+    })();
+    
+    const IconComponent = errorInfo.icon;
+    
     return (
       <SafeAreaView>
         <YStack padding="$4" alignItems="center" justifyContent="center" height="100%">
@@ -736,17 +812,24 @@ export default function CampusPage() {
             transition={{ type: 'spring', damping: 15 }}
           >
             <YStack alignItems="center" gap="$4">
-              <Building size={64} color="$gray9" />
-              <H1>{t('campus-not-found')}</H1>
-              <Paragraph textAlign="center">
-                {isError ? `Error: ${error?.toString()}` : t('we-couldnt-find-information-for-this-campus')}
+              <IconComponent size={64} color={`$${errorInfo.color}9`} />
+              <H1>{errorInfo.title}</H1>
+              <Paragraph textAlign="center" size="$5">
+                {errorInfo.message}
               </Paragraph>
-              <Button
-                onPress={() => router.back()}
-                marginTop="$4"
-              >
-                {t('go-back')}
-              </Button>
+              {errorInfo.hint && (
+                <Paragraph textAlign="center" size="$3" opacity={0.7} maxWidth={300}>
+                  {errorInfo.hint}
+                </Paragraph>
+              )}
+              <XStack gap="$4" marginTop="$4">
+                <Button
+                  onPress={() => router.back()}
+                  variant="outlined"
+                >
+                  {t('go-back')}
+                </Button>
+              </XStack>
             </YStack>
           </MotiView>
         </YStack>
@@ -781,7 +864,7 @@ export default function CampusPage() {
         }}
       >
         <YStack flex={1}>
-          <ParallaxHeader campusData={campusData} slug={slug as string} />
+          <ParallaxHeader campusData={campusData} slug={slug as string} routerPaths={routerPaths} />
 
           {/* Quick Actions */}
           <XStack 

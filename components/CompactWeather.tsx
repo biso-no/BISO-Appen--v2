@@ -14,8 +14,16 @@ const CACHE_DURATION = 15 * 60 * 1000;
 // Appwrite bucket ID for weather icons
 const WEATHER_ICONS_BUCKET_ID = 'weather_icons';
 
+// Extended campus type to include 'National'
+type ExtendedCampus = Campus | 'National';
+
+// Type guard to check if a campus is National
+const isNationalCampus = (campus: ExtendedCampus): campus is 'National' => {
+  return campus === 'National';
+};
+
 interface CompactWeatherProps {
-  campus: Campus;
+  campus: ExtendedCampus;
   iconSize?: number;
   color?: string;
 }
@@ -75,6 +83,7 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [iconUrl, setIconUrl] = useState<string | null>(null);
   const { t } = useTranslation();
+  
   // Fetch weather data for the specified campus
   const fetchWeather = async (campusName: Campus) => {
     setLoading(true);
@@ -150,7 +159,12 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
 
   // Fetch weather when the component mounts or campus changes
   useEffect(() => {
-    fetchWeather(campus);
+    // Skip fetching for National campus
+    if (!isNationalCampus(campus)) {
+      fetchWeather(campus as Campus);
+    } else {
+      setLoading(false);
+    }
   }, [campus]);
 
   // Get the icon URL when weather data changes
@@ -171,6 +185,11 @@ const CompactWeather: React.FC<CompactWeatherProps> = ({
   const formatTemperature = (temp: number) => {
     return `${Math.round(temp)}°`;
   };
+
+  // Early return if campus is 'National'
+  if (isNationalCampus(campus)) {
+    return null;
+  }
 
   if (loading) {
     return (
