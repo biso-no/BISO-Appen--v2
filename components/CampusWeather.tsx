@@ -3,7 +3,6 @@ import { Card, Button, Select, XStack, YStack, Spinner, H4, Paragraph, Avatar } 
 import { ChevronDown, RefreshCw } from '@tamagui/lucide-icons';
 import { getCampusWeather, Campus, getWeatherDescription, getWeatherIconUrl } from '../lib/get-weather';
 import { useTranslation } from 'react-i18next';
-import i18next from '@/i18n';
 
 // The user agent string for API requests
 const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
