@@ -12,6 +12,8 @@ import Animated, {
   Easing 
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Step4Props {
   phone?: string;
@@ -28,7 +30,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
   const [activeField, setActiveField] = useState<string | null>(null);
   const { width } = Dimensions.get('window');
   const isSmallDevice = width < 380;
-  
+  const { t } = useTranslation();
   // Animation values
   const homeScale = useSharedValue(1);
   const formOpacity = useSharedValue(0);
@@ -97,11 +99,11 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
             <Animated.View style={homeAnimatedStyle}>
               <Home size={22} color="$primary" />
             </Animated.View>
-            <H3 fontWeight="bold">Your Contact Details</H3>
+            <H3 fontWeight="bold">{t('your-contact-details')}</H3>
           </XStack>
           
           <Paragraph textAlign="center" opacity={0.8} paddingHorizontal="$4" marginBottom="$1">
-            Let us know how to reach you
+            {t('let-us-know-how-to-reach-you')}
           </Paragraph>
           
           <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
@@ -116,7 +118,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
             >
               <Card.Background>
                 <LinearGradient
-                  colors={['rgba(120, 120, 255, 0.05)', 'rgba(100, 100, 255, 0.02)']}
+                  colors={[t('rgba-120-120-255-0-05'), t('rgba-100-100-255-0-02')]}
                   style={StyleSheet.absoluteFill}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -136,7 +138,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                           size={16} 
                           color={activeField === 'phone' ? '$primary' : '$color'} 
                         />
-                        <Text>Phone</Text>
+                        <Text>{t('phone')}</Text>
                       </XStack>
                     </Input.Label>
                     <Input.Box
@@ -145,7 +147,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                     >
                       <Input.Area
                         id="phone"
-                        placeholder="Enter your phone number"
+                        placeholder={t('enter-your-phone-number')}
                         value={phone}
                         keyboardType="phone-pad"
                         onChangeText={setPhone}
@@ -169,7 +171,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                           size={16} 
                           color={activeField === 'address' ? '$primary' : '$color'} 
                         />
-                        <Text>Address</Text>
+                        <Text>{t('address')}</Text>
                       </XStack>
                     </Input.Label>
                     <Input.Box
@@ -178,7 +180,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                     >
                       <Input.Area
                         id="address"
-                        placeholder="Enter your address"
+                        placeholder={t('enter-your-address')}
                         value={address}
                         onChangeText={setAddress}
                         color="$color"
@@ -201,7 +203,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                           size={16} 
                           color={activeField === 'city' ? '$primary' : '$color'} 
                         />
-                        <Text>City</Text>
+                        <Text>{t('city')}</Text>
                       </XStack>
                     </Input.Label>
                     <Input.Box
@@ -210,7 +212,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                     >
                       <Input.Area
                         id="city"
-                        placeholder="Enter your city"
+                        placeholder={t('enter-your-city')}
                         value={city}
                         onChangeText={setCity}
                         color="$color"
@@ -233,7 +235,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                           size={16} 
                           color={activeField === 'zipCode' ? '$primary' : '$color'} 
                         />
-                        <Text>Zip Code</Text>
+                        <Text>{t('zip-code-0')}</Text>
                       </XStack>
                     </Input.Label>
                     <Input.Box
@@ -242,7 +244,7 @@ export function Step4({ phone, address, city, zipCode, setPhone, setAddress, set
                     >
                       <Input.Area
                         id="zipCode"
-                        placeholder="Enter your zip code"
+                        placeholder={t('enter-your-zip-code')}
                         value={zipCode}
                         onChangeText={setZipCode}
                         color="$color"

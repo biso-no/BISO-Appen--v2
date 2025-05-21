@@ -7,6 +7,8 @@ import { Models, Query } from 'react-native-appwrite';
 import { Image } from 'tamagui';
 import { MapPin, Check } from '@tamagui/lucide-icons';
 import { LinearGradient } from '@tamagui/linear-gradient';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface CampusSelectorProps {
   onSelect: (campus: Models.Document | null) => void;

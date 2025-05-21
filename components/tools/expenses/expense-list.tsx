@@ -1,20 +1,18 @@
-import { Card, Paragraph, Text, View, XStack, YStack, Button, Separator, useTheme } from "tamagui";
+import { Card, Paragraph, Text, View, XStack, YStack, Button, useTheme } from "tamagui";
 import { getFormattedDateFromString } from "@/lib/format-time";
-import { ExpenseFilter } from "./filter";
-import { CustomSelect } from "@/components/ui/select";
-import { useEffect, useState, useMemo, useCallback, memo, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { getDocuments, getExpensesDepartments } from "@/lib/appwrite";
 import { Models } from "react-native-appwrite";
+
 import { ArrowUpDown, Clock, Filter, Plus, RefreshCw, Wallet, ChevronLeft } from "@tamagui/lucide-icons";
+
 import { useRouter } from "expo-router";
-import { Animated, FlatList, RefreshControl, useColorScheme } from "react-native";
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
+import { FlatList, RefreshControl, useColorScheme } from "react-native";
 import { MotiView, MotiText, AnimatePresence } from 'moti';
-import { BlurView } from 'expo-blur';
-import { useWindowDimensions } from 'react-native';
 import { create } from 'zustand';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Define expense status colors and icons
 interface StatusStyle {
@@ -71,7 +69,7 @@ const useExpenseListStore = create<ExpenseListStore>((set) => ({
   setSelectedStatus: (status: string) => set({ selectedStatus: status }),
   selectedDepartment: "all",
   setSelectedDepartment: (department: string) => set({ selectedDepartment: department }),
-  sortingOption: "Date Descending",
+  sortingOption: i18next.t('date-descending'),
   setSortingOption: (option: string) => set({ sortingOption: option }),
 }));
 
@@ -117,7 +115,6 @@ StatusBadge.displayName = 'StatusBadge';
 const ExpenseCardSkeleton = memo(({ delay = 0 }: { delay?: number }) => {
   const colorScheme = useColorScheme();
   const baseColor = colorScheme === 'dark' ? '#333' : '#f0f0f0';
-  const theme = useTheme();
   
   return (
     <MotiView
@@ -160,10 +157,14 @@ ExpenseCardSkeleton.displayName = 'ExpenseCardSkeleton';
 
 // Enhanced expense card with animations
 const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Document, onPress: () => void, index?: number }) => {
+
   const { description, total, $createdAt: created_at, status, department, departmentRel } = expense;
+
+  const { t } = useTranslation();
+
   const formattedDate = useMemo(() => 
-    created_at ? getFormattedDateFromString(created_at) : 'Invalid date',
-    [created_at]
+    created_at ? getFormattedDateFromString(created_at) : t('invalid-date'),
+    [created_at, t]
   );
   
   // For debugging
@@ -223,7 +224,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
                 flex={1}
                 numberOfLines={1}
               >
-                {description || "Unnamed expense"}
+                {description || t('unnamed-expense')}
               </Text>
               <Text
                 fontSize={22}
@@ -254,7 +255,7 @@ const ExpenseCard = memo(({ expense, onPress, index = 0 }: { expense: Models.Doc
             >
               {formattedDate}
             </Text>
-            <StatusBadge status={status || "Unknown"} />
+            <StatusBadge status={status || t('unknown')} />
           </XStack>
         </Card.Footer>
       </Card>
@@ -265,8 +266,7 @@ ExpenseCard.displayName = 'ExpenseCard';
 
 // Enhanced placeholder for empty expenses
 const NoExpensesPlaceholder = memo(() => {
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
+  const { t } = useTranslation();
 
   const router = useRouter();
   
@@ -287,7 +287,7 @@ const NoExpensesPlaceholder = memo(() => {
           transition={{ type: 'timing', duration: 500 }}
         >
           <YStack
-            backgroundColor="rgba(59, 130, 246, 0.1)"
+            backgroundColor='rgba-59-130-246-0-1'
             padding="$5"
             borderRadius="$circle"
             alignItems="center"
@@ -308,7 +308,7 @@ const NoExpensesPlaceholder = memo(() => {
             textAlign: "center"
           }}
         >
-          No Expenses Found
+          {t('no-expenses-found')}
         </MotiText>
         
         <MotiView
@@ -317,7 +317,7 @@ const NoExpensesPlaceholder = memo(() => {
           transition={{ delay: 300 }}
         >
           <Paragraph fontSize={16} color="$color11" textAlign="center" marginTop="$3" maxWidth={300}>
-            You haven't submitted any expenses yet. Start by adding your first expense.
+            {t('you-havent-submitted-any-expenses-yet-start-by-adding-your-first-expense')}
           </Paragraph>
         </MotiView>
         
@@ -337,7 +337,7 @@ const NoExpensesPlaceholder = memo(() => {
             paddingHorizontal="$6"
             onPress={() =>router.push("/explore/expenses/create")}
           >
-            Create New Expense
+            {t('create-new-expense')}
           </Button>
         </MotiView>
       </YStack>
@@ -362,9 +362,7 @@ const ExpenseListHeader = memo(({
   onBackPress?: () => void,
   showBackButton?: boolean
 }) => {
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   return (
     <MotiView
       from={{ opacity: 0, translateY: -10 }}
@@ -377,6 +375,7 @@ const ExpenseListHeader = memo(({
         padding="$4"
         paddingBottom="$3"
       >
+
         <XStack alignItems="center" gap="$3">
           {showBackButton && onBackPress && (
             <MotiView
@@ -395,6 +394,7 @@ const ExpenseListHeader = memo(({
               />
             </MotiView>
           )}
+
           
           <YStack>
             <MotiText
@@ -477,9 +477,8 @@ const FilterPanel = memo(({
   onSortChange: (option: string) => void,
   isVisible: boolean
 }) => {
-  const theme = useTheme();
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {isVisible && (
@@ -502,7 +501,7 @@ const FilterPanel = memo(({
             <YStack gap="$4">
               <XStack alignItems="center" gap="$2">
                 <Filter size={18} />
-                <Text fontSize={18} fontWeight="600">Filters & Sorting</Text>
+                <Text fontSize={18} fontWeight="600">{t('filters-and-sorting')}</Text>
               </XStack>
               
               <YStack gap="$4">
@@ -550,13 +549,13 @@ const FilterPanel = memo(({
                 ))}
                 
                 <YStack gap="$2">
-                  <Text fontSize={14} fontWeight="500">Sort by</Text>
+                  <Text fontSize={14} fontWeight="500">{t('sort-by')}</Text>
                   <XStack flexWrap="wrap" gap="$2">
                     {[
-                      "Date Descending",
-                      "Date Ascending",
-                      "Amount Descending",
-                      "Amount Ascending",
+                      t('date-descending-0'),
+                      t('date-ascending'),
+                      t('amount-descending'),
+                      t('amount-ascending'),
                     ].map((option: string) => (
                       <Button
                         key={option}
@@ -569,7 +568,7 @@ const FilterPanel = memo(({
                         borderColor="$borderColor"
                         borderWidth={1}
                         onPress={() => onSortChange(option)}
-                        iconAfter={option.includes('Descending') ? ArrowUpDown : undefined}
+                        iconAfter={option.includes(t('descending')) ? ArrowUpDown : undefined}
                       >
                         {option}
                       </Button>
@@ -602,12 +601,9 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
   
   const [refreshing, setRefreshing] = useState(false);
   const [departmentFilters, setDepartmentFilters] = useState<string[]>([]);
-  const { width } = useWindowDimensions();
-  const colorScheme = useColorScheme();
   const theme = useTheme();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  
+  const { t } = useTranslation();
   // Create filters object for query
   const filters = useMemo(() => {
     const filtersObj: Record<string, string> = {};
@@ -627,10 +623,7 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
   const { 
     data: expenses,
     isLoading,
-    isError,
-    error,
     refetch,
-    isFetching
   } = useQuery({
     queryKey: ['expenses', filters],
     queryFn: async () => {
@@ -692,46 +685,47 @@ export function ExpenseList({withFilters = true, profileScreen = false}: {withFi
     {
       filterType: 'status',
       options: [
-        { name: "All", value: "all" },
-        { name: "Pending", value: "pending" },
-        { name: "Success", value: "success" },
-        { name: "Submitted", value: "submitted" },
+        { name: t('all-0'), value: "all" },
+        { name: t('pending'), value: "pending" },
+        { name: t('success'), value: "success" },
+        { name: t('submitted'), value: "submitted" },
       ],
-      label: 'Status',
+      label: t('status'),
       initialSelected: selectedStatus,
     },
     {
       filterType: 'department',
       options: [
-        { name: "All", value: "all" },
+        { name: t('all-0'), value: "all" },
         ...departmentFilters.map(department => ({
           name: department,
           value: department
         }))
       ],
-      label: 'Department',
+      label: t('department'),
       initialSelected: selectedDepartment,
     },
-  ], [departmentFilters, selectedStatus, selectedDepartment]);
+  ], [t, selectedStatus, departmentFilters, selectedDepartment]);
   
   // Sort expenses
   const sortedExpenses = useMemo(() => {
-    if (!expenses?.documents) return [];
+    if (!expenses) return [];
+
     
     const docs = [...expenses.documents];
     switch (sortingOption) {
-      case "Date Ascending":
+      case t('date-ascending-0'):
         return docs.sort((a, b) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
-      case "Date Descending":
+      case t('date-descending-1'):
         return docs.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime());
-      case "Amount Ascending":
+      case t('amount-ascending-0'):
         return docs.sort((a, b) => a.total - b.total);
-      case "Amount Descending":
+      case t('amount-descending-0'):
         return docs.sort((a, b) => b.total - a.total);
       default:
         return docs;
     }
-  }, [expenses?.documents, sortingOption]);
+  }, [expenses, sortingOption, t]);
   
   // Render item function for FlatList
   const renderItem = useCallback(({ item: expense, index }: { item: Models.Document, index: number }) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Select, XStack, YStack, Spinner, H4, Paragraph, Avatar } from 'tamagui';
 import { ChevronDown, RefreshCw } from '@tamagui/lucide-icons';
 import { getCampusWeather, Campus, getWeatherDescription, getWeatherIconUrl } from '../lib/get-weather';
+import { useTranslation } from 'react-i18next';
 
 // The user agent string for API requests
 const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
@@ -9,8 +10,16 @@ const USER_AGENT = 'CampusWeatherApp/1.0 (https://example.com)';
 // Cache duration in milliseconds (15 minutes)
 const CACHE_DURATION = 15 * 60 * 1000;
 
+// Extended campus type to include 'National'
+type ExtendedCampus = Campus | 'National';
+
+// Type guard to check if a campus is National
+const isNationalCampus = (campus: ExtendedCampus): campus is 'National' => {
+  return campus === 'National';
+};
+
 interface CampusWeatherProps {
-  defaultCampus?: Campus;
+  defaultCampus?: ExtendedCampus;
   showSelector?: boolean;
 }
 
@@ -23,11 +32,11 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   defaultCampus = Campus.OSLO,
   showSelector = true 
 }) => {
-  const [selectedCampus, setSelectedCampus] = useState<Campus>(defaultCampus);
+  const [selectedCampus, setSelectedCampus] = useState<ExtendedCampus>(defaultCampus);
   const [weatherData, setWeatherData] = useState<Awaited<ReturnType<typeof getCampusWeather>> | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const { t } = useTranslation();
   // Cache for weather data to avoid unnecessary API calls
   const [weatherCache, setWeatherCache] = useState<Record<Campus, CachedWeatherData | null>>({
     [Campus.OSLO]: null,
@@ -37,7 +46,14 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   });
 
   // Fetch weather data for the selected campus
-  const fetchWeather = useCallback(async (campus: Campus) => {
+  const fetchWeather = useCallback(async (campus: ExtendedCampus) => {
+    // Skip fetching for National campus
+    if (isNationalCampus(campus)) {
+      setLoading(false);
+      setWeatherData(null);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -65,7 +81,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
         setWeatherData(data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      setError(err instanceof Error ? err.message : t('failed-to-fetch-weather-data'));
       console.error('Error fetching weather:', err);
     } finally {
       setLoading(false);
@@ -79,7 +95,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
 
   // Handle campus selection change
   const handleCampusChange = (value: string) => {
-    setSelectedCampus(value as Campus);
+    setSelectedCampus(value as ExtendedCampus);
   };
 
   // Format temperature with one decimal place
@@ -88,29 +104,64 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
   };
 
   // Create campus options for the select dropdown
-  const campusOptions = Object.values(Campus).map((campus, index) => (
-    <Select.Item key={campus} index={index} value={campus}>
-      <Select.ItemText>{campus}</Select.ItemText>
+  const campusOptions = [
+    ...Object.values(Campus).map((campus, index) => (
+      <Select.Item key={campus} index={index} value={campus}>
+        <Select.ItemText>{campus}</Select.ItemText>
+      </Select.Item>
+    )),
+    <Select.Item key="National" index={Object.values(Campus).length} value="National">
+      <Select.ItemText>National</Select.ItemText>
     </Select.Item>
-  ));
+  ];
 
-  return (
-    <Card elevate size="$4" bordered padding="$4">
-      <YStack gap="$3">
-        <XStack justifyContent="space-between" alignItems="center">
-          <H4>Weather</H4>
-          
-          {showSelector && (
+  // If National campus is selected, don't render weather data
+  if (isNationalCampus(selectedCampus)) {
+    return showSelector ? (
+      <Card elevate size="$4" bordered padding="$4">
+        <YStack gap="$3">
+          <XStack justifyContent="space-between" alignItems="center">
+            <H4>{t('weather')}</H4>
+            
             <Select value={selectedCampus} onValueChange={handleCampusChange}>
               <Select.Trigger width={150} iconAfter={ChevronDown}>
-                <Select.Value placeholder="Select campus" />
+                <Select.Value placeholder={t('select-campus-0')} />
               </Select.Trigger>
               
               <Select.Content>
                 <Select.ScrollUpButton />
                 <Select.Viewport>
                   <Select.Group>
-                    <Select.Label>Campuses</Select.Label>
+                    <Select.Label>{t('campuses')}</Select.Label>
+                    {campusOptions}
+                  </Select.Group>
+                </Select.Viewport>
+                <Select.ScrollDownButton />
+              </Select.Content>
+            </Select>
+          </XStack>
+        </YStack>
+      </Card>
+    ) : null;
+  }
+
+  return (
+    <Card elevate size="$4" bordered padding="$4">
+      <YStack gap="$3">
+        <XStack justifyContent="space-between" alignItems="center">
+          <H4>{t('weather')}</H4>
+          
+          {showSelector && (
+            <Select value={selectedCampus} onValueChange={handleCampusChange}>
+              <Select.Trigger width={150} iconAfter={ChevronDown}>
+                <Select.Value placeholder={t('select-campus-0')} />
+              </Select.Trigger>
+              
+              <Select.Content>
+                <Select.ScrollUpButton />
+                <Select.Viewport>
+                  <Select.Group>
+                    <Select.Label>{t('campuses')}</Select.Label>
                     {campusOptions}
                   </Select.Group>
                 </Select.Viewport>
@@ -157,7 +208,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
               
               {weatherData.current.humidity !== null && (
                 <Card bordered size="$2" padding="$2">
-                  <Paragraph size="$2">Humidity: {Math.round(weatherData.current.humidity)}%</Paragraph>
+                  <Paragraph size="$2">Humidity: {Math.round(weatherData.current.humidity)}{t('key-3')}</Paragraph>
                 </Card>
               )}
               
@@ -174,7 +225,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
           </YStack>
         ) : null}
         
-        {!loading && (
+        {!loading && !isNationalCampus(selectedCampus) && (
           <Button 
             size="$3" 
             theme="blue" 
@@ -182,7 +233,7 @@ const CampusWeather: React.FC<CampusWeatherProps> = ({
             marginTop="$2"
             icon={RefreshCw}
           >
-            Refresh
+            {t('refresh')}
           </Button>
         )}
       </YStack>

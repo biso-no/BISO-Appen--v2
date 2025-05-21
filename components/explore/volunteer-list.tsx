@@ -27,6 +27,8 @@ import {
 import { useCampus } from "@/lib/hooks/useCampus";
 import { Models } from "react-native-appwrite";
 import { LinearGradient } from "@tamagui/linear-gradient";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Styled components with theme tokens
 const JobCard = styled(Card, {
@@ -71,6 +73,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
     const { campus } = useCampus();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     const htmlStyles = {
         body: { 
@@ -98,7 +101,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
         return (
             <YStack flex={1} justifyContent="center" alignItems="center" gap="$2">
                 <Spinner size="large" color="$color9" />
-                <Text color="$color11">Loading opportunities...</Text>
+                <Text color="$color11">{t('loading-opportunities')}</Text>
             </YStack>
         );
     }
@@ -117,9 +120,9 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                     padding="$8"
                 >
                     <HandHeart size={48} color={theme?.color8?.get()} />
-                    <H2 color="$color11" textAlign="center">No positions available</H2>
+                    <H2 color="$color11" textAlign="center">{t('no-positions-available')}</H2>
                     <Paragraph color="$color9" textAlign="center">
-                        Check back later for new opportunities at {campus?.name}
+                        {t('check-back-later-for-new-opportunities-at')} {campus?.name}
                     </Paragraph>
                     <Button
                         size="$4"
@@ -129,7 +132,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                         animation="bouncy"
                         pressStyle={{ scale: 0.97 }}
                     >
-                        Explore Other Options
+                        {t('explore-other-options')}
                     </Button>
                 </YStack>
             </MotiView>
@@ -151,10 +154,10 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                             exitStyle={{ opacity: 0, scale: 0.9 }}
                             color="$color12"
                         >
-                            Available Positions
+                            {t('available-positions')}
                         </H2>
                         <Paragraph color="$color11">
-                            Explore volunteer opportunities at {campus?.name}
+                            {t('explore-volunteer-opportunities-at')} {campus?.name}
                         </Paragraph>
                     </YStack>
                 )}
@@ -199,7 +202,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                                     fontSize="$2" 
                                                     fontWeight="600"
                                                 >
-                                                    Volunteer
+                                                    {t('volunteer')}
                                                 </Text>
                                             </StatusBadge>
                                             
@@ -243,7 +246,7 @@ export default function VolunteerList({ limit = 10, screen }: { limit?: number, 
                                                 fontSize="$2" 
                                                 color="$color11"
                                             >
-                                                Click to view details
+                                                {t('click-to-view-details')}
                                             </Text>
                                         </XStack>
                                         <ChevronRight 

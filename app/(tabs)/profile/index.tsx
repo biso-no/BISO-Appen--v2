@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   YStack, Card, H2, H4, Text, Input, Separator,
   Label, Button, XStack, useTheme, View, Sheet, ScrollView,
-  SizableText, RadioGroup, Stack, Form
+  SizableText, RadioGroup, Stack, Form, Paragraph
 } from 'tamagui';
 import { 
   LogOut, ArrowLeft, User, Settings, 
-  CreditCard, Bell 
+  CreditCard, Bell, Check
 } from '@tamagui/lucide-icons';
 import { MotiView, AnimatePresence } from 'moti';
 import { useAuth } from '@/components/context/core/auth-provider';
@@ -33,30 +33,36 @@ import { useProfileStore } from '@/lib/stores/profileStore';
 import { useMembershipStore } from '@/lib/stores/membershipStore';
 import { queryClient } from '@/lib/react-query';
 import { CustomSwitch } from '@/components/custom-switch';
+import i18next from '@/i18n';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { LinearGradient } from 'tamagui/linear-gradient';
+import { Theme } from '@tamagui/core';
+import { ActivityIndicator } from 'react-native';
 
 // Type definitions
 type ProfileSectionProps = 'menu' | 'personal' | 'departments' | 'notifications' | 'payment' | 'expenses' | 'preferences';
 
 const paymentMethods = [
-  { label: 'Credit Card', value: 'CARD', size: '$5' },
-  { label: 'Vipps MobilePay', value: 'WALLET', size: '$5' },
+  { label: i18next.t('credit-card'), value: 'CARD', size: '$5' },
+  { label: i18next.t('vipps-mobilepay'), value: 'WALLET', size: '$5' },
 ];
 
 // Form Schemas
 const profileFormSchema = z.object({
-  phone: z.string().min(8, 'Phone number must be at least 8 characters'),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
-  zip: z.string().min(4, 'ZIP code must be at least 4 characters'),
+  phone: z.string().min(8, i18next.t('phone-number-must-be-at-least-8-characters')),
+  address: z.string().min(1, i18next.t('address-is-required')),
+  city: z.string().min(1, i18next.t('city-is-required')),
+  zip: z.string().min(4, i18next.t('zip-code-must-be-at-least-4-characters')),
 });
 
 const norwegianPaymentFormSchema = z.object({
-  bank_account: z.string().length(11, 'Norwegian bank account must be 11 digits'),
+  bank_account: z.string().length(11, i18next.t('norwegian-bank-account-must-be-11-digits')),
 });
 
 const internationalPaymentFormSchema = z.object({
-  bank_account: z.string().min(15, 'IBAN must be at least 15 characters'),
-  swift: z.string().min(8, 'SWIFT/BIC must be at least 8 characters'),
+  bank_account: z.string().min(15, i18next.t('iban-must-be-at-least-15-characters')),
+  swift: z.string().min(8, i18next.t('swift-bic-must-be-at-least-8-characters')),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -68,6 +74,7 @@ const ProfileScreen = () => {
   const { profile, actions: profileActions } = useProfile();
   const { membership, isBisoMember } = useMembershipContext();
   const router = useRouter();
+  const theme = useTheme();
 
   const pathName = usePathname();
   
@@ -160,6 +167,8 @@ const ProfileScreen = () => {
   
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  
+  const { t } = useTranslation();
 
   // Local prefs
   const [localPrefs, setLocalPrefs] = useState<{[key: string]: boolean}>({});
@@ -211,7 +220,7 @@ const ProfileScreen = () => {
           setMembershipOptions(response);
         } catch (error) {
           console.error("Error fetching memberships:", error);
-          setMembershipError("Failed to load membership options. Please try again later.");
+          setMembershipError(t('failed-to-load-membership-options-please-try-again-later'));
         }
       };
       fetchMemberships();
@@ -286,7 +295,7 @@ const ProfileScreen = () => {
       setIsEditingPayment(false);
     } catch (error) {
       console.error('Error updating payment details:', error);
-      Alert.alert('Error', 'Failed to update payment details');
+      Alert.alert(t('error'), t('failed-to-update-payment-details'));
     }
   };
 
@@ -298,7 +307,7 @@ const ProfileScreen = () => {
       setIsEditingPayment(false);
     } catch (error) {
       console.error('Error updating payment details:', error);
-      Alert.alert('Error', 'Failed to update payment details');
+      Alert.alert(t('error'), t('failed-to-update-payment-details'));
     }
   };
 
@@ -340,12 +349,12 @@ const ProfileScreen = () => {
 
   const initiatePurchase = async () => {
     if (!selectedMembership) {
-      setMembershipError("Please select a membership.");
+      setMembershipError(t('please-select-a-membership'));
       return;
     }
 
     if (!selectedPaymentMethod) {
-      setMembershipError("Please select a payment method.");
+      setMembershipError(t('please-select-a-payment-method'));
       return;
     }
 
@@ -385,12 +394,12 @@ const ProfileScreen = () => {
         if (result.type === 'success') {
           setIsMembershipOpen(false);
         } else {
-          setMembershipError("Purchase was not completed. Please try again.");
+          setMembershipError(t('purchase-was-not-completed-please-try-again'));
         }
       }
     } catch (error) {
       console.error("Error during purchase initiation:", error);
-      setMembershipError("An error occurred while processing your purchase. Please try again.");
+      setMembershipError(t('an-error-occurred-while-processing-your-purchase-please-try-again'));
     } finally {
       setMembershipLoading(false);
     }
@@ -496,7 +505,7 @@ const ProfileScreen = () => {
     const [showFull, setShowFull] = useState(false);
     
     const getSecureDisplay = (value: string) => {
-      if (!value) return 'Not set';
+      if (!value) return t('not-set');
       if (!secure) return value;
       if (showFull) return value;
       
@@ -515,7 +524,7 @@ const ProfileScreen = () => {
             theme="gray"
             onPress={() => setShowFull(!showFull)}
           >
-            {showFull ? 'Hide' : 'Show All'}
+            {showFull ? t('hide') : t('show-all')}
           </Button>
         )}
       </XStack>
@@ -613,8 +622,8 @@ const ProfileScreen = () => {
       // Check if the user has targets set up for notifications
       if (checked && (!user.targets || user.targets.length === 0)) {
         Alert.alert(
-          "Notification setup needed", 
-          "You need to enable push notifications on this device to receive updates."
+          t('notification-setup-needed'), 
+          t('you-need-to-enable-push-notifications-on-this-device-to-receive-updates')
         );
         return;
       }
@@ -642,12 +651,12 @@ const ProfileScreen = () => {
         console.error(`Failed to update ${key} notification settings:`, error);
         
         // Show more specific error message to the user
-        let errorMessage = 'Failed to update notification settings';
+        let errorMessage = t('failed-to-update-notification-settings');
         if (error instanceof Error) {
           errorMessage += `: ${error.message}`;
         }
         
-        Alert.alert('Error', errorMessage);
+        Alert.alert(t('error'), errorMessage);
         
         // Revert local state
         setSubscriptions(prev => {
@@ -671,7 +680,7 @@ const ProfileScreen = () => {
     if (isLoading && Object.keys(subscriptions).length === 0) {
       return (
         <YStack gap="$3" alignItems="center" justifyContent="center" height={200}>
-          <Text>Loading notification preferences...</Text>
+          <Text>{t('loading-notification-preferences')}</Text>
         </YStack>
       );
     }
@@ -679,7 +688,7 @@ const ProfileScreen = () => {
     return (
       <YStack gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Expense Updates</Text>
+          <Text>{t('expense-updates')}</Text>
           <CustomSwitch
             checked={getCheckedState('expenses')}
             onCheckedChange={(checked: boolean) => {
@@ -690,13 +699,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications when expenses are approved, rejected or need attention
+          {t('receive-notifications-when-expenses-are-approved-rejected-or-need-attention')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Events</Text>
+          <Text>{t('explore.categories.events.title')}</Text>
           <CustomSwitch
             checked={getCheckedState('events')}
             onCheckedChange={(checked: boolean) => {
@@ -707,13 +716,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about upcoming events and activities
+          {t('receive-notifications-about-upcoming-events-and-activities')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Volunteer Opportunities</Text>
+          <Text>{t('volunteer-opportunities')}</Text>
           <CustomSwitch
             checked={getCheckedState('jobs')}
             onCheckedChange={(checked: boolean) => {
@@ -724,13 +733,13 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about volunteer opportunities and events
+          {t('receive-notifications-about-volunteer-opportunities-and-events')}
         </Text>
 
         <Separator marginVertical="$2" />
 
         <XStack alignItems="center" justifyContent="space-between">
-          <Text>Products</Text>
+          <Text>{t('products')}</Text>
           <CustomSwitch
             checked={getCheckedState('products')}
             onCheckedChange={(checked: boolean) => {
@@ -741,12 +750,78 @@ const ProfileScreen = () => {
           />
         </XStack>
         <Text theme="alt2" fontSize="$2">
-          Receive notifications about new products, offers and promotions
+          {t('receive-notifications-about-new-products-offers-and-promotions')}
         </Text>
       </YStack>
     );
   });
   NotificationSection.displayName = 'NotificationSection';
+
+  const renderPreferencesSection = () => (
+    <AnimatedContent>
+      <YStack space="$6" padding="$4">
+        <YStack space="$4">
+          <H4>{t('app-settings')}</H4>
+          <Separator />
+          
+          <LanguageSwitcher />
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-notifications')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_notifications ?? true}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_notifications: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-analytics')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_analytics ?? true}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_analytics: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+          
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text>{t('enable-dark-mode')}</Text>
+            <CustomSwitch
+              checked={localPrefs?.enable_dark_mode ?? isDarkMode}
+              onCheckedChange={(checked) => {
+                if (user?.prefs) {
+                  const newPrefs = { ...user.prefs, enable_dark_mode: checked };
+                  setLocalPrefs(newPrefs);
+                  // Here you would update the user's preferences in your backend
+                }
+              }}
+            />
+          </XStack>
+        </YStack>
+        
+        <YStack space="$4">
+          <H4>{t('departments')}</H4>
+          <Separator />
+          <DepartmentSelector
+            campus={profile?.campus_id}
+            onSelect={handleDepartmentSelect}
+            selectedDepartments={followedDepartments}
+            multiSelect
+          />
+        </YStack>
+      </YStack>
+    </AnimatedContent>
+  );
 
   // Content Renderer
   const renderContent = () => {
@@ -759,28 +834,28 @@ const ProfileScreen = () => {
               theme="blue"
               icon={User}
             >
-              Personal Details
+              {t('personal-details')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('payment')}
               theme="purple"
               icon={CreditCard}
             >
-              Payment Details
+              {t('payment-details')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('notifications')}
               theme="orange"
               icon={Bell}
             >
-              Notification Preferences
+              {t('notification-preferences')}
             </Button>
             <Button 
               onPress={() => setCurrentSection('preferences')}
               theme="green"
               icon={Settings}
             >
-              Clubs & Departments
+              {t('app-settings')}
             </Button>
             {isBisoMember && (
               <Button 
@@ -788,7 +863,7 @@ const ProfileScreen = () => {
                 theme="yellow"
                 icon={CreditCard}
               >
-                Expenses
+                {t('expenses')}
               </Button>
             )}
             <Button 
@@ -797,7 +872,7 @@ const ProfileScreen = () => {
               theme="red"
               onPress={handleLogout}
             >
-              Sign Out
+              {t('sign-out')}
             </Button>
           </YStack>
         );
@@ -807,7 +882,7 @@ const ProfileScreen = () => {
           <Form onSubmit={handleProfileSubmit(onProfileSubmit)}>
             <YStack gap="$4">
               <EditableProfileField 
-                label="Name" 
+                label={t('name')} 
                 value={profile?.name || ""} 
               />
               <Controller
@@ -815,13 +890,13 @@ const ProfileScreen = () => {
                 name="phone"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="Phone"
+                    label={t('phone')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
                     keyboardType="phone-pad"
-                    placeholder="Phone"
+                    placeholder={t('phone')}
                     inputRef={addressInputRef}
                     onSubmitEditing={() => addressInputRef.current?.focus()}
                   />
@@ -832,12 +907,12 @@ const ProfileScreen = () => {
                 name="address"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="Address"
+                    label={t('address')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="Address"
+                    placeholder={t('address')}
                     inputRef={addressInputRef}
                     onSubmitEditing={() => cityInputRef.current?.focus()}
                   />
@@ -848,12 +923,12 @@ const ProfileScreen = () => {
                 name="city"
                 render={({ field: { onChange, value }, fieldState: { error } }) => (
                   <EditableProfileField 
-                    label="City"
+                    label={t('city')}
                     value={value}
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="City"
+                    placeholder={t('city')}
                     inputRef={cityInputRef}
                     onSubmitEditing={() => zipInputRef.current?.focus()}
                   />
@@ -869,7 +944,7 @@ const ProfileScreen = () => {
                     isEditing={isEditing}
                     onChangeText={onChange}
                     error={error}
-                    placeholder="ZIP Code"
+                    placeholder={t('zip-code')}
                     keyboardType="number-pad"
                     inputRef={zipInputRef}
                     returnKeyType="done"
@@ -886,7 +961,7 @@ const ProfileScreen = () => {
                       theme="active"
                       disabled={!profileIsValid || profileIsSubmitting}
                     >
-                      {profileIsSubmitting ? 'Saving...' : 'Save'}
+                      {profileIsSubmitting ? t('saving') + '...' : t('save')}
                     </Button>
                     <Button 
                       flex={1}
@@ -896,7 +971,7 @@ const ProfileScreen = () => {
                       }}
                       theme="red"
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </>
                 ) : (
@@ -904,7 +979,7 @@ const ProfileScreen = () => {
                     onPress={() => setIsEditing(true)}
                     theme="blue"
                   >
-                    Edit Details
+                    {t('edit-details')}
                   </Button>
                 )}
               </XStack>
@@ -916,21 +991,21 @@ const ProfileScreen = () => {
         return (
           <YStack gap="$4">
             <YStack gap="$2">
-              <Label>Account Type</Label>
+              <Label>{t('account-type')}</Label>
               <XStack gap="$2">
                 <Button
                   flex={1}
                   theme={bankType === 'norwegian' ? 'active' : 'neutral'}
                   onPress={() => setBankType('norwegian')}
                 >
-                  Norwegian Account
+                  {t('norwegian-account')}
                 </Button>
                 <Button
                   flex={1}
                   theme={bankType === 'international' ? 'active' : 'neutral'}
                   onPress={() => setBankType('international')}
                 >
-                  International Account
+                  {t('international-account')}
                 </Button>
               </XStack>
             </YStack>
@@ -943,7 +1018,7 @@ const ProfileScreen = () => {
                     name="bank_account"
                     render={({ field: { onChange, value }, fieldState: { error } }) => (
                       <EditableProfileField 
-                        label="Bank Account"
+                        label={t('bank-account')}
                         value={value}
                         isEditing={isEditingPayment}
                         onChangeText={onChange}
@@ -965,7 +1040,7 @@ const ProfileScreen = () => {
                           theme="active"
                           disabled={!norwegianIsValid || norwegianIsSubmitting}
                         >
-                          {norwegianIsSubmitting ? 'Saving...' : 'Save'}
+                          {norwegianIsSubmitting ? t('saving') + '...' : t('save')}
                         </Button>
                         <Button 
                           flex={1}
@@ -975,7 +1050,7 @@ const ProfileScreen = () => {
                           }}
                           theme="red"
                         >
-                          Cancel
+                          {t('cancel')}
                         </Button>
                       </>
                     ) : (
@@ -983,7 +1058,7 @@ const ProfileScreen = () => {
                         onPress={() => setIsEditingPayment(true)}
                         theme="blue"
                       >
-                        Edit Bank Details
+                        {t('edit-bank-details')}
                       </Button>
                     )}
                   </XStack>
@@ -1037,7 +1112,7 @@ const ProfileScreen = () => {
                           theme="active"
                           disabled={!internationalIsValid || internationalIsSubmitting}
                         >
-                          {internationalIsSubmitting ? 'Saving...' : 'Save'}
+                          {internationalIsSubmitting ? t('saving') + '...' : t('save')}
                         </Button>
                         <Button 
                           flex={1}
@@ -1047,7 +1122,7 @@ const ProfileScreen = () => {
                           }}
                           theme="red"
                         >
-                          Cancel
+                          {t('cancel')}
                         </Button>
                       </>
                     ) : (
@@ -1055,7 +1130,7 @@ const ProfileScreen = () => {
                         onPress={() => setIsEditingPayment(true)}
                         theme="blue"
                       >
-                        Edit Bank Details
+                        {t('edit-bank-details')}
                       </Button>
                     )}
                   </XStack>
@@ -1068,23 +1143,13 @@ const ProfileScreen = () => {
       case 'notifications':
         return (
           <YStack gap="$4">
-            <H4>Notification Settings</H4>
+            <H4>{t('notification-settings')}</H4>
             <NotificationSection />
           </YStack>
         );
 
       case 'preferences':
-        return (
-          <YStack gap="$4">
-            <H4>Department Settings</H4>
-            <DepartmentSelector
-              campus={profile?.campus_id}
-              onSelect={handleDepartmentSelect}
-              selectedDepartments={followedDepartments}
-              multiSelect
-            />
-          </YStack>
-        );
+        return renderPreferencesSection();
 
       case 'expenses':
         return (
@@ -1094,7 +1159,7 @@ const ProfileScreen = () => {
               onPress={() => router.push("/explore/expenses")}
               variant="outlined"
             >
-              View All Expenses
+              {t('view-all-expenses')}
             </Button>
           </YStack>
         );
@@ -1104,13 +1169,13 @@ const ProfileScreen = () => {
   // Get section title
   const getSectionTitle = () => {
     switch (currentSection) {
-      case 'menu': return 'Profile Options';
-      case 'personal': return 'Personal Details';
-      case 'payment': return 'Payment Details';
-      case 'notifications': return 'Notifications';
-      case 'preferences': return 'Clubs & Departments';
-      case 'expenses': return 'Recent Expenses';
-      default: return 'Profile';
+      case 'menu': return t('profile-options');
+      case 'personal': return t('personal-details');
+      case 'payment': return t('payment-details');
+      case 'notifications': return t('notifications');
+      case 'preferences': return t('clubs-and-departments');
+      case 'expenses': return t('recent-expenses');
+      default: return t('profile');
     }
   };
 
@@ -1121,13 +1186,13 @@ const ProfileScreen = () => {
     return (
       <YStack gap="$4" padding="$6" alignItems="center" justifyContent="center">
         <H2>Welcome!</H2>
-        <Text textAlign="center">Complete your profile to get started</Text>
+        <Text textAlign="center">{t('complete-your-profile-to-get-started')}</Text>
         <Button 
           size="$4" 
           theme="active"
           onPress={() => router.navigate('/onboarding')}
         >
-          Complete Profile
+          {t('complete-profile')}
         </Button>
       </YStack>
     );
@@ -1183,7 +1248,7 @@ const ProfileScreen = () => {
                       fontWeight="bold"
                       fontSize="$5"
                     >
-                      Member - {membership.name}
+                      {t('member')} - {membership.name}
                     </SizableText>
                     <XStack gap="$1" alignItems="center">
                       <MaterialCommunityIcons 
@@ -1226,7 +1291,7 @@ const ProfileScreen = () => {
             backgroundColor={isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)'}
             borderColor="$blue8"
           >
-            Get BISO Membership
+            {t('get-biso-membership')}
           </Button>
         )}
       </Card>
@@ -1250,7 +1315,7 @@ const ProfileScreen = () => {
   modal
   open={isMembershipOpen}
   onOpenChange={setIsMembershipOpen}
-  snapPoints={[85]}
+  snapPoints={[90]}
   dismissOnSnapToBottom
   zIndex={100_000}
   animation="medium"
@@ -1258,62 +1323,274 @@ const ProfileScreen = () => {
   <Sheet.Overlay 
     animation="lazy" 
     enterStyle={{ opacity: 0 }} 
-    exitStyle={{ opacity: 0 }} 
+    exitStyle={{ opacity: 0 }}
+    backgroundColor={isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)'} 
   />
   <Sheet.Handle />
-  <Sheet.Frame padding="$4" justifyContent="center" alignItems="center" gap="$5">
-    <H2>Select Membership</H2>
-    <RadioGroup
-      aria-labelledby="Select a membership"
-      name="membership"
-      onValueChange={(value) => {
-        const membership = membershipOptions?.documents?.find(
-          (option) => option.membership_id === value
-        );
-        setSelectedMembership(membership);
-      }}
-    >
-      <YStack width={300} alignItems="center" gap="$2">
-        {membershipOptions?.documents?.map((option) => {
-          const label = `${option.name} - ${option.price} kr`;
-          return (
-            <RadioGroupItemWithLabel 
-              key={option.$id} 
-              size="$5" 
-              value={option.membership_id} 
-              label={label} 
-            />
-          );
-        })}
-      </YStack>
-    </RadioGroup>
-
-    <H2>Select Payment Method</H2>
-    <RadioGroup
-      aria-labelledby="Select a payment method"
-      name="paymentMethod"
-      onValueChange={setSelectedPaymentMethod}
-    >
-      <YStack width={300} alignItems="center" gap="$2">
-        {paymentMethods.map((method) => (
-          <RadioGroupItemWithLabel 
-            key={method.value} 
-            size={method.size} 
-            value={method.value} 
-            label={method.label} 
+  <Sheet.Frame padding="$0" justifyContent="flex-start" alignItems="center">
+    {/* Header with gradient */}
+    <YStack width="100%" alignItems="center" overflow="hidden">
+      <MotiView
+        from={{ translateY: -50, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        transition={{ type: 'spring', damping: 15 }}
+        style={{ width: '100%' }}
+      >
+        <YStack
+          height={90}
+          width="100%"
+          justifyContent="center"
+          alignItems="center"
+          overflow="hidden"
+        >
+          <LinearGradient
+            colors={isDarkMode 
+              ? [(theme.blue9?.val || '#0091ff'), (theme.purple9?.val || '#8c00ff')]
+              : [(theme.blue8?.val || '#0080ff'), (theme.purple8?.val || '#7f00ff')]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            }}
           />
-        ))}
-      </YStack>
-    </RadioGroup>
-    
-    {membershipError && <Text color="$red10">{membershipError}</Text>}
-    
-    <Button 
-      onPress={initiatePurchase} 
-      disabled={membershipLoading || !selectedMembership || !selectedPaymentMethod}
-    >
-      {membershipLoading ? 'Processing...' : 'Buy BISO membership'}
-    </Button>
+          <H2 color="white">{t('become-a-member')}</H2>
+        </YStack>
+      </MotiView>
+    </YStack>
+
+    <YStack padding="$5" gap="$5" width="100%" flex={1}>
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', damping: 15, delay: 100 }}
+      >
+        <YStack>
+          <Text fontSize="$6" fontWeight="bold" marginBottom="$2">{t('select-membership')}</Text>
+          <Text fontSize="$3" color={isDarkMode ? '$gray11' : '$gray10'} marginBottom="$4">
+            {t('choose-the-membership-that-fits-your-needs')}
+          </Text>
+          <YStack gap="$3">
+            {membershipOptions?.documents?.map((option, index) => (
+              <MotiView
+                key={option.$id}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', damping: 15, delay: 150 + index * 100 }}
+              >
+                <Button
+                  unstyled
+                  onPress={() => setSelectedMembership(option)}
+                  pressStyle={{ scale: 0.98 }}
+                >
+                  <Card
+                    bordered
+                    borderColor={selectedMembership?.$id === option.$id ? '$blue8' : isDarkMode ? '$gray7' : '$gray4'}
+                    animation="bouncy"
+                    backgroundColor={selectedMembership?.$id === option.$id ? isDarkMode ? '$blue5' : '$blue2' : undefined}
+                    borderRadius="$6"
+                    overflow="hidden"
+                    borderWidth={selectedMembership?.$id === option.$id ? 2 : 1}
+                    padding="$4"
+                  >
+                    <XStack alignItems="center" justifyContent="space-between">
+                      <YStack>
+                        <Text fontSize="$5" fontWeight="600">{option.name}</Text>
+                        <Paragraph size="$3" theme={selectedMembership?.$id === option.$id ? 'accent' : undefined}>
+                          {option.price} kr
+                        </Paragraph>
+                      </YStack>
+                      {selectedMembership?.$id === option.$id && (
+                        <MotiView
+                          from={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ type: 'spring', damping: 10 }}
+                        >
+                          <Theme name="accent">
+                            <Button
+                              size="$3"
+                              circular
+                              icon={<Check size={18} />}
+                            />
+                          </Theme>
+                        </MotiView>
+                      )}
+                    </XStack>
+                  </Card>
+                </Button>
+              </MotiView>
+            ))}
+          </YStack>
+        </YStack>
+      </MotiView>
+
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', damping: 15, delay: 300 }}
+      >
+        <YStack marginTop="$2">
+          <Text fontSize="$6" fontWeight="bold" marginBottom="$2">{t('select-payment-method')}</Text>
+          <Text fontSize="$3" color={isDarkMode ? '$gray11' : '$gray10'} marginBottom="$4">
+            {t('choose-how-you-want-to-pay')}
+          </Text>
+          <YStack gap="$3">
+            {/* Credit Card Payment Option */}
+            <MotiView
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', damping: 15, delay: 350 }}
+            >
+              <Button
+                unstyled
+                onPress={() => setSelectedPaymentMethod('CARD')}
+                pressStyle={{ scale: 0.98 }}
+              >
+                <Card
+                  bordered
+                  borderColor={selectedPaymentMethod === 'CARD' ? '$blue8' : isDarkMode ? '$gray7' : '$gray4'}
+                  animation="bouncy"
+                  backgroundColor={selectedPaymentMethod === 'CARD' ? isDarkMode ? '$blue5' : '$blue2' : undefined}
+                  borderRadius="$6"
+                  overflow="hidden"
+                  borderWidth={selectedPaymentMethod === 'CARD' ? 2 : 1}
+                  padding="$4"
+                >
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap="$3">
+                      <Theme name="accent">
+                        <CreditCard size={24} />
+                      </Theme>
+                      <Text fontSize="$4" fontWeight="500">{t('credit-card')}</Text>
+                    </XStack>
+                    {selectedPaymentMethod === 'CARD' && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                      >
+                        <Theme name="accent">
+                          <Button
+                            size="$2"
+                            circular
+                            icon={<Check size={16} />}
+                          />
+                        </Theme>
+                      </MotiView>
+                    )}
+                  </XStack>
+                </Card>
+              </Button>
+            </MotiView>
+
+            {/* Vipps Payment Option */}
+            <MotiView
+              from={{ opacity: 0, translateX: 20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'spring', damping: 15, delay: 400 }}
+            >
+              <Button
+                unstyled
+                onPress={() => setSelectedPaymentMethod('WALLET')}
+                pressStyle={{ scale: 0.98 }}
+              >
+                <Card
+                  bordered
+                  borderColor={selectedPaymentMethod === 'WALLET' ? '$orange8' : isDarkMode ? '$gray7' : '$gray4'}
+                  animation="bouncy"
+                  backgroundColor={selectedPaymentMethod === 'WALLET' ? isDarkMode ? 'rgba(255, 100, 0, 0.15)' : 'rgba(255, 100, 0, 0.1)' : undefined}
+                  borderRadius="$6"
+                  overflow="hidden"
+                  borderWidth={selectedPaymentMethod === 'WALLET' ? 2 : 1}
+                  padding="$4"
+                >
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <XStack alignItems="center" gap="$3">
+                      <Image 
+                        source={require('@/assets/images/vipps.png')} 
+                        width={80} 
+                        height={24} 
+                        objectFit="contain"
+                        alt="Vipps"
+                      />
+                    </XStack>
+                    {selectedPaymentMethod === 'WALLET' && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                      >
+                        <Theme name="accent">
+                          <Button
+                            size="$2"
+                            circular
+                            icon={<Check size={16} />}
+                          />
+                        </Theme>
+                      </MotiView>
+                    )}
+                  </XStack>
+                </Card>
+              </Button>
+            </MotiView>
+          </YStack>
+        </YStack>
+      </MotiView>
+
+      {/* Error message */}
+      {membershipError && (
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', damping: 15 }}
+        >
+          <YStack
+            backgroundColor={isDarkMode ? '$red5' : '$red2'}
+            borderRadius="$4"
+            padding="$3"
+            borderColor={isDarkMode ? '$red7' : '$red5'}
+            borderWidth={1}
+          >
+            <Text color={isDarkMode ? '$red11' : '$red10'}>{membershipError}</Text>
+          </YStack>
+        </MotiView>
+      )}
+
+      {/* Purchase Button */}
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'spring', damping: 15, delay: 450 }}
+        style={{ alignItems: 'center', marginTop: 'auto' }}
+      >
+        <Button
+          onPress={initiatePurchase}
+          disabled={membershipLoading || !selectedMembership || !selectedPaymentMethod}
+          width={200}
+          height={50}
+          backgroundColor="#ff5b24"
+          borderRadius="$6"
+          paddingHorizontal="$5"
+          pressStyle={{ opacity: 0.9, scale: 0.98 }}
+        >
+          <XStack alignItems="center" justifyContent="center">
+            {membershipLoading ? <ActivityIndicator color="white" /> : (
+              <Image 
+                source={require('@/assets/images/vipps.png')} 
+                width={100} 
+                height={30} 
+                objectFit='contain'
+                alt="Vipps"
+              />
+            )}
+          </XStack>
+        </Button>
+      </MotiView>
+    </YStack>
   </Sheet.Frame>
 </Sheet>
     </ScrollView>

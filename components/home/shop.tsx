@@ -20,6 +20,8 @@ import { useWindowDimensions } from "react-native";
 import { MyStack } from "../ui/MyStack";
 import { ShoppingBag, Tag, MapPin } from "@tamagui/lucide-icons";
 import { LinearGradient } from "@tamagui/linear-gradient";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Styled components for consistent design
 const ProductCard = styled(Card, {
@@ -128,7 +130,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
     const [isLoading, setIsLoading] = useState(true);
     const { campus } = useCampus();
     const fallbackImage = "https://example.com/fallback-image.jpg";
-
+    const { t } = useTranslation();
     useEffect(() => {
         async function fetchProducts() {
             setIsLoading(true);
@@ -199,8 +201,8 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                     backgroundColor={"transparent"}
                 >
                     <ShoppingBag size={40} color="$gray8" />
-                    <H6 color="$gray11">No products available</H6>
-                    <Paragraph color="$gray9">Check back soon for new items!</Paragraph>
+                    <H6 color="$gray11">{t('no-products-available')}</H6>
+                    <Paragraph color="$gray9">{t('check-back-soon-for-new-items')}</Paragraph>
                 </MyStack>
             );
         }
@@ -303,7 +305,7 @@ export function HomeProducts({ hideAllButton = false }: { hideAllButton?: boolea
                     pressStyle={{ scale: 0.97 }}
                     disabled={isLoading}
                 >
-                    Browse All Products
+                    {t('browse-all-products')}
                 </Button>
 
             </XStack>

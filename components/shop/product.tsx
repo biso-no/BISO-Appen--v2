@@ -9,6 +9,8 @@ import { useTheme } from "tamagui";
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Product {
     product: {
@@ -34,7 +36,7 @@ export function ProductDetails({productId}: {productId: string}) {
     const { width } = useWindowDimensions();
     const theme = useTheme();
     const textColor = theme?.color?.val;
-
+    const { t } = useTranslation();
     useEffect(() => {
         if (!productId) return;
         
@@ -51,14 +53,14 @@ export function ProductDetails({productId}: {productId: string}) {
             fontSize: 16, 
             lineHeight: 24, 
             color: textColor,
-            fontFamily: 'Inter',
+            fontFamily: t('inter'),
         },    
     };
 
     if (!product) {
         return (
             <YStack flex={1} justifyContent="center" alignItems="center">
-                <Text>Loading amazing products...</Text>
+                <Text>{t('loading-amazing-products')}</Text>
             </YStack>
         );
     }
@@ -123,7 +125,7 @@ export function ProductDetails({productId}: {productId: string}) {
                                         pressStyle={{ opacity: 0.85 }}
                                         onPress={() => router.push(product.product.url as ExternalPathString)}
                                     >
-                                        Go to shop
+                                        {t('go-to-shop')}
                                     </Button>
                                 </XStack>
                             </YStack>
@@ -131,7 +133,7 @@ export function ProductDetails({productId}: {productId: string}) {
                             <Separator />
                             
                             <YStack gap="$2">
-                                <H3 color="$blue11">Overview</H3>
+                                <H3 color="$blue11">{t('overview')}</H3>
                                 <RenderHtml
                                     source={{ html: product.product.short_description }}
                                     contentWidth={width - 80}
@@ -142,7 +144,7 @@ export function ProductDetails({productId}: {productId: string}) {
                             <Separator />
 
                             <YStack gap="$2">
-                                <H3 color="$blue11">Product Details</H3>
+                                <H3 color="$blue11">{t('product-details')}</H3>
                                 <RenderHtml
                                     source={{ html: product.product.description }}
                                     contentWidth={width - 80}

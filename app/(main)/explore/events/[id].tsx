@@ -6,6 +6,8 @@ import axios from "axios";
 import { format, parseISO } from "date-fns";
 import { Calendar, Clock, MapPin, Globe, User } from "@tamagui/lucide-icons";
 import RenderHTML from "react-native-render-html";
+import { useTranslation } from "react-i18next";
+import i18next from "@/i18n";
 
 // Event interfaces matching our new structure
 interface Thumbnail {
@@ -62,7 +64,7 @@ export default function EventDetailsScreen() {
     const textColor = theme?.color?.val;
     // Use safe color values with fallbacks
     const blueColor = theme?.blue10?.val || '#0077CC';
-
+    const { t } = useTranslation();
     const { height: windowHeight, width } = useWindowDimensions();
 
     const [event, setEvent] = useState<Event | null>(null);
@@ -73,7 +75,7 @@ export default function EventDetailsScreen() {
     const formatEventTime = (dateString: string) => {
         if (!dateString) return "";
         const date = parseISO(dateString);
-        return format(date, 'h:mm a');
+        return format(date, t('h-mm-a'));
     };
 
     useEffect(() => {
@@ -88,7 +90,7 @@ export default function EventDetailsScreen() {
                 setEvent(response.data);
             } catch (err) {
                 console.error("Failed to fetch event details:", err);
-                setError("Could not load event details. Please try again later.");
+                setError(t('could-not-load-event-details-please-try-again-later'));
             } finally {
                 setIsLoading(false);
             }
@@ -97,7 +99,7 @@ export default function EventDetailsScreen() {
         if (id) {
             fetchEventDetails();
         } else {
-            setError("No event ID provided");
+            setError(t('no-event-id-provided'));
             setIsLoading(false);
         }
     }, [id]);
@@ -148,7 +150,7 @@ export default function EventDetailsScreen() {
         return (
             <View flex={1} justifyContent="center" alignItems="center">
                 <Spinner size="large" color="$blue10" />
-                <Text marginTop="$4" color="$gray700">Loading event details...</Text>
+                <Text marginTop="$4" color="$gray700">{t('loading-event-details')}</Text>
             </View>
         );
     }
@@ -163,16 +165,16 @@ export default function EventDetailsScreen() {
                     transition={{ type: 'timing', duration: 300 }}
                 >
                     <YStack alignItems="center" gap="$4">
-                        <Text fontSize="$6" fontWeight="bold" color="$gray700">Event Not Found</Text>
+                        <Text fontSize="$6" fontWeight="bold" color="$gray700">{t('event-not-found')}</Text>
                         <Text textAlign="center" color="$gray600">
-                            {error || "We couldn't find the event you're looking for."}
+                            {error || t('we-couldnt-find-the-event-youre-looking-for')}
                         </Text>
                         <Button
                             backgroundColor="$blue9"
                             color="white"
                             onPress={() => router.back()}
                         >
-                            Go Back
+                            {t('go-back')}
                         </Button>
                     </YStack>
                 </MotiView> 
@@ -230,7 +232,7 @@ export default function EventDetailsScreen() {
                     <XStack alignItems="center" gap="$2">
                         <Calendar size={18} color={blueColor} />
                         <Text fontSize="$4" color="$gray900">
-                            {format(parseISO(event.start_date), 'EEEE, MMMM d, yyyy')}
+                            {format(parseISO(event.start_date), t('eeee-mmmm-d-yyyy'))}
                         </Text>
                     </XStack>
                     
@@ -238,7 +240,7 @@ export default function EventDetailsScreen() {
                         <Clock size={18} color={blueColor} />
                         <Text fontSize="$4" color="$gray900">
                             {event.all_day 
-                                ? 'All Day' 
+                                ? t('all-day') 
                                 : `${formatEventTime(event.start_date)} - ${formatEventTime(event.end_date)}`
                             }
                         </Text>
@@ -268,17 +270,17 @@ export default function EventDetailsScreen() {
                 {event.cost && (
                     <View>
                         <Stack
-                            backgroundColor={event.cost === "Free" ? "$green2" : "$blue2"}
+                            backgroundColor={event.cost === t('free') ? "$green2" : "$blue2"}
                             paddingHorizontal="$3"
                             paddingVertical="$1"
                             borderRadius="$4"
                             alignSelf="flex-start"
                         >
                             <Text
-                                color={event.cost === "Free" ? "$green9" : "$blue9"}
+                                color={event.cost === t('free-0') ? "$green9" : "$blue9"}
                                 fontWeight="600"
                             >
-                                {event.cost === "Free" ? "Free" : event.cost}
+                                {event.cost === t('free-1') ? t('free-2') : event.cost}
                             </Text>
                         </Stack>
                     </View>
@@ -306,7 +308,7 @@ export default function EventDetailsScreen() {
             
             {/* Description Section */}
             <YStack padding="$4" paddingTop={0} gap="$3">
-                <H5>About this event</H5>
+                <H5>{t('about-this-event')}</H5>
                 
                 {event.description ? (
                     <RenderHTML
@@ -315,7 +317,7 @@ export default function EventDetailsScreen() {
                         tagsStyles={htmlStyles}
                     />
                 ) : (
-                    <Text color="$gray700">No description available.</Text>
+                    <Text color="$gray700">{t('no-description-available')}</Text>
                 )}
                 
                 {/* Website link if available */}
@@ -327,7 +329,7 @@ export default function EventDetailsScreen() {
                         icon={<Globe size={16} color="white" />}
                         onPress={() => handleOpenUrl(event.website)}
                     >
-                        View Event Website
+                        {t('view-event-website')}
                     </Button>
                 )}
             </YStack>

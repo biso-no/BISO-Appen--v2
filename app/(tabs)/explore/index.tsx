@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { RefreshControl } from 'react-native'
 import { 
   YStack, 
@@ -26,7 +26,8 @@ import { useCampus } from '@/lib/hooks/useCampus'
 import axios from 'axios'
 import { useAuth } from '@/components/context/core/auth-provider'
 import { useColorScheme } from 'react-native'
-
+import { useTranslation } from 'react-i18next'
+import i18next from '@/i18n'
 interface Event {
   id: number;
   title: string;
@@ -93,6 +94,7 @@ const categories: ExploreCategory[] = [
   }
 ]
 
+
 export default function ExploreScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -101,8 +103,54 @@ export default function ExploreScreen() {
   const { campus } = useCampus()
   const [error, setError] = useState<string | null>(null)
   const [hasLoaded, setHasLoaded] = useState(false)
+  const { t, i18n } = useTranslation()
+  const animationCompletedRef = useRef(false)
 
   const colorScheme = useColorScheme();
+
+  const categories: ExploreCategory[] = [
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Discover upcoming events and activities',
+      icon: Calendar,
+      color: 'purple',
+      link: '/explore/events'
+    },
+    {
+      id: 'shop',
+      title: 'BISO Shop',
+      description: 'Official merchandise and more',
+      icon: ShoppingBag,
+      color: 'pink',
+      link: '/explore/products'
+    },
+    {
+      id: 'units',
+      title: 'All clubs & units',
+      description: 'Discover student clubs and organizations',
+      icon: Users,
+      color: 'blue',
+      link: '/explore/units'
+    },
+    {
+      id: 'reimbursements',
+      title: 'Reimbursements',
+      description: 'Submit and track expenses',
+      icon: Receipt,
+      color: 'green',
+      link: '/explore/expenses',
+      requiresAuth: true
+    },
+    {
+      id: 'jobs',
+      title: 'Job Board',
+      description: 'Volunteer positions and board positions',
+      icon: Briefcase,
+      color: 'orange',
+      link: '/explore/volunteer'
+    }
+  ]
 
   const loadEvents = useCallback(async () => {
     try {
@@ -135,22 +183,24 @@ export default function ExploreScreen() {
       setEvents(transformedEvents);
       setHasLoaded(true);
     } catch (err) {
-      setError('Failed to load events');
+      setError(t('explore.errors.failedToLoadEvents'));
       console.error('Error loading events:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [campus]);
+  }, [campus, t]);
 
   useEffect(() => {
     if (!hasLoaded) {
-      loadEvents()
+      loadEvents();
+      animationCompletedRef.current = true;
     }
-  }, [hasLoaded, loadEvents])
+  }, [hasLoaded, loadEvents]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     setHasLoaded(false)
+    animationCompletedRef.current = false;
     await loadEvents()
     setRefreshing(false)
   }, [loadEvents])
@@ -179,7 +229,7 @@ export default function ExploreScreen() {
     
     const formatEventDate = (dateString: string) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-NO', {
+      return date.toLocaleDateString(i18n.language, {
         day: 'numeric',
         month: 'short'
       });
@@ -192,6 +242,7 @@ export default function ExploreScreen() {
           pressStyle={{ scale: 0.98 }}
         >
           <MotiView
+            key={`event-${event.id}-animated`}
             from={{ 
               opacity: 0,
               scale: 0.9,
@@ -209,7 +260,6 @@ export default function ExploreScreen() {
               delay: index * 100,
               stiffness: 100
             }}
-            key={`event-${event.id}`}
           >
             <Stack
               backgroundColor="$background"
@@ -258,7 +308,7 @@ export default function ExploreScreen() {
                     pressStyle={{ scale: 0.97 }}
                     onPress={() => router.push(`/(main)/explore/events/${event.id}`)}
                   >
-                    <Text color="white">View Details</Text>
+                    <Text color="white">{t('explore.viewDetails')}</Text>
                   </Button>
                 </XStack>
               </YStack>
@@ -312,6 +362,7 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
       onPress={handlePress}
     >
       <MotiView
+        key={`category-${category.id}-animated`}
         from={{ opacity: 0, translateX: -20 }}
         animate={{ opacity: 1, translateX: 0 }}
         transition={{
@@ -321,7 +372,6 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
           delay: index * 100,
           stiffness: 100
         }}
-        key={`category-${category.id}`}
       >
         <XStack
           backgroundColor={getBackgroundColor()}
@@ -357,18 +407,18 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
                 numberOfLines={1}
                 color="$color"
               >
-                {category.title}
+                {t(`explore.categories.${category.id}.title`)}
               </Text>
               <Text 
                 fontSize={14} 
                 color="$color"
-                opacity={0.8} // Increased opacity for better readability
+                opacity={0.8}
                 numberOfLines={2}
                 flexWrap="wrap"
               >
                 {category.requiresAuth && !user ? 
-                  'Please sign in to access this feature' : 
-                  category.description}
+                  t('explore.signInRequired') : 
+                  t(`explore.categories.${category.id}.description`)}
               </Text>
             </YStack>
           </XStack>
@@ -395,7 +445,7 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
         <YStack gap="$4">
           {events.length > 0 && (
             <View>
-              <Text fontSize={18} fontWeight="bold" color="$color">Featured Events</Text>
+              <Text fontSize={18} fontWeight="bold" color="$color">{t('explore.featuredEvents')}</Text>
               {error ? (
                 <Stack
                   backgroundColor="$red2"
@@ -410,7 +460,7 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
                     onPress={loadEvents}
                     backgroundColor="$red8"
                   >
-                    <Text color="white">Retry</Text>
+                    <Text color="white">{t('common.retry')}</Text>
                   </Button>
                 </Stack>
               ) : isLoading ? (
@@ -428,7 +478,7 @@ const CategoryCard = ({ category, index }: { category: ExploreCategory, index: n
         </YStack>
 
         <YStack gap="$4" marginTop="$6" marginBottom="$8">
-          <Text fontSize={18} fontWeight="bold" color="$color">Services</Text>
+          <Text fontSize={18} fontWeight="bold" color="$color">{t('explore.services')}</Text>
           <YStack gap="$3">
             {categories.map((category, index) => (
               <CategoryCard key={category.id} category={category} index={index} />

@@ -6,7 +6,7 @@ import { MyStack } from "@/components/ui/MyStack";
 import { createSession } from "@/lib/appwrite";
 import { useAuth } from "@/lib/hooks/useAuthStore";
 import { queryClient } from '@/lib/react-query';
-
+import { useTranslation } from "react-i18next";
 //A callback screen that verifies the code from the email. If the code is valid, a large checkmark with animation is shown, and the user is redirected to the home screen.
 export default function VerifyScreen() {
     const router = useRouter();
@@ -17,14 +17,14 @@ export default function VerifyScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isVerified, setIsVerified] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+    const { t } = useTranslation();
     // Get the refetch function from useAuth to refresh user data after authentication
     const { actions } = useAuth();
 
     useEffect(() => {
         async function verifyMagicLink() {
             if (!secret || !userId) {
-                setError("Invalid verification link");
+                setError(t('invalid-verification-link'));
                 setIsLoading(false);
                 return;
             }
@@ -38,17 +38,17 @@ export default function VerifyScreen() {
                     // Also directly refetch the user data to ensure immediate state update
                     await actions.refetch();
                 } else {
-                    setError("Invalid or expired verification link");
+                    setError(t('invalid-or-expired-verification-link'));
                 }
             } catch (err) {
-                setError("Failed to verify link. Please try again.");
+                setError(t('failed-to-verify-link-please-try-again'));
             } finally {
                 setIsLoading(false);
             }
         }
 
         verifyMagicLink();
-    }, [secret, userId, actions]);
+    }, [secret, userId, actions, t]);
 
     useEffect(() => {
         if (isVerified) {
@@ -65,20 +65,20 @@ export default function VerifyScreen() {
                 {isLoading ? (
                     <>
                         <Spinner size="large" />
-                        <Text>Verifying your account...</Text>
+                        <Text>{t('verifying-your-account')}</Text>
                     </>
                 ) : isVerified ? (
                     <>
                         <CheckCircle size={100} color="$green10" />
                         <H1>Success!</H1>
-                        <Text>Your account has been verified.</Text>
-                        <Text>You'll be redirected shortly...</Text>
+                        <Text>{t('your-account-has-been-verified')}</Text>
+                        <Text>{t('youll-be-redirected-shortly')}</Text>
                     </>
                 ) : (
                     <>
                         <XCircle size={100} color="$red10" />
-                        <H1>Verification Failed</H1>
-                        <Text>{error || "Unknown error occurred"}</Text>
+                        <H1>{t('verification-failed')}</H1>
+                        <Text>{error || t('unknown-error-occurred')}</Text>
                     </>
                 )}
             </YStack>

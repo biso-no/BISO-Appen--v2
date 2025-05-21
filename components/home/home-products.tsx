@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import React, { memo, useMemo } from "react";
 import { LinearGradient } from "tamagui/linear-gradient";
 import { YStack, XStack, H3, Card, Image, Text, Button, styled, ScrollView } from "tamagui";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface HomeProductsProps {
     products: WooProduct[];
@@ -33,6 +35,7 @@ const ProductCard = styled(Card, {
 
 // Optimize with memo and minimal animations
 export const HomeProducts = memo(({ products }: HomeProductsProps) => {
+    const { t } = useTranslation();
     // Using useMemo to prevent recreating elements on each render
     const renderProducts = useMemo(() => {
         return (
@@ -97,12 +100,12 @@ export const HomeProducts = memo(({ products }: HomeProductsProps) => {
     return (
         <YStack gap="$4" padding="$4">
             <XStack justifyContent="space-between" alignItems="center">
-                <H3>Featured Products</H3>
+                <H3>{t('featured-products')}</H3>
                 <Button
                     chromeless
                     onPress={() => router.push('/explore/products')}
                 >
-                    <Text fontSize={14} color="$blue9">See all</Text>
+                    <Text fontSize={14} color="$blue9">{t('see-all-0')}</Text>
                 </Button>
             </XStack>
             {renderProducts}

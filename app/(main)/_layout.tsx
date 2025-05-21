@@ -4,24 +4,21 @@ import React from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Avatar, XStack, Button, Stack as TStack, YStack } from 'tamagui';
+import { XStack, Button, Stack as TStack } from 'tamagui';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { UserRound, LogIn, ChevronLeft } from '@tamagui/lucide-icons';
-import { useAuth } from '@/components/context/core/auth-provider';
+import { ChevronLeft } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useProfile } from '@/components/context/core/profile-provider';
 import { MotiView } from 'moti';
-import { CopilotButton } from '@/components/ai';
 import CampusPopover from '@/components/CampusPopover';
+import { AICopilot } from '@/components/ai-copilot';
 
 export default function MainLayout() {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-  const { user } = useAuth();
-  const { profile } = useProfile();
+
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
@@ -103,7 +100,7 @@ export default function MainLayout() {
           </XStack>
           
           <XStack flex={1} justifyContent="flex-end">
-            <CopilotButton />
+            <AICopilot />
           </XStack>
         </XStack>
       </TStack>

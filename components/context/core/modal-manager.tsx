@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Sheet, Dialog } from 'tamagui';
+import { Sheet, Dialog, Theme } from 'tamagui';
+import { useColorScheme } from 'react-native';
 
 type ModalType = 'sheet' | 'dialog';
 
@@ -66,6 +67,7 @@ export function useModals() {
 // Component that renders all active modals
 function ModalRenderer() {
   const { activeModals, hideModal } = useModals();
+  const colorScheme = useColorScheme();
 
   return (
     <>
@@ -81,57 +83,61 @@ function ModalRenderer() {
           const sheetProps = { ...defaultProps, ...config.props };
           
           return (
-            <Sheet
-              key={id}
-              modal
-              open={true}
-              onOpenChange={(isOpen: boolean) => !isOpen && hideModal(id)}
-              {...sheetProps}
-            >
-              <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
-              <Sheet.Handle />
-              <Sheet.Frame padding="$4">
-                {config.component()}
-              </Sheet.Frame>
-            </Sheet>
+            <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+              <Sheet
+                key={id}
+                modal
+                open={true}
+                onOpenChange={(isOpen: boolean) => !isOpen && hideModal(id)}
+                {...sheetProps}
+              >
+                <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+                <Sheet.Handle />
+                <Sheet.Frame padding="$4">
+                  {config.component()}
+                </Sheet.Frame>
+              </Sheet>
+            </Theme>
           );
         } else if (config.type === 'dialog') {
           return (
-            <Dialog 
-              key={id} 
-              modal 
-              open={true} 
-              onOpenChange={(isOpen: boolean) => !isOpen && hideModal(id)}
-              {...config.props}
-            >
-              <Dialog.Portal>
-                <Dialog.Overlay
-                  key="overlay"
-                  animation="quick"
-                  opacity={0.5}
-                  enterStyle={{ opacity: 0 }}
-                  exitStyle={{ opacity: 0 }}
-                />
-                <Dialog.Content
-                  bordered
-                  elevate
-                  key="content"
-                  animation={[
-                    'quick',
-                    {
-                      opacity: {
-                        overshootClamping: true,
+            <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+              <Dialog 
+                key={id} 
+                modal 
+                open={true} 
+                onOpenChange={(isOpen: boolean) => !isOpen && hideModal(id)}
+                {...config.props}
+              >
+                <Dialog.Portal>
+                  <Dialog.Overlay
+                    key="overlay"
+                    animation="quick"
+                    opacity={0.5}
+                    enterStyle={{ opacity: 0 }}
+                    exitStyle={{ opacity: 0 }}
+                  />
+                  <Dialog.Content
+                    bordered
+                    elevate
+                    key="content"
+                    animation={[
+                      'quick',
+                      {
+                        opacity: {
+                          overshootClamping: true,
+                        },
                       },
-                    },
-                  ]}
-                  enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-                  exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-                  gap="$4"
-                >
-                  {config.component()}
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog>
+                    ]}
+                    enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+                    exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+                    gap="$4"
+                  >
+                    {config.component()}
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog>
+            </Theme>
           );
         }
         

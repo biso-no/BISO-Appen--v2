@@ -2,26 +2,16 @@ import React, { useState } from 'react';
 import { Platform, View, StyleSheet, ImageSourcePropType } from 'react-native';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Avatar, XStack, Button, Stack, YStack } from 'tamagui';
 import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
-// Remove Reanimated imports
-import { 
-  UserRound, 
-  LogIn, 
-  Home, 
-  Compass
-} from '@tamagui/lucide-icons';
+
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
-import CampusPopover from '@/components/CampusPopover';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '@/components/context/core/profile-provider';
 // Add moti imports
 import { MotiView } from 'moti';
-import { CopilotButton } from '@/components/ai';
 
 import { withLayoutContext } from "expo-router";
 import { createNativeBottomTabNavigator } from "@bottom-tabs/react-navigation";

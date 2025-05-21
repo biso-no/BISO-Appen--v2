@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import DepartmentSelector from '@/components/SelectDepartments';
 import { MotiView } from 'moti';
 import { Models } from 'react-native-appwrite';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Step3Props {
   campus?: string;

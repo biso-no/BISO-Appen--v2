@@ -727,3 +727,89 @@ export async function createSession(userId: string, secret: string) {
 
     return session
 }
+
+// Notice System Functions
+export async function getActiveNotices(locale?: 'norwegian' | 'english') {
+  try {
+    let query = [
+      Query.equal('isActive', true),
+      Query.orderDesc('priority')
+    ];
+    
+    // Add locale filter if provided
+    if (locale) {
+      query.push(Query.equal('locale', locale));
+    }
+    
+    const response = await databases.listDocuments('app', 'notices', query);
+    return response;
+  } catch (error) {
+    console.error("Error fetching notices:", error);
+    throw error;
+  }
+}
+
+export async function createNotice(noticeData: {
+  title: string;
+  description: string;
+  color?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  priority: number;
+  isActive: boolean;
+  expiresAt?: string;
+}) {
+  try {
+    const response = await databases.createDocument(
+      'app',
+      'notices',
+      ID.unique(),
+      {
+        ...noticeData,
+        createdAt: new Date().toISOString()
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error creating notice:", error);
+    throw error;
+  }
+}
+
+export async function updateNotice(noticeId: string, noticeData: Partial<{
+  title: string;
+  description: string;
+  color: string;
+  actionUrl: string;
+  actionLabel: string;
+  priority: number;
+  isActive: boolean;
+  expiresAt: string;
+}>) {
+  try {
+    const response = await databases.updateDocument(
+      'app',
+      'notices',
+      noticeId,
+      noticeData
+    );
+    return response;
+  } catch (error) {
+    console.error("Error updating notice:", error);
+    throw error;
+  }
+}
+
+export async function deleteNotice(noticeId: string) {
+  try {
+    const response = await databases.deleteDocument(
+      'app',
+      'notices',
+      noticeId
+    );
+    return response;
+  } catch (error) {
+    console.error("Error deleting notice:", error);
+    throw error;
+  }
+}

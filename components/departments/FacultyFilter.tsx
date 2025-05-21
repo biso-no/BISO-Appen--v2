@@ -9,6 +9,8 @@ import {
   ScrollView
 } from "tamagui";
 import * as LucideIcons from "@tamagui/lucide-icons";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface FacultyFilterProps {
   allFaculties: Array<{

@@ -5,8 +5,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { PortalProvider, TamaguiProvider, Theme } from 'tamagui';
@@ -19,9 +20,14 @@ import { LogBox } from 'react-native';
 import { queryClient } from '@/lib/react-query';
 import { RootProvider } from '@/components/context/root-provider';
 import { PerformanceProvider } from '@/lib/performance';
-import { AICopilotProvider } from '@/components/ai';
 import { useNotifications } from '@/lib/notifications';
 import { useRouter } from 'expo-router';
+import NoticeContainer from '@/components/ui/notice-container';
+import AppUpdater from '@/components/app-updater';
+import { AICopilotProvider } from '@/components/context/core/ai-copilot-provider';
+import { Sheet } from '@tamagui/sheet';
+import { AICopilot } from '@/components/ai-copilot';
+import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
 
 // Silence console warnings about defaultProps
 if (__DEV__) {
@@ -84,9 +90,59 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+function AICopilotSheetModal() {
+  const { isOpen, setIsOpen, isEnabled } = useAICopilot();
+  
+  // Don't render the sheet if the feature is disabled
+  if (!isEnabled) return null;
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+  };
+  
+  return (
+    <Sheet
+      forceRemoveScrollEnabled={isOpen}
+      modal={true}
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      snapPoints={[90]}
+      dismissOnSnapToBottom
+      zIndex={100_000}
+      animation="medium"
+    >
+      <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+      <Sheet.Handle />
+      <Sheet.Frame padding="$2" flex={1}>
+        <AICopilot isModal />
+      </Sheet.Frame>
+    </Sheet>
+  );
+}
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const { i18n } = useTranslation();
+
+  // Force rerender when language changes
+  const [, setForceUpdate] = useState(0);
+
+  // Add language change listener
+  useEffect(() => {
+    const handleLanguageChanged = () => {
+      // Force rerender of the entire app
+      setForceUpdate(prev => prev + 1);
+    };
+
+    // Add the listener
+    i18n.on('languageChanged', handleLanguageChanged);
+
+    // Clean up
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, [i18n]);
 
   // Set up notification handlers
   useNotifications(
@@ -117,12 +173,15 @@ function RootLayoutNav() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootProvider>
             <CampusProvider>
-            <AICopilotProvider>
               <PortalProvider shouldAddRootHost>
                 <ModalProvider>
-                  <MembershipModalProvider>
-                    <PerformanceProvider>
-                      <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                  <AICopilotProvider>
+                    <MembershipModalProvider>
+                      <PerformanceProvider>
+                        <Theme name={colorScheme === 'dark' ? 'dark' : 'light'}>
+                        <NoticeContainer />
+                        <AppUpdater />
+                        <AICopilotSheetModal />
                         <Stack initialRouteName='(tabs)'>
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                           <Stack.Screen name="(main)" options={{ headerShown: false }} />
@@ -130,11 +189,11 @@ function RootLayoutNav() {
                           <Stack.Screen name="bug-report" options={{ presentation: 'modal' }} />
                         </Stack>
                       </Theme>
-                    </PerformanceProvider>
-                  </MembershipModalProvider>
+                      </PerformanceProvider>
+                    </MembershipModalProvider>
+                  </AICopilotProvider>
                 </ModalProvider>
               </PortalProvider>
-              </AICopilotProvider>
             </CampusProvider>
           </RootProvider>
         </ThemeProvider>
