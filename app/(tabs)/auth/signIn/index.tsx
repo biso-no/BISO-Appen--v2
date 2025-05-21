@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Input, Text, YStack, XStack, H1, H2, View } from 'tamagui';
-import { createMagicUrl } from '@/lib/appwrite';
+import { createMagicUrl, createOtp, verifyOtp } from '@/lib/appwrite';
 import { useRouter } from 'expo-router';
 import { MyStack } from '@/components/ui/MyStack';
 import { MotiView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'tamagui/linear-gradient';
-import { Mail, Check, ExternalLink } from '@tamagui/lucide-icons';
+import { Mail, Check, ExternalLink, Key } from '@tamagui/lucide-icons';
 import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
@@ -39,6 +39,9 @@ export default function LoginScreen() {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(0);
+  const [isCodeVerificationActive, setIsCodeVerificationActive] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [userId, setUserId] = useState('');
   const { width } = useWindowDimensions();
   const { t } = useTranslation();
   const { push } = useRouter();
@@ -103,6 +106,53 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   }, [email, cooldownTime]);
+
+  const handleSendCodeInstead = useCallback(async () => {
+    if (cooldownTime > 0) return;
+    setIsLoading(true);
+    try {
+      const response = await createOtp(email);
+      console.log('OTP response:', response);
+      
+      if (response && response.$id) {
+        setUserId(response.userId); // Store the userId from response, not $id
+        setIsCodeVerificationActive(true);
+        setCooldownTime(10); // Reset cooldown timer
+        setErrorMessages([]);
+      }
+    } catch (error) {
+      console.error('OTP creation error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to send verification code';
+      setErrorMessages([errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [email, cooldownTime]);
+
+  const handleVerifyCode = useCallback(async () => {
+    if (!verificationCode) {
+      setErrorMessages(['Please enter the verification code']);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      console.log('Verifying with:', { userId, verificationCode });
+      const response = await verifyOtp(userId, verificationCode);
+      console.log('Verification response:', response);
+      
+      if (response && response.$id) {
+        // Successful verification, redirect to the main app
+        push('/explore');
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to verify code';
+      setErrorMessages([errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [verificationCode, userId, push]);
 
   return (
     <KeyboardAvoidingView
@@ -233,45 +283,95 @@ export default function LoginScreen() {
                     >
                       {t('weve-sent-a-magic-link-to-your-email-please-check-your-inbox-and-click-the-link-to-sign-in')}
                     </Text>
-                    <XStack gap="$2" width="100%">
-                      <Button
-                        flex={1}
-                        backgroundColor={COLORS.accentBlue}
-                        color="white"
-                        size="$4"
-                        fontWeight="600"
-                        onPress={() => Linking.openURL('mailto:')}
-                        pressStyle={{ 
-                          backgroundColor: COLORS.defaultBlue,
-                          scale: 0.98,
-                        }}
-                      >
-                        <ExternalLink size={16} color="white" />
-                        <Text color="white" fontSize={14} fontWeight="600" marginLeft="$1">
-                          {t('open-email-app')}
-                        </Text>
-                      </Button>
-                      <Button
-                        flex={1}
-                        backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
-                        color="white"
-                        size="$4"
-                        fontWeight="600"
-                        onPress={handleResend}
-                        disabled={cooldownTime > 0 || isLoading}
-                        pressStyle={{ 
-                          backgroundColor: COLORS.accentBlue,
-                          scale: 0.98,
-                        }}
-                        opacity={cooldownTime > 0 ? 0.7 : 1}
-                      >
-                        <Text color="white" fontSize={14} fontWeight="600">
-                          {isLoading ? 'Sending...' : 
-                           cooldownTime > 0 ? t('resend-in-cooldowntime-s') : 
-                           t('resend-link')}
-                        </Text>
-                      </Button>
-                    </XStack>
+                    {isCodeVerificationActive ? (
+                      <YStack width="100%" gap="$3">
+                        <XStack
+                          backgroundColor="white"
+                          borderRadius="$4"
+                          borderWidth={1}
+                          borderColor={COLORS.subtleBlue}
+                          padding="$3"
+                          alignItems="center"
+                        >
+                          <Key size={20} color={COLORS.secondary} />
+                          <Input
+                            flex={1}
+                            marginLeft="$2"
+                            placeholder="Enter 6-digit code"
+                            backgroundColor="transparent"
+                            borderWidth={0}
+                            value={verificationCode}
+                            onChangeText={setVerificationCode}
+                            keyboardType="numeric"
+                            maxLength={6}
+                            color={COLORS.primary}
+                            placeholderTextColor={COLORS.defaultBlue}
+                            fontSize={16}
+                            fontWeight="500"
+                          />
+                        </XStack>
+                        
+                        <Button
+                          backgroundColor={COLORS.secondary}
+                          color="white"
+                          size="$4"
+                          fontWeight="600"
+                          onPress={handleVerifyCode}
+                          disabled={isLoading || verificationCode.length !== 6}
+                          pressStyle={{ 
+                            backgroundColor: COLORS.accentBlue,
+                            scale: 0.98,
+                          }}
+                          opacity={verificationCode.length !== 6 ? 0.7 : 1}
+                        >
+                          <Text color="white" fontSize={14} fontWeight="600">
+                            {isLoading ? 'Verifying...' : 'Verify Code'}
+                          </Text>
+                        </Button>
+                      </YStack>
+                    ) : (
+                      <XStack gap="$2" width="100%">
+                        <Button
+                          flex={1}
+                          backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.secondary}
+                          color="white"
+                          size="$4"
+                          fontWeight="600"
+                          onPress={handleResend}
+                          disabled={cooldownTime > 0 || isLoading}
+                          pressStyle={{ 
+                            backgroundColor: COLORS.accentBlue,
+                            scale: 0.98,
+                          }}
+                          opacity={cooldownTime > 0 ? 0.7 : 1}
+                        >
+                          <Text color="white" fontSize={14} fontWeight="600">
+                            {isLoading ? 'Sending...' : 
+                            cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
+                            'Resend Link'}
+                          </Text>
+                        </Button>
+                        
+                        <Button
+                          flex={1}
+                          backgroundColor={cooldownTime > 0 ? '$gray8' : COLORS.defaultGold}
+                          color={COLORS.primary}
+                          size="$4"
+                          fontWeight="600"
+                          onPress={handleSendCodeInstead}
+                          disabled={cooldownTime > 0 || isLoading}
+                          pressStyle={{ 
+                            backgroundColor: COLORS.accentGold,
+                            scale: 0.98,
+                          }}
+                          opacity={cooldownTime > 0 ? 0.7 : 1}
+                        >
+                          <Text color={COLORS.primary} fontSize={14} fontWeight="600">
+                            {isLoading ? 'Sending...' : 'Send code instead'}
+                          </Text>
+                        </Button>
+                      </XStack>
+                    )}
                   </YStack>
                 ) : (
                   <Button

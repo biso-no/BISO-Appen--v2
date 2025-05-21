@@ -50,6 +50,49 @@ type ExploreCategory = {
   requiresAuth?: boolean
 }
 
+const categories: ExploreCategory[] = [
+  {
+    id: 'events',
+    title: 'Events',
+    description: 'Discover upcoming events and activities',
+    icon: Calendar,
+    color: 'purple',
+    link: '/explore/events'
+  },
+  {
+    id: 'shop',
+    title: 'BISO Shop',
+    description: 'Official merchandise and more',
+    icon: ShoppingBag,
+    color: 'pink',
+    link: '/explore/products'
+  },
+  {
+    id: 'units',
+    title: 'All clubs & units',
+    description: 'Discover student clubs and organizations',
+    icon: Users,
+    color: 'blue',
+    link: '/explore/units'
+  },
+  {
+    id: 'reimbursements',
+    title: 'Reimbursements',
+    description: 'Submit and track expenses',
+    icon: Receipt,
+    color: 'green',
+    link: '/explore/expenses',
+    requiresAuth: false
+  },
+  {
+    id: 'jobs',
+    title: 'Job Board',
+    description: 'Volunteer positions and board positions',
+    icon: Briefcase,
+    color: 'orange',
+    link: '/explore/volunteer'
+  }
+]
 
 
 export default function ExploreScreen() {
@@ -114,7 +157,7 @@ export default function ExploreScreen() {
       setIsLoading(true);
       setError(null);
   
-      let url = 'https://biso.no/wp-json/biso/v1/events?featured=true';
+      let url = 'https://biso.no/wp-json/biso/v1/events';
       
       const params: Record<string, string | number> = {
         per_page: 25
