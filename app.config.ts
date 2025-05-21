@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
+      LSApplicationQueriesSchemes: ['itms-apps'],
     },
     entitlements: {
       'aps-environment': 'production',
@@ -76,6 +77,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-font',
+    'expo-localization',
     'react-native-email-link',
     ["expo-splash-screen", {
       backgroundColor: "#232323",

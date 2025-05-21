@@ -8,7 +8,8 @@ import { useAuth } from "./context/core/auth-provider";
 import { useProfile } from "./context/core/profile-provider";
 import { launchCameraAsync } from "expo-image-picker";
 import { File } from "@/lib/file-utils";
-
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 const HighlightedAvatar = styled(Avatar, {
     variants: {
@@ -23,7 +24,7 @@ const HighlightedAvatar = styled(Avatar, {
 });
 
 export function ImagePopover() {
-
+    const { t } = useTranslation();
     const [isPressed, setIsPressed] = useState(false);
     const [capturing, setCapturing] = useState(false);
 
@@ -130,7 +131,7 @@ export function ImagePopover() {
             >
                 <YGroup gap="$4">
                     <Button onPress={handleCaptureImage} disabled={capturing}>
-                        <Text>Capture Image</Text>
+                        <Text>{t('capture-image')}</Text>
                     </Button>
                     <MyImagePicker image={image} setImage={setImage} handleImageChange={handleImageChange} />
                 </YGroup>

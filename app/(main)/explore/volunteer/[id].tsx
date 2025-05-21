@@ -6,11 +6,13 @@ import { YStack, useTheme, Separator, Spinner, ScrollView, Button } from "tamagu
 import axios from "axios";
 import { useWindowDimensions } from "react-native";
 import { MotiView } from 'moti';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 export default function VolunteerScreen() {
     const params = useLocalSearchParams();
     const { width } = useWindowDimensions();
-
+    const { t } = useTranslation();
     const [job, setJob] = useState<{ id: number, title: string, content: string, url: string }>({ id: 0, title: "", content: "", url: "" });
     const [loading, setLoading] = useState(true);
 
@@ -74,7 +76,7 @@ export default function VolunteerScreen() {
                 contentWidth={width - 40}
                 tagsStyles={titleStyles}
             />
-            <Button onPress={() => router.push(job?.url as RelativePathString)}>View on BISO.no</Button>
+            <Button onPress={() => router.push(job?.url as RelativePathString)}>{t('view-on-biso-no')}</Button>
             <Separator />
             <RenderHTML
                 source={{ html: job?.content }}

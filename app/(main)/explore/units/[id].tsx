@@ -8,7 +8,8 @@ import { databases } from '@/lib/appwrite';
 import { Models } from 'react-native-appwrite';
 import { useWindowDimensions } from 'react-native';
 import { useTheme } from 'tamagui';
-
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 const DepartmentScreen = () => {
   const route = useRoute();
@@ -16,7 +17,7 @@ const DepartmentScreen = () => {
   const { id } = searchParams;
 
   const { width } = useWindowDimensions();
-
+  const { t } = useTranslation();
   const [department, setDepartment] = useState<Models.Document>();
 
   const theme = useTheme();
@@ -31,7 +32,7 @@ const DepartmentScreen = () => {
   }, [id]);
 
 if (!department) {
-  return <Text>Uh oh, we couldn't find that department. Please try again.</Text>;
+  return <Text>{t('uh-oh-we-couldnt-find-that-department-please-try-again')}</Text>;
 }
 
 const htmlStyles = {
@@ -72,13 +73,13 @@ const htmlStyles = {
     {department.news.length > 0 && (
       <View marginTop={16} marginBottom={16}>
         <Text fontWeight="bold" fontSize={20} marginBottom={8}>
-          Latest Posts
+          {t('latest-posts')}
         </Text>
         {department.news.map((post: Models.Document) => (
           <View key={post.id} marginBottom={8}>
             <Text>{post.content}</Text>
             <Button onPress={() => Linking.openURL(post.url)}>
-                <Text>View Post</Text>
+                <Text>{t('view-post')}</Text>
             </Button>
           </View>
         ))}
@@ -88,19 +89,19 @@ const htmlStyles = {
     {department.socialMedia && (
       <View marginTop={16} marginBottom={16}>
         <Text fontWeight="bold" fontSize={20} marginBottom={8}>
-          Social Media
+          {t('social-media')}
         </Text>
         <Button
           onPress={() => Linking.openURL(department.socialMedia.facebook)}
         >
-            <Text>Instagram</Text>
+            <Text>{t('instagram')}</Text>
         </Button>
       </View>
     )}
         {department.boardOfTrustees && (
       <View marginTop={16} marginBottom={16}>
         <Text fontWeight="bold" fontSize={20} marginBottom={8}>
-          Board of Trustees
+          {t('board-of-trustees')}
         </Text>
         {department.boardOfTrustees.map((member: Models.Document, index: number) => (
           <View

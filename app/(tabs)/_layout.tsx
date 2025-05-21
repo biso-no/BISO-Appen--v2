@@ -11,19 +11,20 @@ import {
   LogIn, 
   Home, 
   Compass,
-  ChevronLeft
+  ChevronLeft,
+  Bot
 } from '@tamagui/lucide-icons';
 import { useAuth } from '@/components/context/core/auth-provider';
 import * as Notifications from 'expo-notifications';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '@/components/context/core/profile-provider';
 // Add moti imports
 import { MotiView } from 'moti';
-import { CopilotButton } from '@/components/ai';
 import CampusPopover from '@/components/CampusPopover';
+import { useAICopilot } from '@/components/context/core/ai-copilot-provider';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,7 +45,7 @@ export default function TabLayout() {
   const { user, isLoading } = useAuth();
   const { profile } = useProfile();
   const avatarId = profile?.avatar;
-  const [image, setImage] = useState(profile?.avatar || '');
+  const [image] = useState(profile?.avatar || '');
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -54,7 +55,6 @@ export default function TabLayout() {
     } else if (!avatarId) {
       return <UserRound size={25} color={color} marginTop="$2" />;
     } else {
-      const avatarUrl = `https://appwrite.biso.no/v1/storage/buckets/avatar/files/${avatarId}/view?project=biso`;
       return (
         <Avatar circular size={30} bordered marginTop="$2">
           <Avatar.Image src={image || require('@/assets/images/placeholder.png')} />
@@ -65,10 +65,20 @@ export default function TabLayout() {
 
   const HeaderComponent = () => {
     const canGoBack = router.canGoBack();
+    const pathname = usePathname();
+    const isHomeScreen = pathname === '/' || pathname === '/index' || pathname === '/(tabs)' || pathname === '/(tabs)/index';
+    const { openAICopilot, isEnabled } = useAICopilot();
+    
+    const shouldShowBackButton = canGoBack && !isHomeScreen;
 
     const handleBackPress = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.back();
+    };
+
+    const handleOpenAICopilot = () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      openAICopilot();
     };
 
     return (
@@ -111,7 +121,7 @@ export default function TabLayout() {
       >
         <XStack justifyContent="space-between" alignItems="center">
           <XStack flex={1} justifyContent="flex-start">
-            {canGoBack && (
+            {shouldShowBackButton && (
               <MotiView
                 from={{ opacity: 0, translateX: -20 }}
                 animate={{ opacity: 1, translateX: 0 }}
@@ -137,7 +147,17 @@ export default function TabLayout() {
           </XStack>
           
           <XStack flex={1} justifyContent="flex-end">
-            <CopilotButton />
+            {isEnabled && (
+              <Button
+                size="$3"
+                circular
+                icon={<Bot size={20} color={Colors[colorScheme ?? 'light'].text} />}
+                onPress={handleOpenAICopilot}
+                backgroundColor={Colors[colorScheme ?? 'light'].tint + '15'}
+                pressStyle={{ scale: 0.9, opacity: 0.8 }}
+                animation="quick"
+              />
+            )}
           </XStack>
         </XStack>
       </Stack>

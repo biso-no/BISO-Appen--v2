@@ -1,5 +1,7 @@
 import { Button } from "tamagui";
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface ImagePickerProps {
     image: string;
@@ -8,7 +10,7 @@ interface ImagePickerProps {
 }
 
 export function MyImagePicker({ image, setImage, handleImageChange }: ImagePickerProps) {
-
+    const { t } = useTranslation();
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -24,6 +26,6 @@ export function MyImagePicker({ image, setImage, handleImageChange }: ImagePicke
     };
 
     return (
-        <Button onPress={pickImage}>Pick an image</Button>
+        <Button onPress={pickImage}>{t('pick-an-image')}</Button>
     );
 }

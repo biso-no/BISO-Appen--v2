@@ -19,6 +19,8 @@ import {
   ChevronRight,
   MapPin
 } from "@tamagui/lucide-icons";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface DepartmentCardProps {
   department: Models.Document;
@@ -29,7 +31,7 @@ interface DepartmentCardProps {
 export function DepartmentCard({ department, onPress, index }: DepartmentCardProps) {
   const theme = useTheme();
   const colorScheme = useColorScheme();
-  
+  const { t } = useTranslation();
   // Generate colors for departments based on index or name
   const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow'];
   const colorSeed = department.Name ? department.Name.charCodeAt(0) % colors.length : index % colors.length;
@@ -157,7 +159,7 @@ export function DepartmentCard({ department, onPress, index }: DepartmentCardPro
                 color={colorScheme === 'dark' ? `$${departmentColor}11` : `$${departmentColor}12`} 
                 fontWeight="600"
               >
-                Details
+                {t('details')}
               </Text>
               <ChevronRight size={16} />
             </Button>

@@ -31,6 +31,8 @@ import { ShoppingBag, Tag, MapPin, Search, Filter, X, ChevronDown, SlidersHorizo
 import { LinearGradient } from "@tamagui/linear-gradient";
 import { MotiView, AnimatePresence as MotiPresence } from 'moti';
 import { create } from 'zustand';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Zustand store for product filters
 interface FilterStore {
@@ -251,7 +253,7 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
     const { campus } = useCampus();
     const [showFilters, setShowFilters] = useState(false);
     const fallbackImage = "https://example.com/fallback-image.jpg";
-    
+    const { t } = useTranslation();
     const { 
         searchQuery, 
         setSearchQuery,
@@ -365,8 +367,8 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                     >
                         <ShoppingBag size={40} color="$gray8" />
                     </MotiView>
-                    <H6 color="$gray11">No products available</H6>
-                    <Paragraph color="$gray9">Check back soon for new items!</Paragraph>
+                    <H6 color="$gray11">{t('no-products-available')}</H6>
+                    <Paragraph color="$gray9">{t('check-back-soon-for-new-items')}</Paragraph>
                 </MyStack>
             );
         }
@@ -483,7 +485,7 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                             }} 
                         />
                         <SearchBar
-                            placeholder="Search products..."
+                            placeholder={t('search-products')}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             flex={1}
@@ -506,7 +508,7 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                         icon={SlidersHorizontal}
                         onPress={() => setShowFilters(true)}
                     >
-                        Filter
+                        {t('filter')}
                     </FilterButton>
                 </XStack>
 
@@ -543,7 +545,7 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                                 color="$gray11"
                                 onPress={clearFilters}
                             >
-                                Clear all
+                                {t('clear-all')}
                             </Button>
                         </MotiView>
                     </XStack>
@@ -564,10 +566,10 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                 <Sheet.Frame padding="$4">
                     <Sheet.Handle />
                     <YStack gap="$4">
-                        <H6>Filter Products</H6>
+                        <H6>{t('filter-products')}</H6>
                         <Separator />
                         <YStack gap="$2">
-                            <Text color="$gray11" fontWeight="600">Departments</Text>
+                            <Text color="$gray11" fontWeight="600">{t('departments')}</Text>
                             {departments.length > 0 ? (
                                 <XStack flexWrap="wrap" gap="$2">
                                     {departments.map(dept => (
@@ -583,7 +585,7 @@ export function Products({ hideAllButton = false }: { hideAllButton?: boolean })
                                     ))}
                                 </XStack>
                             ) : (
-                                <Text color="$gray9">No departments available</Text>
+                                <Text color="$gray9">{t('no-departments-available')}</Text>
                             )}
                         </YStack>
                     </YStack>

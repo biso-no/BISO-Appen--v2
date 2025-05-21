@@ -21,6 +21,8 @@ import { create } from 'zustand';
 import * as FileSystem from 'expo-file-system';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { functions } from '@/lib/appwrite';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Extend the Attachment type to include our new fields
 declare module '@/lib/stores/expenseStore' {
@@ -54,7 +56,7 @@ const mockProcessReceipt = async (base64Image: string) => {
   return {
     date: new Date().toISOString(),
     amount: Math.floor(Math.random() * 1000) + 100,
-    description: 'Restaurant receipt',
+    description: i18next.t('restaurant-receipt'),
     currency: Math.random() > 0.5 ? 'EUR' : 'NOK',
     confidence: Math.random(),
     exchangeRate: 10.5,
@@ -79,7 +81,7 @@ export function FileUpload() {
   const [isCameraVisible, setIsCameraVisible] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
-
+  const { t } = useTranslation();
   const { control, formState: { errors }, watch, setValue } = useFormContext();
   const attachments = watch('expenseAttachments') || [];
   const colorScheme = useColorScheme();
@@ -346,14 +348,14 @@ export function FileUpload() {
   return (
     <YStack gap="$4" width="100%">
       <XStack justifyContent="space-between" alignItems="center">
-        <H6 fontWeight="bold">Expense Attachments</H6>
+        <H6 fontWeight="bold">{t('expense-attachments')}</H6>
 
       </XStack>
       
-      <Text>Upload receipts, invoices, or other documentation</Text>
+      <Text>{t('upload-receipts-invoices-or-other-documentation')}</Text>
       <XStack alignItems="center" gap="$2">
           <Text fontSize="$2" color={isAIAssistanceEnabled ? "$blue10" : "$gray10"}>
-            AI Assistance
+            {t('ai-assistance')}
           </Text>
           <CustomSwitch
             checked={isAIAssistanceEnabled}
@@ -387,7 +389,7 @@ export function FileUpload() {
                 marginVertical="$4"
                 width="100%"
               >
-                <Text color="$gray11">No attachments added yet</Text>
+                <Text color="$gray11">{t('no-attachments-added-yet')}</Text>
               </YStack>
             )}
           </>
@@ -399,13 +401,13 @@ export function FileUpload() {
           onPress={() => setShowAddSheet(true)}
           icon={<Upload size={18} color={isDark ? 'white' : 'black'} />}
         >
-          Upload
+          {t('upload')}
         </Button>
         <Button
           onPress={openCamera}
           icon={<CameraIcon size={18} color={isDark ? 'white' : 'black'} />}
         >
-          Capture
+          {t('capture')}
         </Button>
       </XStack>
       
@@ -424,7 +426,7 @@ export function FileUpload() {
           <Sheet.ScrollView showsVerticalScrollIndicator={true}>
             <YStack gap="$4" width="100%">
               <XStack justifyContent="space-between" alignItems="center">
-                <H6>{editingIndex !== null ? 'Edit Attachment' : 'Add Attachment'}</H6>
+                <H6>{editingIndex !== null ? t('edit-attachment') : t('add-attachment')}</H6>
                 <Button
                   size="$2"
                   circular
@@ -439,23 +441,23 @@ export function FileUpload() {
               {isLoading && (
                 <XStack padding="$4" justifyContent="center" alignItems="center">
                   <Spinner size="large" color="$blue9" />
-                  <Text marginLeft="$2">Processing with AI...</Text>
+                  <Text marginLeft="$2">{t('processing-with-ai')}</Text>
                 </XStack>
               )}
               
               {confidence !== null && (
                 <XStack backgroundColor="$blue2" padding="$2" borderRadius="$2" justifyContent="space-between">
-                  <Text fontSize="$2" color="$blue10">AI confidence level</Text>
+                  <Text fontSize="$2" color="$blue10">{t('ai-confidence-level')}</Text>
                   <Text fontSize="$2" fontWeight="bold" color="$blue10">
-                    {(confidence * 100).toFixed(0)}%
+                    {(confidence * 100).toFixed(0)}{t('key-3')}
                   </Text>
                 </XStack>
               )}
               
               <YStack gap="$2">
-                <Label>Description</Label>
+                <Label>{t('description')}</Label>
                 <Input
-                  placeholder="e.g., Dinner receipt, Train ticket"
+                  placeholder={t('e-g-dinner-receipt-train-ticket')}
                   value={description}
                   onChangeText={setDescription}
                 />
@@ -463,7 +465,7 @@ export function FileUpload() {
               
               <XStack gap="$2">
                 <YStack gap="$2" flex={1}>
-                  <Label>Amount</Label>
+                  <Label>{t('amount')}</Label>
                   <Input
                     placeholder="0.00"
                     value={amount}
@@ -477,13 +479,13 @@ export function FileUpload() {
               {currency !== 'NOK' && exchangeRate !== null && (
                 <YStack gap="$2">
                   <XStack justifyContent="space-between">
-                    <Label>Exchange Rate</Label>
+                    <Label>{t('exchange-rate')}</Label>
                     <Text fontSize="$2" color="$gray11">
                       {exchangeRate.toFixed(4)}
                     </Text>
                   </XStack>
                   <XStack justifyContent="space-between">
-                    <Label>Amount in NOK</Label>
+                    <Label>{t('amount-in-nok')}</Label>
                     <Text fontWeight="bold">
                       {nokAmount !== null ? nokAmount.toFixed(2) : '0.00'} NOK
                     </Text>
@@ -492,7 +494,7 @@ export function FileUpload() {
               )}
               
               <YStack gap="$2">
-                <Label>Date</Label>
+                <Label>{t('date')}</Label>
                 <Button
                   onPress={() => setShowDatePicker(true)}
                   variant="outlined"
@@ -516,13 +518,13 @@ export function FileUpload() {
               </YStack>
 
               <YStack gap="$2">
-                <Label>Upload File</Label>
+                <Label>{t('upload-file')}</Label>
                 <XStack gap="$2">
                   <Button
                     onPress={pickDocument}
                     icon={<MaterialIcons name="description" size={18} color={isDark ? 'white' : 'black'} />}
                   >
-                    Document
+                    {t('document')}
                   </Button>
                   
                 </XStack>
@@ -552,7 +554,7 @@ export function FileUpload() {
                     >
                       <MaterialIcons name="insert-drive-file" size={24} color={isDark ? 'white' : 'black'} />
                       <Text numberOfLines={1} ellipsizeMode="middle" flex={1}>
-                        Selected document
+                        {t('selected-document')}
                       </Text>
                       <Button
                         size="$2"
@@ -573,7 +575,7 @@ export function FileUpload() {
                 marginTop="$2"
                 color="white"
               >
-                {editingIndex !== null ? 'Update Attachment' : 'Add Attachment'}
+                {editingIndex !== null ? t('update-attachment') : t('add-attachment-0')}
               </Button>
             </YStack>
           </Sheet.ScrollView>

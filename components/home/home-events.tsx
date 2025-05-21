@@ -21,6 +21,7 @@ import { Calendar, Clock, MapPin, Star, ArrowRight, Heart } from "@tamagui/lucid
 import { format, parseISO } from "date-fns";
 import { LinearGradient } from "tamagui/linear-gradient";
 import { MotiView, AnimatePresence } from "moti";
+import { useTranslation } from "react-i18next";
 
 // Updated Event interface based on the provided JSON structure
 interface Thumbnail {
@@ -145,21 +146,25 @@ const CategoryBadge = styled(Text, {
 })
 
 // Create a memoized component to prevent unnecessary re-renders
-export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps) => {
+export const HomeEvents = memo(({ events = [], isFullView = false }: HomeEventsProps) => {
   const { width } = useWindowDimensions();
   const cardWidth = width - 32;
+  const { t } = useTranslation();
   
   // Extract dates and group by month for better visualization
   const eventsByDate = useMemo(() => {
+    // Ensure events is always an array, even if it's null/undefined
+    const safeEvents = Array.isArray(events) ? events : [];
+    
     const today = new Date();
-    const thisWeek = events.filter(event => {
+    const thisWeek = safeEvents.filter(event => {
       const eventDate = parseISO(event.start_date);
       const diffTime = Math.abs(eventDate.getTime() - today.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays <= 7;
     });
     
-    const upcoming = events.filter(event => {
+    const upcoming = safeEvents.filter(event => {
       const eventDate = parseISO(event.start_date);
       const diffTime = Math.abs(eventDate.getTime() - today.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -175,7 +180,7 @@ export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps)
     return format(date, 'h:mm a');
   };
   
-  if (events.length === 0) {
+  if (events?.length === 0) {
     return (
       <YStack
         alignItems="center"
@@ -185,7 +190,7 @@ export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps)
         backgroundColor="$gray100"
         borderRadius="$4"
       >
-        <Text color="$gray700">No upcoming events</Text>
+        <Text color="$gray700">{t('no-upcoming-events')}</Text>
       </YStack>
     );
   }
@@ -423,6 +428,9 @@ export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps)
     );
   } else {
     // Compact view for the All tab - simple list of events
+    // Ensure events is always an array, even if it's null/undefined
+    const safeEvents = Array.isArray(events) ? events : [];
+    
     return (
       <YStack gap="$2" marginBottom="$6" paddingHorizontal="$4">
         <XStack justifyContent="space-between" alignItems="center" paddingHorizontal="$2">
@@ -440,7 +448,7 @@ export const HomeEvents = memo(({ events, isFullView = false }: HomeEventsProps)
         </XStack>
 
         {/* Compact event list - max 3 events */}
-        {events.slice(0, 3).map((event, index) => (
+        {safeEvents.slice(0, 3).map((event, index) => (
           <MotiView
             key={`compact-${event.id}`}
             from={{ opacity: 0, translateX: 20 }}

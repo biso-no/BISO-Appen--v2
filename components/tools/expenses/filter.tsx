@@ -2,6 +2,8 @@ import { Filter } from "@tamagui/lucide-icons";
 import { Text, Button, Sheet, Label, XGroup } from "tamagui";
 import { CustomSelect } from "@/components/ui/select";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "@/i18n";
 
 interface FilterOption {
   name: string;
@@ -25,7 +27,7 @@ export function ExpenseFilter({ onFilterChange, filtersConfig }: ExpenseFilterPr
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>(
     filtersConfig.reduce((acc, filter) => ({ ...acc, [filter.filterType]: filter.initialSelected }), {})
   );
-
+  const { t } = useTranslation();
   const handleFilterChange = (filterType: string, value: string) => {
     setSelectedFilters((prev) => ({ ...prev, [filterType]: value }));
     onFilterChange(filterType, value);
@@ -39,7 +41,7 @@ export function ExpenseFilter({ onFilterChange, filtersConfig }: ExpenseFilterPr
         bordered
         size="$4"
       >
-        <Text fontSize={18}>Filter</Text>
+        <Text fontSize={18}>{t('filter')}</Text>
       </Button>
       <Sheet
         modal
@@ -62,10 +64,10 @@ export function ExpenseFilter({ onFilterChange, filtersConfig }: ExpenseFilterPr
                   items={filter.options}
                   onValueChange={(value) => handleFilterChange(filter.filterType, value)}
                   initialSelected={selectedFilters[filter.filterType]}
-                  label={`Filter by ${filter.label.toLowerCase()}`}
+                  label={t('filter-by-filter-label-tolowercase')}
                 />
               </XGroup>
-            ))}
+            ))} 
           </Sheet.ScrollView>
         </Sheet.Frame>
       </Sheet>

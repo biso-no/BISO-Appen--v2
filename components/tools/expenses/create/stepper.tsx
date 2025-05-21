@@ -20,12 +20,14 @@ import { Check } from '@tamagui/lucide-icons';
 import { CustomSwitch } from '@/components/custom-switch';
 import { useAIAssistanceStore } from './FileUpload';
 import { functions } from '@/lib/appwrite';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 export function MultiStepForm() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { profile } = useProfileStore();
-  
+  const { t } = useTranslation();
   // Initialize expense form hook with custom validation
   const methods = useForm({
     resolver: zodResolver(expenseFormSchema),
@@ -185,16 +187,16 @@ export function MultiStepForm() {
   // Define steps
   const steps: Step[] = [
     {
-      label: 'Payment Details',
+      label: t('payment-details'),
       content: (
         <ScrollView>
           <YStack gap="$4" padding="$4">
-            <H6 fontWeight="bold">Payment Details</H6>
+            <H6 fontWeight="bold">{t('payment-details')}</H6>
             <YGroup gap="$2">
               <YGroup.Item>
-                <Label>Bank Account</Label>
+                <Label>{t('bank-account')}</Label>
                 <Input
-                  placeholder="Bank Account"
+                  placeholder={t('bank-account')}
                   onChangeText={(value) => setValue('bank_account', value)}
                   value={watch('bank_account')}
                 />
@@ -208,15 +210,15 @@ export function MultiStepForm() {
                     checked={receivedPrepayment} 
                     onCheckedChange={handlePrepaymentToggle} 
                   />
-                  <Text>Did you receive a prepayment?</Text>
+                  <Text>{t('did-you-receive-a-prepayment')}</Text>
                 </XStack>
               </YGroup.Item>
               {receivedPrepayment && (
                 <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <YGroup.Item>
-                    <Label>How much was prepaid?</Label>
+                    <Label>{t('how-much-was-prepaid')}</Label>
                     <Input
-                      placeholder="Prepayment Amount"
+                      placeholder={t('prepayment-amount')}
                       onChangeText={(value) => setValue('prepayment_amount', parseFloat(value) || 0)}
                       value={watch('prepayment_amount').toString()}
                       keyboardType="numeric"
@@ -232,15 +234,15 @@ export function MultiStepForm() {
       onPrevious: handlePrevStep,
     },
     {
-      label: 'Department',
+      label: t('department'),
       content: (
         <ScrollView>
           <YStack gap="$4" padding="$4">
-            <H6 fontWeight="bold">Department Information</H6>
+            <H6 fontWeight="bold">{t('department-information')}</H6>
             {console.log('Department step - selectedCampus:', form.selectedCampus)}
             <YGroup>
               <YGroup.Item>
-                <Label>Campus</Label>
+                <Label>{t('campus')}</Label>
                 <CampusSelector
                   onSelect={handleCampusChange}
                   campus={watch('campus')}
@@ -252,7 +254,7 @@ export function MultiStepForm() {
               </YGroup.Item>
               {form.selectedCampus && (
                 <YGroup.Item>
-                  <Label>Department</Label>
+                  <Label>{t('department')}</Label>
                   <DepartmentSelector
                     title=""
                     campus={form.selectedCampus.$id}
@@ -272,7 +274,7 @@ export function MultiStepForm() {
       onPrevious: handlePrevStep,
     },
     {
-      label: 'Attachments',
+      label: t('attachments'),
       content: (
         <ScrollView>
           <YStack gap="$4" padding="$4" width="100%">
@@ -287,12 +289,12 @@ export function MultiStepForm() {
       onPrevious: handlePrevStep,
     },
     {
-      label: 'Event',
+      label: t('event'),
       content: (
         <ScrollView>
           <YStack gap="$4" padding="$4">
-            <H6 fontWeight="bold">Event Information (Optional)</H6>
-            <Text>Is this expense related to a specific event?</Text>
+            <H6 fontWeight="bold">{t('event-information-optional')}</H6>
+            <Text>{t('is-this-expense-related-to-a-specific-event')}</Text>
             <YGroup marginTop="$2">
               <YGroup.Item>
                 <XStack gap="$2" alignItems="center">
@@ -302,19 +304,19 @@ export function MultiStepForm() {
                       if (!val) {
                         setValue('eventName', '');
                       } else {
-                        setValue('eventName', 'Event'); // Set default value when toggled on
+                        setValue('eventName', t('event-0')); // Set default value when toggled on
                       }
                     }} 
                   />
-                  <Text>Expense for event?</Text>
+                  <Text>{t('expense-for-event')}</Text>
                 </XStack>
               </YGroup.Item>
               {!!eventName && (
                 <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <YGroup.Item>
-                    <Label>Event Name</Label>
+                    <Label>{t('event-name')}</Label>
                     <Input
-                      placeholder="Event Name"
+                      placeholder={t('event-name-0')}
                       onChangeText={(value) => setValue('eventName', value)}
                       value={eventName || ''}
                     />
@@ -329,18 +331,18 @@ export function MultiStepForm() {
       onPrevious: handlePrevStep,
     },
     {
-      label: 'Overview',
+      label: t('overview'),
       content: (
         <ScrollView>
           <YStack gap="$4" padding="$4">
-            <H6 fontWeight="bold">Description & Review</H6>
+            <H6 fontWeight="bold">{t('description-and-review')}</H6>
             
             <YStack gap="$2">
               <XStack justifyContent="space-between">
-                <Label>Description</Label>
+                <Label>{t('description')}</Label>
               </XStack>
               <Input
-                placeholder="Expense Description"
+                placeholder={t('expense-description')}
                 onChangeText={(value) => setValue('description', value)}
                 value={description}
                 multiline
@@ -354,28 +356,28 @@ export function MultiStepForm() {
             </YStack>
             
             <YStack gap="$4" marginTop="$4">
-              <H6>Expense Summary</H6>
+              <H6>{t('expense-summary')}</H6>
               
               <Card bordered padding="$4">
                 <YStack gap="$3">
                   <XStack justifyContent="space-between">
-                    <Text color="$gray11">Bank Account:</Text>
-                    <Text>{watch('bank_account') || 'Not provided'}</Text>
+                    <Text color="$gray11">{t('bank-account-0')}</Text>
+                    <Text>{watch('bank_account') || t('not-provided')}</Text>
                   </XStack>
                   
                   <XStack justifyContent="space-between">
                     <Text color="$gray11">Campus:</Text>
-                    <Text>{watch('campus') || 'Not selected'}</Text>
+                    <Text>{watch('campus') || t('not-selected')}</Text>
                   </XStack>
                   
                   <XStack justifyContent="space-between">
                     <Text color="$gray11">Department:</Text>
-                    <Text>{watch('department') || 'Not selected'}</Text>
+                    <Text>{watch('department') || t('not-selected-0')}</Text>
                   </XStack>
                   
                   {receivedPrepayment && (
                     <XStack justifyContent="space-between">
-                      <Text color="$gray11">Prepayment Amount:</Text>
+                      <Text color="$gray11">{t('prepayment-amount-0')}</Text>
                       <Text>{watch('prepayment_amount')} kr</Text>
                     </XStack>
                   )}
@@ -393,7 +395,7 @@ export function MultiStepForm() {
                   </XStack>
                   
                   <XStack justifyContent="space-between">
-                    <Text color="$gray11" fontWeight="bold">Total Amount:</Text>
+                    <Text color="$gray11" fontWeight="bold">{t('total-amount')}</Text>
                     <Text fontWeight="bold" color="$green9">{watch('total')} kr</Text>
                   </XStack>
                 </YStack>

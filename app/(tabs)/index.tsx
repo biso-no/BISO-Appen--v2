@@ -29,6 +29,8 @@ import { HomeJobs } from '@/components/home/home-jobs';
 import type { Job } from '@/types/jobs';
 import { useScreenPerformance } from '@/lib/performance';
 import { BISCOLogo } from '@/components/BISCOLogo';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Updated Event interface based on the provided JSON structure
 interface Thumbnail {
@@ -89,12 +91,12 @@ interface Product {
 // Replace CategorySelector component with a new implementation
 const CategorySelector = memo(
   ({ categories, activeCategory, onSelectCategory }: {
-    categories: Array<{
+    categories: {
       id: string;
       label: string;
       icon: React.ComponentType<any>;
       description: string;
-    }>;
+    }[];
     activeCategory: string;
     onSelectCategory: (category: string) => void;
   }) => {
@@ -155,7 +157,7 @@ export default function HomeScreen() {
   const { campus } = useCampus();
   const colorScheme = useColorScheme();
   const theme = useTheme();
-
+  const { t } = useTranslation();
   // Track performance 
   useScreenPerformance('HomeScreen');
 
@@ -163,29 +165,29 @@ export default function HomeScreen() {
   const categories = useMemo(() => [
     {
       id: 'all',
-      label: 'All',
+      label: t('all-0'),
       icon: Sparkles,
-      description: 'Browse everything happening at your campus',
+      description: t('browse-everything-happening-at-your-campus'),
     },
     {
       id: 'events',
-      label: 'Events',
+      label: t('explore.categories.events.title'),
       icon: Calendar,
-      description: 'Find events happening at your campus',
+      description: t('find-events-happening-at-your-campus'),
     },
     {
       id: 'marketplace',
-      label: 'Shop',
+      label: t('shop'),
       icon: ShoppingBag,
-      description: 'Buy and sell items within your campus community',
+      description: t('buy-and-sell-items-within-your-campus-community'),
     },
     {
       id: 'jobs',
-      label: 'Jobs',
+      label: t('jobs'),
       icon: Users,
-      description: 'Find job opportunities with campus partners',
+      description: t('find-job-opportunities-with-campus-partners'),
     },
-  ], []);
+  ], [t]);
 
   // Handle category selection
   const handleCategorySelect = useCallback((category: string) => {
@@ -213,51 +215,48 @@ export default function HomeScreen() {
 
   const fetchJobs = useCallback(async () => {
     try {
-      if (!campus?.name) return [];
+      if (!campus) return [];
       
-      const response = await axios.get(
-        `https://biso.no/wp-json/custom/v1/jobs/?includeExpired=false&per_page=5&campus=${campus.name}`
+      const body = { campusId: campus.$id, locale: i18next.language };
+
+      const response = await functions.createExecution(
+        'fetch_jobs',
+        JSON.stringify(body),
+        false
       );
-      return response.data;
+      console.log("New jobs:", response.responseBody);
+      const jobBody = JSON.parse(response.responseBody);
+      return jobBody?.jobs?.slice(0, 3) || [];
     } catch (error) {
       console.error("Error fetching jobs:", error);
       return [];
     }
-  }, [campus?.name]);
+  }, [campus]);
 
   // Updated fetchEvents function to use the new Event interface
   const fetchEvents = useCallback(async () => {
     try {
-      if (!campus?.name) return [];
+      console.log("Fetching events for campus:", campus?.$id);
+      if (!campus) return [];
+      console.log("Campus ID:", campus?.$id);
+      // Call your Appwrite function
+      const response = await functions.createExecution(
+        'fetch_events', 
+        JSON.stringify({ campusId: campus?.$id, locale: i18next.language }),
+        false, // async execution
+      );
+      console.log("Response:", response); 
+      if (response.responseBody) {
+        console.log(`Fetched ${response.responseBody.length} events for campus ${campus.name}`);
+        return JSON.parse(response.responseBody);
+      }
       
-      let url = 'https://biso.no/wp-json/biso/v1/events';
-      
-      const params: Record<string, string | number> = {
-        per_page: 25
-      };
-  
-      // Append the organizer parameter with campus name
-      params.organizer = "biso-" + campus.name.toLowerCase();
-      
-      console.log("Fetching events with params:", params);
-      const response = await axios.get(url, { params });
-      console.log(`Fetched ${response.data.length} events for campus ${campus.name}`);
-      
-      // Filter out past events
-      const today = new Date();
-      const filteredEvents = response.data.filter((event: Event) => {
-        const eventDate = parseISO(event.start_date);
-        return isAfter(eventDate, today);
-      });
-      
-      console.log(`${filteredEvents.length} upcoming events after filtering`);
-      return filteredEvents;
-      
+      return [];
     } catch (err) {
       console.error('Error loading events:', err);
       return [];
     }
-  }, [campus?.name]);
+  }, [campus]);
 
   // Optimized data loading with parallel requests
   const loadAllData = useCallback(async () => {
@@ -324,9 +323,9 @@ export default function HomeScreen() {
       >
         <BISCOLogo />
       </MotiView>
-      <Text color="$blue10" marginTop={20}>Loading content...</Text>
+      <Text color="$blue10" marginTop={20}>{t('loading-content')}</Text>
     </YStack>
-  ), []);
+  ), [t]);
 
   return (
     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme?.background?.val || '#ffffff' }}>

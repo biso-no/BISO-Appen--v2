@@ -6,6 +6,7 @@ import { useCampus } from "@/lib/hooks/useCampus";
 import { RelativePathString, router } from "expo-router";
 import CompactWeather from "@/components/CompactWeather";
 import { Campus } from "@/lib/get-weather";
+import { useTranslation } from "react-i18next";
 
 type CampusId = "1" | "2" | "3" | "4";
 
@@ -13,6 +14,7 @@ type CampusImageMap = {
     [key in CampusId]: any;
 };
 
+// City names don't need translation
 const CAMPUS_NAMES: Record<CampusId, string> = {
     "1": "Oslo",
     "2": "Bergen",
@@ -91,6 +93,7 @@ export const CampusHero = memo(function CampusHero() {
     const { campus } = useCampus();
     const [isLoading, setIsLoading] = useState(true);
     const [isPressed, setIsPressed] = useState(false);
+    const { t } = useTranslation();
     
     // Animation values - simplified to improve performance
     const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -242,7 +245,7 @@ export const CampusHero = memo(function CampusHero() {
                                         shadowOpacity={0.3}
                                         shadowRadius={2}
                                     >
-                                        Tap to explore campus details
+                                        {t('tap-to-explore-campus-details')}
                                     </Text>
                                     
                                     {/* Weather component - separately memoized */}

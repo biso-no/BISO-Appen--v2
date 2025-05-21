@@ -14,6 +14,8 @@ import {
 } from "@tamagui/lucide-icons";
 import { JobCategory } from '../../lib/stores/volunteerStore';
 import * as LucideIcons from "@tamagui/lucide-icons";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface FilterSheetProps {
   isOpen: boolean;
@@ -50,7 +52,7 @@ export function FilterSheet({
   maxVisibleCategories = 5,
   maxVisibleInterests = 5
 }: FilterSheetProps) {
-  
+  const { t } = useTranslation();
   // Colors for interest buttons
   const colors = ['blue', 'purple', 'orange', 'pink', 'green', 'yellow', 'red', 'cyan'];
   
@@ -83,12 +85,12 @@ export function FilterSheet({
         <Sheet.Handle />
         <Sheet.ScrollView>
           <YStack gap="$4">
-            <H2 size="$6" fontWeight="700">Filters</H2>
+            <H2 size="$6" fontWeight="700">{t('filters')}</H2>
             <Separator />
             
             {/* Categories section */}
             <YStack gap="$4">
-              <Text fontWeight="600">Position Type</Text>
+              <Text fontWeight="600">{t('position-type')}</Text>
               <XStack flexWrap="wrap" gap="$2">
                 {visibleCategories.map(category => {
                   const isSelected = selectedCategory === category.id;
@@ -140,7 +142,7 @@ export function FilterSheet({
                     marginBottom="$2"
                     icon={showAllCategories ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   >
-                    {showAllCategories ? "Show Less" : `${categories.length - maxVisibleCategories} More`}
+                    {showAllCategories ? t('show-less') : t('categories-length-maxvisiblecategories-more')}
                   </Button>
                 )}
               </XStack>
@@ -149,7 +151,7 @@ export function FilterSheet({
             {/* Interests section */}
             {interests.length > 0 && (
               <YStack gap="$4">
-                <Text fontWeight="600">Interests</Text>
+                <Text fontWeight="600">{t('interests')}</Text>
                 <XStack flexWrap="wrap" gap="$2">
                   {visibleInterests.map((interest, index) => {
                     const isSelected = selectedInterests.includes(interest);
@@ -200,7 +202,7 @@ export function FilterSheet({
                       marginBottom="$2"
                       icon={showAllInterests ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     >
-                      {showAllInterests ? "Show Less" : `${interests.length - maxVisibleInterests} More`}
+                      {showAllInterests ? t('show-less') : t('interests-length-maxvisibleinterests-more')}
                     </Button>
                   )}
                 </XStack>
@@ -215,7 +217,7 @@ export function FilterSheet({
                 flex={1}
                 onPress={onClearFilters}
               >
-                Clear Filters
+                {t('clear-filters')}
               </Button>
               
               <Button 
@@ -224,7 +226,7 @@ export function FilterSheet({
                 flex={1}
                 onPress={() => onOpenChange(false)}
               >
-                Apply Filters
+                {t('apply-filters')}
               </Button>
             </XStack>
           </YStack>

@@ -11,6 +11,8 @@ import {
   ChevronUp
 } from "@tamagui/lucide-icons";
 import { JobCategory } from '../../lib/stores/volunteerStore';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Import the necessary icons from lucide-icons
 import * as LucideIcons from "@tamagui/lucide-icons";
@@ -32,7 +34,7 @@ export function CategoryFilter({
   onToggleShowAll,
   maxVisible = 5
 }: CategoryFilterProps) {
-  
+  const { t } = useTranslation();
   // Only show up to maxVisible categories when not showing all
   const visibleCategories = showAllCategories 
     ? categories 
@@ -112,7 +114,7 @@ export function CategoryFilter({
               marginBottom="$2"
             >
               <Text color="$gray11" fontWeight="500">
-                {showAllCategories ? "Show Less" : `${categories.length - maxVisible} More`}
+                {showAllCategories ? t('show-less') : t('categories-length-maxvisible-more')}
               </Text>
             </Button>
           )}

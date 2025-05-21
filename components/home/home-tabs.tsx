@@ -8,6 +8,8 @@ import {
   Stack,
   ScrollView
 } from 'tamagui';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Category {
     id: string;
@@ -54,6 +56,7 @@ const CategoryButton = memo(({
   onPress: () => void;
   theme: any;
 }) => {
+  const { t } = useTranslation();
   // Add debug logging for button press and make the click handler more direct
   const handlePress = React.useCallback(() => {
     console.log('Category button pressed:', category.id, 'isActive:', isActive);
@@ -68,7 +71,7 @@ const CategoryButton = memo(({
       pressStyle={{ scale: 0.95 }}
       onPress={handlePress}
       active={isActive}
-      accessibilityLabel={`Select ${category.label} category`}
+      accessibilityLabel={t('select-category-label-category')}
       accessibilityState={{ selected: isActive }}
     >
       <XStack gap="$2" alignItems="center">

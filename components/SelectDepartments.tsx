@@ -9,6 +9,8 @@ import { Search, Check, X, Building2, Users2 } from '@tamagui/lucide-icons';
 import { databases } from '@/lib/appwrite';
 import { MotiView } from 'moti';
 import { useColorScheme, ColorSchemeName } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface DepartmentSelectorProps {
   campus: string | null | undefined;
@@ -99,8 +101,9 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
   campus, 
   onSelect, 
   selectedDepartments,
-  title = 'Follow Units'
+  title = i18next.t('follow-units')
 }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [departments, setDepartments] = useState<Models.Document[]>([]);
   const [loading, setLoading] = useState(false);
@@ -116,7 +119,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
           const response = await databases.listDocuments('app', 'departments', [
             Query.equal('campus_id', campus),
             Query.equal('active', true),
-            Query.select(['Name', '$id', 'campus_id']),
+            Query.select([t('name'), '$id', 'campus_id']),
             Query.limit(200),
           ]);
           console.log('Departments response:', response);
@@ -182,7 +185,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
         <XStack gap="$2" alignItems="center">
           <Search size={20} color="$blue10" />
           <Input
-            placeholder="Search units..."
+            placeholder={t('search-units')}
             value={searchTerm}
             onChangeText={setSearchTerm}
             flex={1}
@@ -207,7 +210,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
       {/* Selected Units */}
       {selectedDepartments.length > 0 && (
         <YStack gap="$2">
-          <Text color="$gray11" fontSize="$3" fontWeight="500">Selected units:</Text>
+          <Text color="$gray11" fontSize="$3" fontWeight="500">{t('selected-units')}</Text>
           <XStack flexWrap="wrap" gap="$2">
             {selectedDepartments.map((dept) => (
               <SelectedDepartmentTag
@@ -244,7 +247,7 @@ const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
               alignItems="center" 
               backgroundColor={colorScheme === 'dark' ? '$gray3' : '$gray1'}
             >
-              <Text color="$gray11" fontSize="$4">No units found</Text>
+              <Text color="$gray11" fontSize="$4">{t('no-units-found')}</Text>
             </Card>
           )}
         </YStack>

@@ -9,6 +9,8 @@ import { Mail, Check, ExternalLink } from '@tamagui/lucide-icons';
 import { useWindowDimensions, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Company Colors
 const COLORS = {
@@ -38,7 +40,7 @@ export default function LoginScreen() {
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(0);
   const { width } = useWindowDimensions();
-
+  const { t } = useTranslation();
   const { push } = useRouter();
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function LoginScreen() {
 
   const handleEmailSubmit = async () => {
     if (!email) {
-      setErrorMessages(['Please enter your email address']);
+      setErrorMessages([t('please-enter-your-email-address')]);
       return;
     }
     setIsLoading(true);
@@ -81,7 +83,7 @@ export default function LoginScreen() {
         setCooldownTime(10); // Set 10 second cooldown
       }
     } catch (error) {
-      setErrorMessages(['Failed to send magic link. Please try again.']);
+      setErrorMessages([t('failed-to-send-magic-link-please-try-again')]);
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +98,7 @@ export default function LoginScreen() {
         setCooldownTime(10); // Reset cooldown timer
       }
     } catch (error) {
-      setErrorMessages(['Failed to resend magic link. Please try again.']);
+      setErrorMessages([t('failed-to-resend-magic-link-please-try-again')]);
     } finally {
       setIsLoading(false);
     }
@@ -178,7 +180,7 @@ export default function LoginScreen() {
                 fontSize={32}
                 letterSpacing={-0.5}
               >
-                Welcome Back
+                {t('welcome-back')}
               </H1>
               <H2
                 textAlign="center"
@@ -187,7 +189,7 @@ export default function LoginScreen() {
                 fontWeight="600"
                 letterSpacing={-0.2}
               >
-                Sign in to continue
+                {t('sign-in-to-continue')}
               </H2>
 
               <YStack gap="$4" marginTop="$6">
@@ -203,7 +205,7 @@ export default function LoginScreen() {
                   <Input
                     flex={1}
                     marginLeft="$2"
-                    placeholder="Enter your email"
+                    placeholder={t('enter-your-email')}
                     backgroundColor="transparent"
                     borderWidth={0}
                     value={email}
@@ -229,7 +231,7 @@ export default function LoginScreen() {
                       letterSpacing={-0.1}
                       paddingHorizontal="$4"
                     >
-                      We've sent a magic link to your email. Please check your inbox and click the link to sign in.
+                      {t('weve-sent-a-magic-link-to-your-email-please-check-your-inbox-and-click-the-link-to-sign-in')}
                     </Text>
                     <XStack gap="$2" width="100%">
                       <Button
@@ -246,7 +248,7 @@ export default function LoginScreen() {
                       >
                         <ExternalLink size={16} color="white" />
                         <Text color="white" fontSize={14} fontWeight="600" marginLeft="$1">
-                          Open Email App
+                          {t('open-email-app')}
                         </Text>
                       </Button>
                       <Button
@@ -265,8 +267,8 @@ export default function LoginScreen() {
                       >
                         <Text color="white" fontSize={14} fontWeight="600">
                           {isLoading ? 'Sending...' : 
-                           cooldownTime > 0 ? `Resend in ${cooldownTime}s` : 
-                           'Resend Link'}
+                           cooldownTime > 0 ? t('resend-in-cooldowntime-s') : 
+                           t('resend-link')}
                         </Text>
                       </Button>
                     </XStack>
@@ -291,7 +293,7 @@ export default function LoginScreen() {
                     elevation={5}
                   >
                     <Text color="white" fontSize={16} fontWeight="700">
-                      {isLoading ? 'Sending Link...' : 'Continue with Email'}
+                      {isLoading ? t('sending-link') : t('continue-with-email')}
                     </Text>
                   </Button>
                 )}
@@ -302,13 +304,13 @@ export default function LoginScreen() {
                   opacity={0.7}
                   color={COLORS.defaultBlue}
                 >
-                  By continuing, you agree to our{' '}
+                  {t('by-continuing-you-agree-to-our')}{' '}
                   <Text
                     color={COLORS.accentBlue}
                     onPress={() => push('https://biso.no/en/privacy-policy/')}
                     fontWeight="500"
                   >
-                    Privacy Policy
+                    {t('privacy-policy')}
                   </Text>
                 </Text>
               </YStack>

@@ -6,6 +6,8 @@ import { StyleSheet, Dimensions } from 'react-native';
 import { MapPin, Building2, ChevronDown, ChevronUp } from '@tamagui/lucide-icons';
 import { Models } from 'react-native-appwrite';
 import DepartmentSelector from '../SelectDepartments';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface Step2Props {
   onNext?: () => void | Promise<void>;
@@ -24,7 +26,7 @@ export function Step2({
 }: Step2Props) {
   const [showCampusSelector, setShowCampusSelector] = React.useState(!selectedCampus);
   const { height } = Dimensions.get('window');
-
+  const { t } = useTranslation();
   return (
     <ScrollView bounces={false}>
       <YStack width="100%" minHeight={height * 0.7} alignItems="center">
@@ -47,7 +49,7 @@ export function Step2({
                 <XStack gap="$2" alignItems="center">
                   <MapPin size={20} color="$primary" />
                   <Text fontWeight="600">
-                    {selectedCampus ? selectedCampus.name : "Select your campus"}
+                    {selectedCampus ? selectedCampus.name : t('select-your-campus')}
                   </Text>
                 </XStack>
                 {showCampusSelector ? (
@@ -89,7 +91,7 @@ export function Step2({
               <YStack gap="$2" flex={1} width="100%">
                 <XStack alignItems="center" gap="$2">
                   <Building2 size={24} color="$primary" />
-                  <H3>Select Departments</H3>
+                  <H3>{t('select-departments')}</H3>
                 </XStack>
                 
                 <Card 

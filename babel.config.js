@@ -4,6 +4,15 @@ module.exports = function (api) {
     presets: ['babel-preset-expo'],
     plugins: [
       'react-native-reanimated/plugin',
+      [
+        'module-resolver',
+        {
+          root: ['.'],
+          alias: {
+            'react-native-device-info': './react-native-device-info.js'
+          }
+        }
+      ],
     ]
   };
 };

@@ -15,6 +15,8 @@ import { functions } from '@/lib/appwrite';
 import { useCampus } from '@/lib/hooks/useCampus';
 import { useQuery } from '@tanstack/react-query';
 import { Image as ExpoImage } from 'expo-image';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 // Types for department members from M365
 interface DepartmentMember {
@@ -74,7 +76,7 @@ const fetchDepartmentMembers = async ({
   const result: DepartmentMembersResponse = JSON.parse(execution.responseBody);
   
   if (!result.success) {
-    throw new Error(result.message || 'Failed to load department members');
+    throw new Error(result.message || i18next.t('failed-to-load-department-members'));
   }
   
   return result;
@@ -354,7 +356,7 @@ export const DepartmentMembersShowcase = memo(({
 }: DepartmentMembersShowcaseProps) => {
   const colorScheme = useColorScheme();
   const { campus } = useCampus();
-  
+  const { t } = useTranslation();
   // Use React Query for data fetching with automatic caching
   const { 
     data, 
@@ -394,7 +396,7 @@ export const DepartmentMembersShowcase = memo(({
         >
           <Users size={20} color={headerIconColor} />
           <Text fontSize="$6" fontWeight="600" color="$color">
-            {title || 'Department Members'}
+            {title || t('department-members')}
           </Text>
           <ChevronRight size={16} color="$gray9" />
         </XStack>
@@ -420,9 +422,9 @@ export const DepartmentMembersShowcase = memo(({
   if (isError) {
     return (
       <YStack padding="$4" alignItems="center" gap="$4">
-        <Text color="$red10">{error?.toString() || 'Error loading members'}</Text>
+        <Text color="$red10">{error?.toString() || t('error-loading-members')}</Text>
         <Button themeInverse onPress={() => refetch()}>
-          Retry
+          {t('common.retry')}
         </Button>
       </YStack>
     );
@@ -432,7 +434,7 @@ export const DepartmentMembersShowcase = memo(({
   if (members.length === 0) {
     return (
       <YStack padding="$4" alignItems="center">
-        <Text>No department members found</Text>
+        <Text>{t('no-department-members-found')}</Text>
       </YStack>
     );
   }

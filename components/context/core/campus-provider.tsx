@@ -4,6 +4,8 @@ import { Models, Query } from 'react-native-appwrite';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProfile } from '@/components/context/core/profile-provider';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface CampusContextType {
   campuses: Models.Document[] | null;
@@ -36,7 +38,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
   const [currentCampus, setCurrentCampus] = useState<Models.Document | null>(null);
   const queryClient = useQueryClient();
   const { profile } = useProfile();
-
+  const { t } = useTranslation();
   // Use React Query for caching and automatic refetching
   const { 
     data: campuses, 
@@ -60,7 +62,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
       };
       await AsyncStorage.default.setItem('campus', JSON.stringify(campusData));
     } catch (err) {
-      console.error('Failed to update campus', err);
+      console.error(t('failed-to-update-campus'), err);
       throw err;
     }
   }, []);
@@ -122,7 +124,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
 export function useCampusContext() {
   const context = useContext(CampusContext);
   if (context === undefined) {
-    throw new Error('useCampusContext must be used within a CampusProvider');
+    throw new Error(i18next.t('usecampuscontext-must-be-used-within-a-campusprovider'));
   }
   return context;
 } 

@@ -1,6 +1,8 @@
 import React, { createContext, useContext } from 'react';
 import { Models } from 'react-native-appwrite';
 import { useAuth as useZustandAuth } from '@/lib/hooks/useAuthStore';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 export interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
@@ -18,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error(i18next.t('useauth-must-be-used-within-an-authprovider'));
   }
   return context;
 };

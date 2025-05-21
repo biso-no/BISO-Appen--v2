@@ -9,6 +9,8 @@ import {
 import { Button, Text, Spinner } from 'tamagui';
 import { Alert } from 'react-native';
 import { useProfile } from './context/core/profile-provider';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 
 WebBrowser.maybeCompleteAuthSession();
@@ -22,7 +24,7 @@ async function fetchUserEmail(accessToken: string) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch user email');
+            throw new Error(i18next.t('failed-to-fetch-user-email'));
         }
 
         const data = await response.json();
@@ -34,6 +36,7 @@ async function fetchUserEmail(accessToken: string) {
 }
 
 export function BILoginButton() {
+    const { t } = useTranslation();
     const discovery = useAutoDiscovery('https://login.microsoftonline.com/adee44b2-91fc-40f1-abdd-9cc29351b5fd/v2.0');
     const redirectUri = makeRedirectUri({
         scheme: 'biso',
@@ -73,19 +76,19 @@ export function BILoginButton() {
                 }, discovery);
 
                 if (!accessToken) {
-                    throw new Error("Failed to login with BI");
+                    throw new Error(t('failed-to-login-with-bi'));
                 }
 
                 const email = await fetchUserEmail(accessToken);
                 if (!email.endsWith('@bi.no') && !email.endsWith('@biso.no')) {
-                    throw new Error("Please use a valid email address ending with @bi.no or @biso.no");
+                    throw new Error(t('please-use-a-valid-email-address-ending-with-bi-no-or-biso-no'));
                 }
 
                 const studentId = email.replace(/@bi.no|@biso.no/, '');
                 await profileActions.addStudentId(studentId);
             }
         } catch (error) {
-            Alert.alert("Login Error", error instanceof Error ? error.message : "An error occurred during login");
+            Alert.alert(t('login-error'), error instanceof Error ? error.message : t('an-error-occurred-during-login'));
         } finally {
             setLoading(false);
         }
@@ -94,7 +97,7 @@ export function BILoginButton() {
     return (
         <Button onPress={handleLogin} variant='outlined' disabled={!isReady}>
             {loading && <Spinner size="small" />}
-            <Text>Login with BI</Text>
+            <Text>{t('login-with-bi')}</Text>
         </Button>
     );
 }

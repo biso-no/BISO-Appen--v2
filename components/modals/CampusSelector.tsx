@@ -3,14 +3,17 @@ import { YStack, Text, Button, YGroup, Separator, XStack } from 'tamagui';
 import { useCampusContext } from '@/components/context/core/campus-provider';
 import { capitalizeFirstLetter } from '@/lib/utils/helpers';
 import { Models } from 'react-native-appwrite';
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 interface CampusSelectorProps {
   onClose: () => void;
   title?: string;
 }
 
-export function CampusSelector({ onClose, title = 'Select Campus' }: CampusSelectorProps) {
+export function CampusSelector({ onClose, title = i18next.t('select-campus') }: CampusSelectorProps) {
   const { campuses, currentCampus, changeCampus } = useCampusContext();
+  const { t } = useTranslation();
 
   const handleCampusChange = async (campus: Models.Document) => {
     try {
@@ -25,9 +28,9 @@ export function CampusSelector({ onClose, title = 'Select Campus' }: CampusSelec
     return (
       <YStack gap="$4">
         <Text fontSize={22} fontWeight="bold">{title}</Text>
-        <Text color="$red10">No campuses available. Please try again later.</Text>
+        <Text color="$red10">{t('no-campuses-available-please-try-again-later')}</Text>
         <Button alignSelf="flex-end" onPress={onClose} theme="accent">
-          Close
+          {t('close')}
         </Button>
       </YStack>
     );

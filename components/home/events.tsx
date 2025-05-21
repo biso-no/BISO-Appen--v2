@@ -7,12 +7,15 @@ import { useCampus } from "@/lib/hooks/useCampus";
 import { useRouter } from "expo-router";
 import { useWindowDimensions } from "react-native";
 import { mapCampus } from "@/lib/utils/map-campus";
+import { useTranslation } from 'react-i18next';
+import i18next from '@/i18n';
 
 export function Events() {
     const { width } = useWindowDimensions();
     const [events, setEvents] = useState<Models.Document[]>();
     const router = useRouter();
     const { campus } = useCampus();
+    const { t } = useTranslation();
 
     useEffect(() => {
         async function fetchEvents() {
@@ -39,7 +42,7 @@ export function Events() {
     if (!events || events.length === 0) {
         return (
             <MyStack justifyContent="center" alignItems="center" gap="$2" backgroundColor={"transparent"}>
-              <H6>Stay tuned!</H6>
+              <H6>{t('stay-tuned')}</H6>
             </MyStack>
         );
     }
@@ -47,7 +50,7 @@ export function Events() {
     return (
         <YStack gap="$4" justifyContent="center" alignItems="center">
             <XStack justifyContent="space-between" alignItems="center">
-            <Button>See all</Button>
+            <Button>{t('see-all')}</Button>
             </XStack>
             <XStack gap="$3" flexWrap="wrap" justifyContent="center" alignItems="center">
                 {events.map((event) => (
