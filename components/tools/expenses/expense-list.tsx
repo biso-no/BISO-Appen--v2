@@ -363,6 +363,8 @@ const ExpenseListHeader = memo(({
   showBackButton?: boolean
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const colorScheme = useColorScheme();
   return (
     <MotiView
       from={{ opacity: 0, translateY: -10 }}
