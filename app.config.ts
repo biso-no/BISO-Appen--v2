@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'BISO',
   owner: 'bi_student_organisation',
   newArchEnabled: true,
-  version: "1.0.0",
+  version: "1.0.6",
   orientation: 'portrait',
   icon: "./assets/ios_icon.png",
   scheme: 'biso',
